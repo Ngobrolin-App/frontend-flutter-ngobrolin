@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "366569795847",
+    "project_id": "ngobrolin-app",
+    "storage_bucket": "ngobrolin-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:366569795847:android:7ee01f7cf12438ae3915a2",
+        "android_client_info": {
+          "package_name": "com.example.ngobrolin_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCOECDmiHCMJjLNGHuSt5Xt82Lc6ORU5g0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

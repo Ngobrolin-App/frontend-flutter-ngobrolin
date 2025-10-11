@@ -1,0 +1,1 @@
+{"flutter":{"platforms":{"android":{"default":{"projectId":"ngobrolin-app","appId":"1:366569795847:android:7ee01f7cf12438ae3915a2","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"ngobrolin-app","configurations":{"android":"1:366569795847:android:7ee01f7cf12438ae3915a2","ios":"1:366569795847:ios:10b12bded21b55b23915a2"}}}}}}
