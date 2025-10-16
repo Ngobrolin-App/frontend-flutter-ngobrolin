@@ -4,10 +4,20 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:ngobrolin_app/firebase_options.dart';
 import 'package:provider/provider.dart';
 
+import 'core/di/service_locator.dart';
 import 'core/localization/app_localizations.dart';
+// Legacy providers
 import 'core/providers/auth_provider.dart';
 import 'core/providers/settings_provider.dart';
 import 'core/providers/socket_provider.dart';
+// ViewModels
+import 'core/viewmodels/auth/auth_view_model.dart';
+import 'core/viewmodels/profile/profile_view_model.dart';
+import 'core/viewmodels/chat/chat_view_model.dart';
+import 'core/viewmodels/chat/chat_list_view_model.dart';
+import 'core/viewmodels/search/search_user_view_model.dart';
+import 'core/viewmodels/settings/settings_view_model.dart';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -24,6 +34,9 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
   await Firebase.initializeApp();
+
+  // Setup service locator
+  setupServiceLocator();
 
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
@@ -55,9 +68,18 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
+        // Legacy providers (will be replaced gradually)
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ChangeNotifierProvider(create: (_) => SocketProvider()..init()),
+        
+        // ViewModels with dependency injection
+        ChangeNotifierProvider(create: (_) => serviceLocator<AuthViewModel>()),
+        ChangeNotifierProvider(create: (_) => serviceLocator<ProfileViewModel>()),
+        ChangeNotifierProvider(create: (_) => serviceLocator<ChatViewModel>()),
+        ChangeNotifierProvider(create: (_) => serviceLocator<ChatListViewModel>()),
+        ChangeNotifierProvider(create: (_) => serviceLocator<SearchUserViewModel>()),
+        ChangeNotifierProvider(create: (_) => serviceLocator<SettingsViewModel>()),
       ],
       child: const MyApp(),
     ),

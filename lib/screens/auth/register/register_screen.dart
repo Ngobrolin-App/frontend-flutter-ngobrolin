@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/viewmodels/auth/auth_view_model.dart';
 import '../../../core/widgets/buttons/primary_button.dart';
 import '../../../core/widgets/inputs/custom_text_field.dart';
 import '../../../core/widgets/inputs/password_field.dart';
@@ -21,7 +22,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -34,27 +34,44 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _register() async {
     if (_formKey.currentState?.validate() ?? false) {
-      setState(() {
-        _isLoading = true;
-      });
+      // Get the AuthViewModel
+      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+      
+      // Also get the legacy AuthProvider for backward compatibility
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
       try {
-        await Provider.of<AuthProvider>(context, listen: false).signUp(
-          _usernameController.text,
-          _passwordController.text,
+        // Use the new ViewModel for registration
+        final success = await authViewModel.signUp(
+          username: _usernameController.text,
+          name: _nameController.text,
+          password: _passwordController.text,
         );
+        
+        // Also update the legacy provider
+        await authProvider.signUp(_usernameController.text, _passwordController.text);
 
         if (!mounted) return;
 
-        // Navigate to login screen on successful registration
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.tr('registration_successful')),
-            backgroundColor: Colors.green,
-          ),
-        );
-        
-        Navigator.of(context).pushReplacementNamed(AppRoutes.login);
+        if (success) {
+          // Navigate to login screen on successful registration
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.tr('registration_successful')),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          Navigator.of(context).pushReplacementNamed(AppRoutes.login);
+        } else {
+          // Show error message if registration failed
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(authViewModel.errorMessage ?? 'Registration failed'),
+              backgroundColor: AppColors.warning,
+            ),
+          );
+        }
       } catch (e) {
         // Show error message
         if (!mounted) return;
@@ -64,25 +81,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
             backgroundColor: AppColors.warning,
           ),
         );
-      } finally {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final authViewModel = Provider.of<AuthViewModel>(context);
+    
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.primary),
-      ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -90,8 +98,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Form(
               key: _formKey,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  const SizedBox(height: 32),
+
+                  // Logo
+                  Image.asset(
+                    'assets/apps_logo/app-icon-ngobrolin-enhanced-transparent.png',
+                    width: 200,
+                    height: 200,
+                  ),
+                  const SizedBox(height: 16),
+
                   // Title
                   Text(
                     context.tr('sign_up'),
@@ -101,8 +119,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       color: AppColors.primary,
                     ),
                   ),
+
                   const SizedBox(height: 32),
-                  
+
                   // Name field
                   CustomTextField(
                     controller: _nameController,
@@ -119,7 +138,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     textInputAction: TextInputAction.next,
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Username field
                   CustomTextField(
                     controller: _usernameController,
@@ -138,7 +157,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     textInputAction: TextInputAction.next,
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Password field
                   PasswordField(
                     controller: _passwordController,
@@ -156,7 +175,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     textInputAction: TextInputAction.next,
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Confirm password field
                   PasswordField(
                     controller: _confirmPasswordController,
@@ -175,15 +194,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     onSubmitted: (_) => _register(),
                   ),
                   const SizedBox(height: 32),
-                  
+
                   // Register button
                   PrimaryButton(
                     text: context.tr('sign_up'),
-                    onPressed: _register,
-                    isLoading: _isLoading,
+                    onPressed: authViewModel.isLoading ? null : () {
+                      _register();
+                    },
+                    isLoading: authViewModel.isLoading,
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // Login link
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,

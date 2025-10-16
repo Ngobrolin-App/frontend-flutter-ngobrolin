@@ -3,7 +3,7 @@ import '../../../theme/app_colors.dart';
 
 class PrimaryButton extends StatelessWidget {
   final String text;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final bool isLoading;
   final bool isFullWidth;
   final double height;
@@ -24,7 +24,7 @@ class PrimaryButton extends StatelessWidget {
     this.width,
     this.backgroundColor,
     this.textColor,
-    this.borderRadius = 8,
+    this.borderRadius = 16,
     this.padding,
     this.icon,
   }) : super(key: key);
@@ -58,10 +58,7 @@ class PrimaryButton extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (icon != null) ...[
-                    icon!,
-                    const SizedBox(width: 8),
-                  ],
+                  if (icon != null) ...[icon!, const SizedBox(width: 8)],
                   Text(
                     text,
                     style: const TextStyle(

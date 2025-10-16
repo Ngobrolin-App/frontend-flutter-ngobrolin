@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/providers/socket_provider.dart';
+import '../../core/viewmodels/chat/chat_view_model.dart';
+import '../../core/viewmodels/settings/settings_view_model.dart';
 import '../../core/widgets/cards/chat_bubble.dart';
 import '../../routes/app_routes.dart';
 import '../../theme/app_colors.dart';
@@ -25,66 +27,16 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  bool _isLoading = false;
-
-  // Mock messages data
-  final List<Map<String, dynamic>> _messages = [
-    {
-      'id': '1',
-      'content': 'Hi there!',
-      'senderId': 'current_user',
-      'timestamp': DateTime.now().subtract(const Duration(minutes: 30)),
-      'isRead': true,
-    },
-    {
-      'id': '2',
-      'content': 'Hello! How are you?',
-      'senderId': 'other_user',
-      'timestamp': DateTime.now().subtract(const Duration(minutes: 28)),
-      'isRead': true,
-    },
-    {
-      'id': '3',
-      'content': 'I\'m doing great, thanks for asking. How about you?',
-      'senderId': 'current_user',
-      'timestamp': DateTime.now().subtract(const Duration(minutes: 25)),
-      'isRead': true,
-    },
-    {
-      'id': '4',
-      'content': 'I\'m good too. Just working on some projects.',
-      'senderId': 'other_user',
-      'timestamp': DateTime.now().subtract(const Duration(minutes: 20)),
-      'isRead': true,
-    },
-    {
-      'id': '5',
-      'content': 'That sounds interesting! What kind of projects?',
-      'senderId': 'current_user',
-      'timestamp': DateTime.now().subtract(const Duration(minutes: 18)),
-      'isRead': true,
-    },
-    {
-      'id': '6',
-      'content': 'Mostly mobile app development using Flutter. It\'s really fun!',
-      'senderId': 'other_user',
-      'timestamp': DateTime.now().subtract(const Duration(minutes: 15)),
-      'isRead': true,
-    },
-    {
-      'id': '7',
-      'content': 'That\'s awesome! I love Flutter too.',
-      'senderId': 'current_user',
-      'timestamp': DateTime.now().subtract(const Duration(minutes: 10)),
-      'isRead': false,
-    },
-  ];
 
   @override
   void initState() {
     super.initState();
-    // Scroll to bottom when screen loads
+    // Initialize chat with the user
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      final chatViewModel = Provider.of<ChatViewModel>(context, listen: false);
+      chatViewModel.initChat(widget.userId, widget.name, widget.avatarUrl);
+      
+      // Scroll to bottom when screen loads
       _scrollToBottom();
     });
   }
@@ -110,31 +62,23 @@ class _ChatScreenState extends State<ChatScreen> {
     final message = _messageController.text.trim();
     if (message.isEmpty) return;
 
-    setState(() {
-      _isLoading = true;
-    });
-
     try {
-      // Add message to local list
-      final newMessage = {
-        'id': DateTime.now().millisecondsSinceEpoch.toString(),
-        'content': message,
-        'senderId': 'current_user',
-        'timestamp': DateTime.now(),
-        'isRead': false,
-      };
-
-      setState(() {
-        _messages.add(newMessage);
+      // Get the ChatViewModel
+      final chatViewModel = Provider.of<ChatViewModel>(context, listen: false);
+      
+      // Send message using the ViewModel
+      final success = await chatViewModel.sendMessage(message);
+      
+      if (success) {
         _messageController.clear();
-      });
-
-      // Send message via socket
-      final socketProvider = Provider.of<SocketProvider>(context, listen: false);
-      socketProvider.sendMessage(
-        toUserId: widget.userId,
-        content: message,
-      );
+        
+        // Also send via socket for backward compatibility
+        final socketProvider = Provider.of<SocketProvider>(context, listen: false);
+        socketProvider.sendMessage(
+          toUserId: widget.userId,
+          content: message,
+        );
+      }
 
       // Scroll to bottom after sending message
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -149,17 +93,14 @@ class _ChatScreenState extends State<ChatScreen> {
           backgroundColor: AppColors.warning,
         ),
       );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final chatViewModel = Provider.of<ChatViewModel>(context);
+    final messages = chatViewModel.messages;
+    
     return Scaffold(
       appBar: AppBar(
         title: GestureDetector(
@@ -223,24 +164,26 @@ class _ChatScreenState extends State<ChatScreen> {
         children: [
           // Chat messages
           Expanded(
-            child: _messages.isEmpty
-                ? _buildEmptyState(context)
-                : ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _messages.length,
-                    itemBuilder: (context, index) {
-                      final message = _messages[index];
-                      final isMe = message['senderId'] == 'current_user';
-                      
-                      return ChatBubble(
-                        message: message['content'],
-                        timestamp: message['timestamp'],
-                        isMe: isMe,
-                        isRead: message['isRead'],
-                      );
-                    },
-                  ),
+            child: chatViewModel.isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : messages.isEmpty
+                    ? _buildEmptyState(context)
+                    : ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.all(16),
+                        itemCount: messages.length,
+                        itemBuilder: (context, index) {
+                          final message = messages[index];
+                          final isMe = message['senderId'] == 'current_user';
+                          
+                          return ChatBubble(
+                            message: message['content'],
+                            timestamp: DateTime.parse(message['timestamp']),
+                            isMe: isMe,
+                            isRead: message['isRead'] ?? false,
+                          );
+                        },
+                      ),
           ),
           
           // Message input
@@ -291,7 +234,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 
                 // Send button
                 IconButton(
-                  icon: _isLoading
+                  icon: chatViewModel.isLoading
                       ? const SizedBox(
                           width: 24,
                           height: 24,
@@ -301,7 +244,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           ),
                         )
                       : const Icon(Icons.send, color: AppColors.accent),
-                  onPressed: _isLoading ? null : _sendMessage,
+                  onPressed: chatViewModel.isLoading ? null : _sendMessage,
                 ),
               ],
             ),
@@ -369,13 +312,27 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _blockUser(BuildContext context) {
-    // TODO: Implement block user functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${widget.name} has been blocked'),
-        backgroundColor: Colors.green,
-      ),
-    );
-    Navigator.of(context).pop();
+    final settingsViewModel = Provider.of<SettingsViewModel>(context, listen: false);
+    
+    // Block user using SettingsViewModel
+    settingsViewModel.blockAccount(widget.userId, widget.name, widget.name)
+      .then((success) {
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${widget.name} has been blocked'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.of(context).pop();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to block ${widget.name}'),
+              backgroundColor: AppColors.warning,
+            ),
+          );
+        }
+      });
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/viewmodels/auth/auth_view_model.dart';
 import '../../../core/widgets/buttons/primary_button.dart';
 import '../../../core/widgets/inputs/custom_text_field.dart';
 import '../../../core/widgets/inputs/password_field.dart';
@@ -19,7 +20,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -30,20 +30,39 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _login() async {
     if (_formKey.currentState?.validate() ?? false) {
-      setState(() {
-        _isLoading = true;
-      });
+      // Get the AuthViewModel
+      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+
+      // Also get the legacy AuthProvider for backward compatibility
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
       try {
-        await Provider.of<AuthProvider>(context, listen: false).signIn(
+        // Use the new ViewModel for authentication
+        final success = await authViewModel.signIn(
+          _usernameController.text,
+          _passwordController.text,
+        );
+
+        // Also update the legacy provider
+        await authProvider.signIn(
           _usernameController.text,
           _passwordController.text,
         );
 
         if (!mounted) return;
 
-        // Navigate to main screen on successful login
-        Navigator.of(context).pushReplacementNamed(AppRoutes.main);
+        if (success) {
+          // Navigate to main screen on successful login
+          Navigator.of(context).pushReplacementNamed(AppRoutes.main);
+        } else {
+          // Show error message if login failed
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(authViewModel.errorMessage ?? 'Login failed'),
+              backgroundColor: AppColors.warning,
+            ),
+          );
+        }
       } catch (e) {
         // Show error message
         if (!mounted) return;
@@ -53,18 +72,14 @@ class _LoginScreenState extends State<LoginScreen> {
             backgroundColor: AppColors.warning,
           ),
         );
-      } finally {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final authViewModel = Provider.of<AuthViewModel>(context);
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -76,27 +91,28 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const SizedBox(height: 40),
-                  
+                  const SizedBox(height: 32),
+
                   // Logo
                   Image.asset(
                     'assets/apps_logo/app-icon-ngobrolin-enhanced-transparent.png',
-                    width: 100,
-                    height: 100,
+                    width: 200,
+                    height: 200,
                   ),
-                  const SizedBox(height: 24),
-                  
+
+                  const SizedBox(height: 16),
+
                   // App name
-                  const Text(
-                    'Ngobrolin',
+                  Text(
+                    context.tr('sign_in'),
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
                       color: AppColors.primary,
                     ),
                   ),
-                  const SizedBox(height: 40),
-                  
+                  const SizedBox(height: 32),
+
                   // Username field
                   CustomTextField(
                     controller: _usernameController,
@@ -112,7 +128,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     textInputAction: TextInputAction.next,
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Password field
                   PasswordField(
                     controller: _passwordController,
@@ -128,7 +144,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     onSubmitted: (_) => _login(),
                   ),
                   const SizedBox(height: 8),
-                  
+
                   // Forgot password
                   Align(
                     alignment: Alignment.centerRight,
@@ -138,22 +154,24 @@ class _LoginScreenState extends State<LoginScreen> {
                       },
                       child: Text(
                         context.tr('forgot_password'),
-                        style: const TextStyle(
-                          color: AppColors.primary,
-                        ),
+                        style: const TextStyle(color: AppColors.primary),
                       ),
                     ),
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // Login button
                   PrimaryButton(
                     text: context.tr('sign_in'),
-                    onPressed: _login,
-                    isLoading: _isLoading,
+                    onPressed: authViewModel.isLoading
+                        ? null
+                        : () {
+                            _login();
+                          },
+                    isLoading: authViewModel.isLoading,
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // Register link
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,

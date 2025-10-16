@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../core/localization/app_localizations.dart';
+import '../../../core/viewmodels/search/search_user_view_model.dart';
 import '../../../core/widgets/cards/user_list_item.dart';
 import '../../../routes/app_routes.dart';
 import '../../../theme/app_colors.dart';
@@ -13,59 +15,16 @@ class SearchUserScreen extends StatefulWidget {
 
 class _SearchUserScreenState extends State<SearchUserScreen> {
   final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
   bool _isSearching = false;
 
-  // Mock data for user list
-  final List<Map<String, dynamic>> _allUsers = [
-    {
-      'id': '1',
-      'name': 'John Doe',
-      'username': 'johndoe',
-      'avatarUrl': null,
-    },
-    {
-      'id': '2',
-      'name': 'Jane Smith',
-      'username': 'janesmith',
-      'avatarUrl': null,
-    },
-    {
-      'id': '3',
-      'name': 'Mike Johnson',
-      'username': 'mikejohnson',
-      'avatarUrl': null,
-    },
-    {
-      'id': '4',
-      'name': 'Sarah Williams',
-      'username': 'sarahwilliams',
-      'avatarUrl': null,
-    },
-    {
-      'id': '5',
-      'name': 'David Brown',
-      'username': 'davidbrown',
-      'avatarUrl': null,
-    },
-    {
-      'id': '6',
-      'name': 'Emily Davis',
-      'username': 'emilydavis',
-      'avatarUrl': null,
-    },
-  ];
-
-  List<Map<String, dynamic>> get _filteredUsers {
-    if (_searchQuery.isEmpty) {
-      return _allUsers;
-    }
-    
-    final query = _searchQuery.toLowerCase();
-    return _allUsers.where((user) {
-      return user['name'].toLowerCase().contains(query) ||
-          user['username'].toLowerCase().contains(query);
-    }).toList();
+  @override
+  void initState() {
+    super.initState();
+    // Initialize search with empty query to get random users
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final searchViewModel = Provider.of<SearchUserViewModel>(context, listen: false);
+      searchViewModel.searchUsers();
+    });
   }
 
   @override
@@ -83,19 +42,24 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
   void _stopSearch() {
     setState(() {
       _isSearching = false;
-      _searchQuery = '';
       _searchController.clear();
+      
+      // Reset search query in ViewModel
+      final searchViewModel = Provider.of<SearchUserViewModel>(context, listen: false);
+      searchViewModel.setSearchQuery('');
     });
   }
 
   void _updateSearchQuery(String query) {
-    setState(() {
-      _searchQuery = query;
-    });
+    final searchViewModel = Provider.of<SearchUserViewModel>(context, listen: false);
+    searchViewModel.setSearchQuery(query);
   }
 
   @override
   Widget build(BuildContext context) {
+    final searchViewModel = Provider.of<SearchUserViewModel>(context);
+    final users = searchViewModel.users;
+    
     return Scaffold(
       appBar: AppBar(
         title: _isSearching
@@ -123,45 +87,47 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
                 ),
         ],
       ),
-      body: ListView.separated(
-        itemCount: _filteredUsers.length,
-        separatorBuilder: (context, index) => const Divider(
-          height: 1,
-          indent: 72,
-        ),
-        itemBuilder: (context, index) {
-          final user = _filteredUsers[index];
-          return UserListItem(
-            id: user['id'],
-            name: user['name'],
-            username: user['username'],
-            avatarUrl: user['avatarUrl'],
-            onTap: () {
-              Navigator.of(context).pushNamed(
-                AppRoutes.userProfile,
-                arguments: {
-                  'userId': user['id'],
-                  'name': user['name'],
-                  'username': user['username'],
-                  'avatarUrl': user['avatarUrl'],
-                },
-              );
-            },
-            onActionTap: () {
-              Navigator.of(context).pushNamed(
-                AppRoutes.chat,
-                arguments: {
-                  'userId': user['id'],
-                  'name': user['name'],
-                  'avatarUrl': user['avatarUrl'],
-                },
-              );
-            },
-            actionIcon: Icons.chat_bubble_outline,
-            actionText: context.tr('message'),
-          );
-        },
-      ),
+      body: searchViewModel.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView.separated(
+              itemCount: users.length,
+              separatorBuilder: (context, index) => const Divider(
+                height: 1,
+                indent: 72,
+              ),
+              itemBuilder: (context, index) {
+                final user = users[index];
+                return UserListItem(
+                  id: user['id'],
+                  name: user['name'],
+                  username: user['username'],
+                  avatarUrl: user['avatarUrl'],
+                  onTap: () {
+                    Navigator.of(context).pushNamed(
+                      AppRoutes.userProfile,
+                      arguments: {
+                        'userId': user['id'],
+                        'name': user['name'],
+                        'username': user['username'],
+                        'avatarUrl': user['avatarUrl'],
+                      },
+                    );
+                  },
+                  onActionTap: () {
+                    Navigator.of(context).pushNamed(
+                      AppRoutes.chat,
+                      arguments: {
+                        'userId': user['id'],
+                        'name': user['name'],
+                        'avatarUrl': user['avatarUrl'],
+                      },
+                    );
+                  },
+                  actionIcon: Icons.chat_bubble_outline,
+                  actionText: context.tr('message'),
+                );
+              },
+            ),
     );
   }
 }

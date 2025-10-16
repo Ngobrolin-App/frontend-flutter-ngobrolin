@@ -26,7 +26,7 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    
+
     // Check if user is authenticated
     if (authProvider.authenticated) {
       // Navigate to main screen if authenticated
@@ -34,7 +34,7 @@ class _SplashScreenState extends State<SplashScreen> {
     } else {
       // Check if first time user
       final isFirstTime = await _isFirstTimeUser();
-      
+
       if (isFirstTime) {
         // Navigate to onboarding for first time users
         Navigator.of(context).pushReplacementNamed(AppRoutes.onboarding);
@@ -54,7 +54,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primary,
+      backgroundColor: AppColors.backgroundGeneral,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -62,25 +62,12 @@ class _SplashScreenState extends State<SplashScreen> {
             // Logo
             Image.asset(
               'assets/apps_logo/app-icon-ngobrolin-enhanced-transparent.png',
-              width: 120,
-              height: 120,
-            ),
-            const SizedBox(height: 24),
-            // App name
-            const Text(
-              'Ngobrolin',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+              width: 200,
+              height: 200,
             ),
             const SizedBox(height: 48),
             // Loading indicator
-            const SpinKitDoubleBounce(
-              color: Colors.white,
-              size: 50.0,
-            ),
+            const SpinKitDoubleBounce(color: AppColors.primary, size: 50.0),
           ],
         ),
       ),

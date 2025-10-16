@@ -47,7 +47,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     await prefs.setBool('onboarding_completed', true);
 
     if (!mounted) return;
-    
+
     // Navigate to login screen
     Navigator.of(context).pushReplacementNamed(AppRoutes.login);
   }
@@ -55,7 +55,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.backgroundGeneral,
       body: SafeArea(
         child: Column(
           children: [
@@ -73,7 +73,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
               ),
             ),
-            
+
             // Page view
             Expanded(
               child: PageView(
@@ -83,17 +83,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   OnboardingPage(
                     image: 'assets/onboarding/onboarding_1.png',
                     title: context.tr('welcome_message'),
-                    description: context.tr('welcome_description'),
+                    description: context.tr('welcome_description_1'),
                   ),
                   OnboardingPage(
                     image: 'assets/onboarding/onboarding_2.png',
                     title: context.tr('app_name'),
-                    description: context.tr('welcome_description'),
+                    description: context.tr('welcome_description_2'),
                   ),
                 ],
               ),
             ),
-            
+
             // Page indicator
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -112,7 +112,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
               ),
             ),
-            
+
             // Next/Start button
             Container(
               padding: const EdgeInsets.all(24),
