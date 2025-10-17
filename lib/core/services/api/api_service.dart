@@ -23,11 +23,11 @@ class ApiService {
         options: options,
         cancelToken: cancelToken,
       );
-      
+
       if (parser != null) {
         return parser(response.data);
       }
-      
+
       return response.data as T;
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);
@@ -53,11 +53,11 @@ class ApiService {
         options: options,
         cancelToken: cancelToken,
       );
-      
+
       if (parser != null) {
         return parser(response.data);
       }
-      
+
       return response.data as T;
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);
@@ -83,11 +83,11 @@ class ApiService {
         options: options,
         cancelToken: cancelToken,
       );
-      
+
       if (parser != null) {
         return parser(response.data);
       }
-      
+
       return response.data as T;
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);
@@ -113,11 +113,11 @@ class ApiService {
         options: options,
         cancelToken: cancelToken,
       );
-      
+
       if (parser != null) {
         return parser(response.data);
       }
-      
+
       return response.data as T;
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);
@@ -143,11 +143,11 @@ class ApiService {
         options: options,
         cancelToken: cancelToken,
       );
-      
+
       if (parser != null) {
         return parser(response.data);
       }
-      
+
       return response.data as T;
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);

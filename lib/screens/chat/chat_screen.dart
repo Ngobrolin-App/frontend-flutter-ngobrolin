@@ -13,12 +13,8 @@ class ChatScreen extends StatefulWidget {
   final String name;
   final String? avatarUrl;
 
-  const ChatScreen({
-    Key? key,
-    required this.userId,
-    required this.name,
-    this.avatarUrl,
-  }) : super(key: key);
+  const ChatScreen({Key? key, required this.userId, required this.name, this.avatarUrl})
+    : super(key: key);
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -35,7 +31,7 @@ class _ChatScreenState extends State<ChatScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final chatViewModel = Provider.of<ChatViewModel>(context, listen: false);
       chatViewModel.initChat(widget.userId, widget.name, widget.avatarUrl);
-      
+
       // Scroll to bottom when screen loads
       _scrollToBottom();
     });
@@ -65,19 +61,16 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       // Get the ChatViewModel
       final chatViewModel = Provider.of<ChatViewModel>(context, listen: false);
-      
+
       // Send message using the ViewModel
       final success = await chatViewModel.sendMessage(message);
-      
+
       if (success) {
         _messageController.clear();
-        
+
         // Also send via socket for backward compatibility
         final socketProvider = Provider.of<SocketProvider>(context, listen: false);
-        socketProvider.sendMessage(
-          toUserId: widget.userId,
-          content: message,
-        );
+        socketProvider.sendMessage(toUserId: widget.userId, content: message);
       }
 
       // Scroll to bottom after sending message
@@ -100,7 +93,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     final chatViewModel = Provider.of<ChatViewModel>(context);
     final messages = chatViewModel.messages;
-    
+
     return Scaffold(
       appBar: AppBar(
         title: GestureDetector(
@@ -119,9 +112,7 @@ class _ChatScreenState extends State<ChatScreen> {
               CircleAvatar(
                 radius: 16,
                 backgroundColor: AppColors.lightGrey,
-                backgroundImage: widget.avatarUrl != null
-                    ? NetworkImage(widget.avatarUrl!)
-                    : null,
+                backgroundImage: widget.avatarUrl != null ? NetworkImage(widget.avatarUrl!) : null,
                 child: widget.avatarUrl == null
                     ? Text(
                         widget.name.isNotEmpty ? widget.name[0].toUpperCase() : '?',
@@ -167,25 +158,25 @@ class _ChatScreenState extends State<ChatScreen> {
             child: chatViewModel.isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : messages.isEmpty
-                    ? _buildEmptyState(context)
-                    : ListView.builder(
-                        controller: _scrollController,
-                        padding: const EdgeInsets.all(16),
-                        itemCount: messages.length,
-                        itemBuilder: (context, index) {
-                          final message = messages[index];
-                          final isMe = message['senderId'] == 'current_user';
-                          
-                          return ChatBubble(
-                            message: message['content'],
-                            timestamp: DateTime.parse(message['timestamp']),
-                            isMe: isMe,
-                            isRead: message['isRead'] ?? false,
-                          );
-                        },
-                      ),
+                ? _buildEmptyState(context)
+                : ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.all(16),
+                    itemCount: messages.length,
+                    itemBuilder: (context, index) {
+                      final message = messages[index];
+                      final isMe = message['senderId'] == 'current_user';
+
+                      return ChatBubble(
+                        message: message['content'],
+                        timestamp: DateTime.parse(message['timestamp']),
+                        isMe: isMe,
+                        isRead: message['isRead'] ?? false,
+                      );
+                    },
+                  ),
           ),
-          
+
           // Message input
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
@@ -208,7 +199,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     // TODO: Implement attachment functionality
                   },
                 ),
-                
+
                 // Text input
                 Expanded(
                   child: TextField(
@@ -221,27 +212,21 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                       filled: true,
                       fillColor: AppColors.lightGrey.withOpacity(0.3),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     ),
                     textInputAction: TextInputAction.send,
                     onSubmitted: (_) => _sendMessage(),
                     maxLines: null,
                   ),
                 ),
-                
+
                 // Send button
                 IconButton(
                   icon: chatViewModel.isLoading
                       ? const SizedBox(
                           width: 24,
                           height: 24,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.accent,
-                          ),
+                          child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accent),
                         )
                       : const Icon(Icons.send, color: AppColors.accent),
                   onPressed: chatViewModel.isLoading ? null : _sendMessage,
@@ -259,26 +244,16 @@ class _ChatScreenState extends State<ChatScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Image.asset(
-            'assets/empty_state/img-empty-state.png',
-            width: 120,
-            height: 120,
-          ),
+          Image.asset('assets/empty_state/img-empty-state.png', width: 120, height: 120),
           const SizedBox(height: 16),
           Text(
             context.tr('no_messages'),
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
             context.tr('start_new_chat'),
-            style: const TextStyle(
-              fontSize: 16,
-              color: AppColors.grey,
-            ),
+            style: const TextStyle(fontSize: 16, color: AppColors.grey),
           ),
         ],
       ),
@@ -292,19 +267,13 @@ class _ChatScreenState extends State<ChatScreen> {
         title: Text(context.tr('block_account')),
         content: Text(context.tr('are_you_sure_block')),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(context.tr('no')),
-          ),
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(context.tr('no'))),
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
               _blockUser(context);
             },
-            child: Text(
-              context.tr('yes'),
-              style: const TextStyle(color: AppColors.warning),
-            ),
+            child: Text(context.tr('yes'), style: const TextStyle(color: AppColors.warning)),
           ),
         ],
       ),
@@ -313,26 +282,22 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _blockUser(BuildContext context) {
     final settingsViewModel = Provider.of<SettingsViewModel>(context, listen: false);
-    
+
     // Block user using SettingsViewModel
-    settingsViewModel.blockAccount(widget.userId, widget.name, widget.name)
-      .then((success) {
-        if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${widget.name} has been blocked'),
-              backgroundColor: Colors.green,
-            ),
-          );
-          Navigator.of(context).pop();
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to block ${widget.name}'),
-              backgroundColor: AppColors.warning,
-            ),
-          );
-        }
-      });
+    settingsViewModel.blockAccount(widget.userId, widget.name, widget.name).then((success) {
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${widget.name} has been blocked'), backgroundColor: Colors.green),
+        );
+        Navigator.of(context).pop();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to block ${widget.name}'),
+            backgroundColor: AppColors.warning,
+          ),
+        );
+      }
+    });
   }
 }

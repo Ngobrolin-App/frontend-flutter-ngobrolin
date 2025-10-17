@@ -35,9 +35,7 @@ class ChatListItem extends StatelessWidget {
             CircleAvatar(
               radius: 24,
               backgroundColor: AppColors.lightGrey,
-              backgroundImage: avatarUrl != null
-                  ? CachedNetworkImageProvider(avatarUrl!)
-                  : null,
+              backgroundImage: avatarUrl != null ? CachedNetworkImageProvider(avatarUrl!) : null,
               child: avatarUrl == null
                   ? Text(
                       name.isNotEmpty ? name[0].toUpperCase() : '?',
@@ -68,10 +66,7 @@ class ChatListItem extends StatelessWidget {
                       ),
                       Text(
                         context.loc.formatTime(timestamp),
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.timestamp,
-                        ),
+                        style: const TextStyle(fontSize: 12, color: AppColors.timestamp),
                       ),
                     ],
                   ),
@@ -85,27 +80,20 @@ class ChatListItem extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 14,
-                            color: unreadCount > 0
-                                ? AppColors.text
-                                : AppColors.timestamp,
-                            fontWeight:
-                                unreadCount > 0 ? FontWeight.w500 : FontWeight.normal,
+                            color: unreadCount > 0 ? AppColors.text : AppColors.timestamp,
+                            fontWeight: unreadCount > 0 ? FontWeight.w500 : FontWeight.normal,
                           ),
                         ),
                       ),
                       if (unreadCount > 0) ...[
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 2),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: const BoxDecoration(
                             color: AppColors.accent,
                             shape: BoxShape.circle,
                           ),
-                          constraints: const BoxConstraints(
-                            minWidth: 20,
-                            minHeight: 20,
-                          ),
+                          constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
                           child: Center(
                             child: Text(
                               unreadCount.toString(),

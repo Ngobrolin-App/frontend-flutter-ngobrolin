@@ -5,10 +5,8 @@ const Map<String, String> idID = {
 
   // Onboarding
   'welcome_message': 'Selamat datang di Ngobrolin!',
-  'welcome_description_1':
-      'Temukan teman baru dan terhubung kapan saja, di mana saja.',
-  'welcome_description_2':
-      'Bangun koneksi, berbagi cerita, dan tetap dekat dengan siapa pun.',
+  'welcome_description_1': 'Temukan teman baru dan terhubung kapan saja, di mana saja.',
+  'welcome_description_2': 'Bangun koneksi, berbagi cerita, dan tetap dekat dengan siapa pun.',
   'start_now': 'Mulai Sekarang',
 
   // Auth

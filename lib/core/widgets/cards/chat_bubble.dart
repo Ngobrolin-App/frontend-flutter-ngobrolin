@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'package:iconify_flutter/icons/material_symbols.dart';
 import '../../../theme/app_colors.dart';
 import '../../localization/app_localizations.dart';
 
@@ -21,9 +23,7 @@ class ChatBubble extends StatelessWidget {
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.75,
-        ),
+        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
         margin: const EdgeInsets.symmetric(vertical: 4),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
@@ -43,13 +43,7 @@ class ChatBubble extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              message,
-              style: const TextStyle(
-                fontSize: 16,
-                color: AppColors.text,
-              ),
-            ),
+            Text(message, style: const TextStyle(fontSize: 16, color: AppColors.text)),
             const SizedBox(height: 4),
             Row(
               mainAxisSize: MainAxisSize.min,
@@ -57,15 +51,12 @@ class ChatBubble extends StatelessWidget {
               children: [
                 Text(
                   context.loc.formatTime(timestamp),
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.timestamp,
-                  ),
+                  style: const TextStyle(fontSize: 12, color: AppColors.timestamp),
                 ),
                 if (isMe) ...[
                   const SizedBox(width: 4),
-                  Icon(
-                    isRead ? Icons.done_all : Icons.done,
+                  Iconify(
+                    isRead ? MaterialSymbols.done_all_rounded : MaterialSymbols.done_rounded,
                     size: 14,
                     color: isRead ? Colors.blue : AppColors.timestamp,
                   ),

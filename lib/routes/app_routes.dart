@@ -57,11 +57,8 @@ class AppRoutes {
         );
       default:
         return MaterialPageRoute(
-          builder: (_) => Scaffold(
-            body: Center(
-              child: Text('No route defined for ${settings.name}'),
-            ),
-          ),
+          builder: (_) =>
+              Scaffold(body: Center(child: Text('No route defined for ${settings.name}'))),
         );
     }
   }
@@ -73,9 +70,7 @@ class BlockedUsersScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('Blocked Users Screen')),
-    );
+    return const Scaffold(body: Center(child: Text('Blocked Users Screen')));
   }
 }
 
@@ -95,8 +90,6 @@ class UserProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(child: Text('User Profile Screen: $name')),
-    );
+    return Scaffold(body: Center(child: Text('User Profile Screen: $name')));
   }
 }

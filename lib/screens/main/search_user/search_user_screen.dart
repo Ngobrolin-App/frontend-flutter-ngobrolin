@@ -43,7 +43,7 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
     setState(() {
       _isSearching = false;
       _searchController.clear();
-      
+
       // Reset search query in ViewModel
       final searchViewModel = Provider.of<SearchUserViewModel>(context, listen: false);
       searchViewModel.setSearchQuery('');
@@ -59,7 +59,7 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
   Widget build(BuildContext context) {
     final searchViewModel = Provider.of<SearchUserViewModel>(context);
     final users = searchViewModel.users;
-    
+
     return Scaffold(
       appBar: AppBar(
         title: _isSearching
@@ -77,24 +77,15 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
             : Text(context.tr('users')),
         actions: [
           _isSearching
-              ? IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: _stopSearch,
-                )
-              : IconButton(
-                  icon: const Icon(Icons.search),
-                  onPressed: _startSearch,
-                ),
+              ? IconButton(icon: const Icon(Icons.close), onPressed: _stopSearch)
+              : IconButton(icon: const Icon(Icons.search), onPressed: _startSearch),
         ],
       ),
       body: searchViewModel.isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView.separated(
               itemCount: users.length,
-              separatorBuilder: (context, index) => const Divider(
-                height: 1,
-                indent: 72,
-              ),
+              separatorBuilder: (context, index) => const Divider(height: 1, indent: 72),
               itemBuilder: (context, index) {
                 final user = users[index];
                 return UserListItem(

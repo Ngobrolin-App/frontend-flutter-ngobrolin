@@ -28,11 +28,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final settingsProvider = Provider.of<SettingsProvider>(context);
     final settingsViewModel = Provider.of<SettingsViewModel>(context);
-    
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(context.tr('settings')),
-      ),
+      appBar: AppBar(title: Text(context.tr('settings'))),
       body: settingsViewModel.isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
@@ -47,9 +45,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () => _showLanguageDialog(context),
                 ),
-                
+
                 const Divider(),
-                
+
                 // Private account toggle
                 SwitchListTile(
                   title: Text(context.tr('private_account')),
@@ -62,9 +60,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   },
                   secondary: const Icon(Icons.lock_outline),
                 ),
-                
+
                 const Divider(),
-                
+
                 // Blocked users
                 ListTile(
                   title: Text(context.tr('blocked_users')),
@@ -74,9 +72,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Navigator.of(context).pushNamed(AppRoutes.blockedUsers);
                   },
                 ),
-                
+
                 const Divider(),
-                
+
                 // About app
                 ListTile(
                   title: const Text('About Ngobrolin'),
@@ -93,7 +91,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _showLanguageDialog(BuildContext context) {
     final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     final settingsViewModel = Provider.of<SettingsViewModel>(context, listen: false);
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -123,7 +121,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Navigator.of(context).pop();
               },
             ),
-            
+
             // Indonesian option
             ListTile(
               title: const Text('Indonesia'),

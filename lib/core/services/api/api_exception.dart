@@ -6,11 +6,7 @@ class ApiException implements Exception {
   final int? statusCode;
   final dynamic data;
 
-  ApiException({
-    required this.message,
-    this.statusCode,
-    this.data,
-  });
+  ApiException({required this.message, this.statusCode, this.data});
 
   /// Factory constructor to create ApiException from DioException
   factory ApiException.fromDioException(DioException exception) {
@@ -66,11 +62,7 @@ class ApiException implements Exception {
         }
     }
 
-    return ApiException(
-      message: message,
-      statusCode: statusCode,
-      data: data,
-    );
+    return ApiException(message: message, statusCode: statusCode, data: data);
   }
 
   @override

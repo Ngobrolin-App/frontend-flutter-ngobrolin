@@ -36,7 +36,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (_formKey.currentState?.validate() ?? false) {
       // Get the AuthViewModel
       final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-      
+
       // Also get the legacy AuthProvider for backward compatibility
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
@@ -47,7 +47,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           name: _nameController.text,
           password: _passwordController.text,
         );
-        
+
         // Also update the legacy provider
         await authProvider.signUp(_usernameController.text, _passwordController.text);
 
@@ -75,12 +75,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       } catch (e) {
         // Show error message
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: AppColors.warning,
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: AppColors.warning));
       }
     }
   }
@@ -88,7 +85,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final authViewModel = Provider.of<AuthViewModel>(context);
-    
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -198,9 +195,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   // Register button
                   PrimaryButton(
                     text: context.tr('sign_up'),
-                    onPressed: authViewModel.isLoading ? null : () {
-                      _register();
-                    },
+                    onPressed: authViewModel.isLoading
+                        ? null
+                        : () {
+                            _register();
+                          },
                     isLoading: authViewModel.isLoading,
                   ),
                   const SizedBox(height: 24),

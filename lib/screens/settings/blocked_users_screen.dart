@@ -14,25 +14,15 @@ class BlockedUsersScreen extends StatefulWidget {
 class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
   // Mock data for blocked users
   final Map<String, Map<String, dynamic>> _blockedUsersData = {
-    '1': {
-      'id': '1',
-      'name': 'John Doe',
-      'username': 'johndoe',
-      'avatarUrl': null,
-    },
-    '2': {
-      'id': '2',
-      'name': 'Jane Smith',
-      'username': 'janesmith',
-      'avatarUrl': null,
-    },
+    '1': {'id': '1', 'name': 'John Doe', 'username': 'johndoe', 'avatarUrl': null},
+    '2': {'id': '2', 'name': 'Jane Smith', 'username': 'janesmith', 'avatarUrl': null},
   };
 
   @override
   Widget build(BuildContext context) {
     final settingsProvider = Provider.of<SettingsProvider>(context);
     final blockedUserIds = settingsProvider.blockedAccounts;
-    
+
     // Filter blocked users based on the provider's blocked IDs
     final blockedUsers = _blockedUsersData.entries
         .where((entry) => blockedUserIds.contains(entry.key))
@@ -40,9 +30,7 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
         .toList();
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(context.tr('blocked_users')),
-      ),
+      appBar: AppBar(title: Text(context.tr('blocked_users'))),
       body: blockedUsers.isEmpty
           ? _buildEmptyState(context)
           : ListView.separated(
@@ -86,26 +74,16 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.block,
-            size: 80,
-            color: AppColors.lightGrey,
-          ),
+          const Icon(Icons.block, size: 80, color: AppColors.lightGrey),
           const SizedBox(height: 16),
           Text(
             context.tr('no_blocked_users'),
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
             context.tr('no_blocked_users_description'),
-            style: const TextStyle(
-              fontSize: 16,
-              color: AppColors.grey,
-            ),
+            style: const TextStyle(fontSize: 16, color: AppColors.grey),
             textAlign: TextAlign.center,
           ),
         ],
@@ -130,14 +108,11 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
           TextButton(
             onPressed: () {
               // Unblock the user
-              final settingsProvider = Provider.of<SettingsProvider>(
-                context,
-                listen: false,
-              );
+              final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
               settingsProvider.unblockAccount(userId);
-              
+
               Navigator.of(context).pop();
-              
+
               // Show confirmation
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -146,10 +121,7 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
                 ),
               );
             },
-            child: Text(
-              context.tr('unblock'),
-              style: const TextStyle(color: AppColors.primary),
-            ),
+            child: Text(context.tr('unblock'), style: const TextStyle(color: AppColors.primary)),
           ),
         ],
       ),

@@ -36,9 +36,7 @@ class UserListItem extends StatelessWidget {
             CircleAvatar(
               radius: 24,
               backgroundColor: AppColors.lightGrey,
-              backgroundImage: avatarUrl != null
-                  ? CachedNetworkImageProvider(avatarUrl!)
-                  : null,
+              backgroundImage: avatarUrl != null ? CachedNetworkImageProvider(avatarUrl!) : null,
               child: avatarUrl == null
                   ? Text(
                       name.isNotEmpty ? name[0].toUpperCase() : '?',
@@ -67,10 +65,7 @@ class UserListItem extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     '@$username',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: AppColors.timestamp,
-                    ),
+                    style: const TextStyle(fontSize: 14, color: AppColors.timestamp),
                   ),
                 ],
               ),
@@ -90,11 +85,7 @@ class UserListItem extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       if (actionIcon != null) ...[
-                        Icon(
-                          actionIcon,
-                          color: Colors.white,
-                          size: 16,
-                        ),
+                        Icon(actionIcon, color: Colors.white, size: 16),
                         if (actionText != null) const SizedBox(width: 4),
                       ],
                       if (actionText != null)

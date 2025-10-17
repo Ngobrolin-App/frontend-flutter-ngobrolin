@@ -9,10 +9,7 @@ class AuthResponse extends Equatable {
   final String token;
   final User user;
 
-  const AuthResponse({
-    required this.token,
-    required this.user,
-  });
+  const AuthResponse({required this.token, required this.user});
 
   /// Creates an AuthResponse from JSON data
   factory AuthResponse.fromJson(Map<String, dynamic> json) => _$AuthResponseFromJson(json);

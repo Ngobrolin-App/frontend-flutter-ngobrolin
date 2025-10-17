@@ -10,10 +10,7 @@ import '../../../theme/app_colors.dart';
 class EditProfileScreen extends StatefulWidget {
   final Map<String, dynamic> userData;
 
-  const EditProfileScreen({
-    Key? key,
-    required this.userData,
-  }) : super(key: key);
+  const EditProfileScreen({Key? key, required this.userData}) : super(key: key);
 
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();
@@ -25,7 +22,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _bioController;
   late TextEditingController _passwordController;
   late TextEditingController _confirmPasswordController;
-  
+
   File? _imageFile;
   bool _isLoading = false;
   bool _changePassword = false;
@@ -73,22 +70,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.tr('profile_updated')),
-            backgroundColor: Colors.green,
-          ),
+          SnackBar(content: Text(context.tr('profile_updated')), backgroundColor: Colors.green),
         );
 
         Navigator.of(context).pop();
       } catch (e) {
         // Show error message
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: AppColors.warning,
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: AppColors.warning));
       } finally {
         if (mounted) {
           setState(() {
@@ -102,9 +93,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(context.tr('edit_profile')),
-      ),
+      appBar: AppBar(title: Text(context.tr('edit_profile'))),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -122,8 +111,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         backgroundImage: _imageFile != null
                             ? FileImage(_imageFile!)
                             : (widget.userData['avatarUrl'] != null
-                                ? NetworkImage(widget.userData['avatarUrl'])
-                                : null),
+                                  ? NetworkImage(widget.userData['avatarUrl'])
+                                  : null),
                         child: (_imageFile == null && widget.userData['avatarUrl'] == null)
                             ? Text(
                                 widget.userData['name'][0].toUpperCase(),
@@ -146,11 +135,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               color: AppColors.accent,
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(
-                              Icons.camera_alt,
-                              color: Colors.white,
-                              size: 20,
-                            ),
+                            child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
                           ),
                         ),
                       ),
@@ -158,7 +143,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                
+
                 // Name field
                 CustomTextField(
                   controller: _nameController,
@@ -171,7 +156,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Bio field
                 CustomTextField(
                   controller: _bioController,
@@ -179,7 +164,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   maxLines: 3,
                 ),
                 const SizedBox(height: 24),
-                
+
                 // Change password option
                 CheckboxListTile(
                   title: Text(context.tr('change_password')),
@@ -192,7 +177,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   controlAffinity: ListTileControlAffinity.leading,
                   contentPadding: EdgeInsets.zero,
                 ),
-                
+
                 // Password fields (only shown if change password is selected)
                 if (_changePassword) ...[
                   const SizedBox(height: 16),
@@ -228,9 +213,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     },
                   ),
                 ],
-                
+
                 const SizedBox(height: 32),
-                
+
                 // Save button
                 PrimaryButton(
                   text: context.tr('save_changes'),

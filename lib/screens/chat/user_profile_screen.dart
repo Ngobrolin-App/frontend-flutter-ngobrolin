@@ -39,7 +39,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       'bio': 'Hello, I am using Ngobrolin!', // Mock bio
       'avatarUrl': widget.avatarUrl,
     };
-    
+
     // Check if user is blocked
     final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _isBlocked = settingsProvider.blockedAccounts.contains(widget.userId);
@@ -48,29 +48,22 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   void _startChat() {
     Navigator.of(context).pushReplacementNamed(
       AppRoutes.chat,
-      arguments: {
-        'userId': widget.userId,
-        'name': widget.name,
-        'avatarUrl': widget.avatarUrl,
-      },
+      arguments: {'userId': widget.userId, 'name': widget.name, 'avatarUrl': widget.avatarUrl},
     );
   }
 
   void _toggleBlockUser() {
     final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    
+
     if (_isBlocked) {
       // Unblock user
       settingsProvider.unblockAccount(widget.userId);
       setState(() {
         _isBlocked = false;
       });
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${widget.name} has been unblocked'),
-          backgroundColor: Colors.green,
-        ),
+        SnackBar(content: Text('${widget.name} has been unblocked'), backgroundColor: Colors.green),
       );
     } else {
       // Show confirmation dialog
@@ -80,20 +73,17 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           title: Text(context.tr('block_account')),
           content: Text(context.tr('are_you_sure_block')),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(context.tr('no')),
-            ),
+            TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(context.tr('no'))),
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                
+
                 // Block user
                 settingsProvider.blockAccount(widget.userId);
                 setState(() {
                   _isBlocked = true;
                 });
-                
+
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('${widget.name} has been blocked'),
@@ -101,10 +91,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   ),
                 );
               },
-              child: Text(
-                context.tr('yes'),
-                style: const TextStyle(color: AppColors.warning),
-              ),
+              child: Text(context.tr('yes'), style: const TextStyle(color: AppColors.warning)),
             ),
           ],
         ),
@@ -115,9 +102,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(context.tr('profile')),
-      ),
+      appBar: AppBar(title: Text(context.tr('profile'))),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -147,7 +132,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         : null,
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Name
                   Text(
                     _userData['name'],
@@ -158,19 +143,16 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  
+
                   // Username
                   Text(
                     '@${_userData['username']}',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.white70,
-                    ),
+                    style: const TextStyle(fontSize: 16, color: Colors.white70),
                   ),
                 ],
               ),
             ),
-            
+
             // Bio
             if (_userData['bio'] != null && _userData['bio'].isNotEmpty)
               Padding(
@@ -180,22 +162,16 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   children: [
                     Text(
                       context.tr('bio'),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      _userData['bio'],
-                      style: const TextStyle(fontSize: 16),
-                    ),
+                    Text(_userData['bio'], style: const TextStyle(fontSize: 16)),
                   ],
                 ),
               ),
-            
+
             const Divider(),
-            
+
             // Action buttons
             Padding(
               padding: const EdgeInsets.all(16),
@@ -208,9 +184,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       onPressed: _startChat,
                       icon: const Icon(Icons.chat_bubble_outline, color: Colors.white),
                     ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // Block/Unblock button
                   OutlinedButton.icon(
                     onPressed: _toggleBlockUser,
@@ -220,14 +196,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     ),
                     label: Text(
                       _isBlocked ? context.tr('unblock_user') : context.tr('block_account'),
-                      style: TextStyle(
-                        color: _isBlocked ? AppColors.primary : AppColors.warning,
-                      ),
+                      style: TextStyle(color: _isBlocked ? AppColors.primary : AppColors.warning),
                     ),
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(
-                        color: _isBlocked ? AppColors.primary : AppColors.warning,
-                      ),
+                      side: BorderSide(color: _isBlocked ? AppColors.primary : AppColors.warning),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       minimumSize: const Size(double.infinity, 50),
                     ),

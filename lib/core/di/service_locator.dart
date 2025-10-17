@@ -23,36 +23,36 @@ void setupServiceLocator() {
   serviceLocator.registerLazySingleton(() => ApiService());
 
   // Register repositories
-  serviceLocator.registerLazySingleton(() => AuthRepository(
-        apiService: serviceLocator<ApiService>(),
-      ));
-  serviceLocator.registerLazySingleton(() => UserRepository(
-        apiService: serviceLocator<ApiService>(),
-      ));
-  serviceLocator.registerLazySingleton(() => ChatRepository(
-        apiService: serviceLocator<ApiService>(),
-      ));
-  serviceLocator.registerLazySingleton(() => SettingsRepository(
-        apiService: serviceLocator<ApiService>(),
-      ));
+  serviceLocator.registerLazySingleton(
+    () => AuthRepository(apiService: serviceLocator<ApiService>()),
+  );
+  serviceLocator.registerLazySingleton(
+    () => UserRepository(apiService: serviceLocator<ApiService>()),
+  );
+  serviceLocator.registerLazySingleton(
+    () => ChatRepository(apiService: serviceLocator<ApiService>()),
+  );
+  serviceLocator.registerLazySingleton(
+    () => SettingsRepository(apiService: serviceLocator<ApiService>()),
+  );
 
   // Register view models
-  serviceLocator.registerFactory(() => AuthViewModel(
-        authRepository: serviceLocator<AuthRepository>(),
-      ));
-  serviceLocator.registerFactory(() => ProfileViewModel(
-        userRepository: serviceLocator<UserRepository>(),
-      ));
-  serviceLocator.registerFactory(() => ChatViewModel(
-        chatRepository: serviceLocator<ChatRepository>(),
-      ));
-  serviceLocator.registerFactory(() => ChatListViewModel(
-        chatRepository: serviceLocator<ChatRepository>(),
-      ));
-  serviceLocator.registerFactory(() => SearchUserViewModel(
-        userRepository: serviceLocator<UserRepository>(),
-      ));
-  serviceLocator.registerFactory(() => SettingsViewModel(
-        settingsRepository: serviceLocator<SettingsRepository>(),
-      ));
+  serviceLocator.registerFactory(
+    () => AuthViewModel(authRepository: serviceLocator<AuthRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => ProfileViewModel(userRepository: serviceLocator<UserRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => ChatViewModel(chatRepository: serviceLocator<ChatRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => ChatListViewModel(chatRepository: serviceLocator<ChatRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => SearchUserViewModel(userRepository: serviceLocator<UserRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => SettingsViewModel(settingsRepository: serviceLocator<SettingsRepository>()),
+  );
 }

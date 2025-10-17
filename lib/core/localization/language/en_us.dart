@@ -6,8 +6,7 @@ const Map<String, String> enUS = {
   // Onboarding
   'welcome_message': 'Welcome to Ngobrolin!',
   'welcome_description_1': 'Find new friends and connect anytime, anywhere.',
-  'welcome_description_2':
-      'Build connections, share stories, and stay close with anyone.',
+  'welcome_description_2': 'Build connections, share stories, and stay close with anyone.',
   'start_now': 'Start Now',
 
   // Auth

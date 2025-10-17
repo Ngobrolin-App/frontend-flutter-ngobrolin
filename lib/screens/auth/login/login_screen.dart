@@ -44,14 +44,12 @@ class _LoginScreenState extends State<LoginScreen> {
         );
 
         // Also update the legacy provider
-        await authProvider.signIn(
-          _usernameController.text,
-          _passwordController.text,
-        );
+        await authProvider.signIn(_usernameController.text, _passwordController.text);
 
         if (!mounted) return;
 
         if (success) {
+          // if (true) {
           // Navigate to main screen on successful login
           Navigator.of(context).pushReplacementNamed(AppRoutes.main);
         } else {
@@ -66,12 +64,9 @@ class _LoginScreenState extends State<LoginScreen> {
       } catch (e) {
         // Show error message
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: AppColors.warning,
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: AppColors.warning));
       }
     }
   }

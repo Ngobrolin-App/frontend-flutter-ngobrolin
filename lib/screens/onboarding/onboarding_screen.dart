@@ -66,10 +66,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 onPressed: _completeOnboarding,
                 child: Text(
                   context.tr('skip'),
-                  style: const TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 16,
-                  ),
+                  style: const TextStyle(color: AppColors.primary, fontSize: 16),
                 ),
               ),
             ),
@@ -105,9 +102,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   height: 8,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: _currentPage == index
-                        ? AppColors.primary
-                        : AppColors.lightGrey,
+                    color: _currentPage == index ? AppColors.primary : AppColors.lightGrey,
                   ),
                 ),
               ),
@@ -117,9 +112,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             Container(
               padding: const EdgeInsets.all(24),
               child: PrimaryButton(
-                text: _currentPage == _numPages - 1
-                    ? context.tr('start_now')
-                    : context.tr('next'),
+                text: _currentPage == _numPages - 1 ? context.tr('start_now') : context.tr('next'),
                 onPressed: _nextPage,
               ),
             ),

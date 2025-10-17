@@ -61,22 +61,18 @@ class Chat extends Equatable {
 
   /// Creates a Chat with updated last message
   Chat updateLastMessage(String message, DateTime time) {
-    return copyWith(
-      lastMessage: message,
-      timestamp: time,
-      unreadCount: unreadCount + 1,
-    );
+    return copyWith(lastMessage: message, timestamp: time, unreadCount: unreadCount + 1);
   }
 
   @override
   List<Object?> get props => [
-        id,
-        userId,
-        name,
-        username,
-        avatarUrl,
-        lastMessage,
-        timestamp,
-        unreadCount,
-      ];
+    id,
+    userId,
+    name,
+    username,
+    avatarUrl,
+    lastMessage,
+    timestamp,
+    unreadCount,
+  ];
 }

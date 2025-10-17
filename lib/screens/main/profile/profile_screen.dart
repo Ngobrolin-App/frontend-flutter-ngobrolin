@@ -41,19 +41,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         title: Text(context.tr('logout')),
         content: Text(context.tr('are_you_sure_logout')),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(context.tr('no')),
-          ),
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(context.tr('no'))),
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
               _logout(context);
             },
-            child: Text(
-              context.tr('yes'),
-              style: const TextStyle(color: AppColors.warning),
-            ),
+            child: Text(context.tr('yes'), style: const TextStyle(color: AppColors.warning)),
           ),
         ],
       ),
@@ -64,22 +58,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
     // Use both old and new providers for backward compatibility
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-    
+
     // Sign out from both
     authProvider.signOut();
     authViewModel.signOut();
 
     // Navigate to login screen
-    Navigator.of(
-      context,
-    ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
+    Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
   }
 
   @override
   Widget build(BuildContext context) {
     final profileViewModel = Provider.of<ProfileViewModel>(context);
     final userData = profileViewModel.userData;
-    
+
     return Scaffold(
       appBar: AppBar(
         title: Text(context.tr('profile')),
@@ -153,16 +145,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         children: [
                           Text(
                             context.tr('bio'),
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 8),
-                          Text(
-                            userData['bio'],
-                            style: const TextStyle(fontSize: 16),
-                          ),
+                          Text(userData['bio'], style: const TextStyle(fontSize: 16)),
                         ],
                       ),
                     ),
@@ -177,8 +163,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       onPressed: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (context) =>
-                                EditProfileScreen(userData: userData),
+                            builder: (context) => EditProfileScreen(userData: userData),
                           ),
                         );
                       },

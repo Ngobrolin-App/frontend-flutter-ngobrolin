@@ -12,13 +12,9 @@ class ChatRepository {
   /// Get chat list for current user
   Future<List<Chat>> getChatList() async {
     try {
-      final response = await _apiService.get<List<dynamic>>(
-        '/chats',
-      );
-      
-      return (response)
-          .map((item) => Chat.fromJson(item as Map<String, dynamic>))
-          .toList();
+      final response = await _apiService.get<List<dynamic>>('/chats');
+
+      return (response).map((item) => Chat.fromJson(item as Map<String, dynamic>)).toList();
     } catch (e) {
       if (e is ApiException) {
         rethrow;
@@ -30,13 +26,9 @@ class ChatRepository {
   /// Get messages for a specific chat
   Future<List<Message>> getMessages(String chatId) async {
     try {
-      final response = await _apiService.get<List<dynamic>>(
-        '/chats/$chatId/messages',
-      );
-      
-      return (response)
-          .map((item) => Message.fromJson(item as Map<String, dynamic>))
-          .toList();
+      final response = await _apiService.get<List<dynamic>>('/chats/$chatId/messages');
+
+      return (response).map((item) => Message.fromJson(item as Map<String, dynamic>)).toList();
     } catch (e) {
       if (e is ApiException) {
         rethrow;
@@ -46,19 +38,13 @@ class ChatRepository {
   }
 
   /// Send a message
-  Future<Message> sendMessage({
-    required String receiverId,
-    required String content,
-  }) async {
+  Future<Message> sendMessage({required String receiverId, required String content}) async {
     try {
       final response = await _apiService.post<Map<String, dynamic>>(
         '/messages',
-        data: {
-          'receiverId': receiverId,
-          'content': content,
-        },
+        data: {'receiverId': receiverId, 'content': content},
       );
-      
+
       return Message.fromJson(response);
     } catch (e) {
       if (e is ApiException) {
@@ -71,9 +57,7 @@ class ChatRepository {
   /// Mark messages as read
   Future<bool> markAsRead(String chatId) async {
     try {
-      await _apiService.put<Map<String, dynamic>>(
-        '/chats/$chatId/read',
-      );
+      await _apiService.put<Map<String, dynamic>>('/chats/$chatId/read');
       return true;
     } catch (e) {
       if (e is ApiException) {
@@ -86,9 +70,7 @@ class ChatRepository {
   /// Delete a chat
   Future<bool> deleteChat(String chatId) async {
     try {
-      await _apiService.delete<Map<String, dynamic>>(
-        '/chats/$chatId',
-      );
+      await _apiService.delete<Map<String, dynamic>>('/chats/$chatId');
       return true;
     } catch (e) {
       if (e is ApiException) {
@@ -103,11 +85,9 @@ class ChatRepository {
     try {
       final response = await _apiService.post<Map<String, dynamic>>(
         '/chats',
-        data: {
-          'userId': userId,
-        },
+        data: {'userId': userId},
       );
-      
+
       return Chat.fromJson(response);
     } catch (e) {
       if (e is ApiException) {

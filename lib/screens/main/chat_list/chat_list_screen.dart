@@ -22,7 +22,10 @@ class _ChatListScreenState extends State<ChatListScreen> {
     super.initState();
     // Fetch chat list when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final chatListViewModel = Provider.of<ChatListViewModel>(context, listen: false);
+      final chatListViewModel = Provider.of<ChatListViewModel>(
+        context,
+        listen: false,
+      );
       chatListViewModel.fetchChatList();
     });
   }
@@ -31,7 +34,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
   Widget build(BuildContext context) {
     final chatListViewModel = Provider.of<ChatListViewModel>(context);
     final chatList = chatListViewModel.chatList;
-    
+
     return Scaffold(
       appBar: AppBar(
         title: Text(context.tr('chats')),
@@ -50,36 +53,36 @@ class _ChatListScreenState extends State<ChatListScreen> {
       body: chatListViewModel.isLoading
           ? const Center(child: CircularProgressIndicator())
           : chatList.isEmpty
-              ? _buildEmptyState(context)
-              : ListView.separated(
-                  itemCount: chatList.length,
-                  separatorBuilder: (context, index) =>
-                      const Divider(height: 1, indent: 72),
-                  itemBuilder: (context, index) {
-                    final chat = chatList[index];
-                    return ChatListItem(
-                      id: chat['id'],
-                      name: chat['name'],
-                      avatarUrl: chat['avatarUrl'],
-                      lastMessage: chat['lastMessage'],
-                      timestamp: DateTime.parse(chat['timestamp']),
-                      unreadCount: chat['unreadCount'],
-                      onTap: () {
-                        // Mark chat as read when opened
-                        chatListViewModel.markChatAsRead(chat['id']);
-                        
-                        Navigator.of(context).pushNamed(
-                          AppRoutes.chat,
-                          arguments: {
-                            'userId': chat['userId'],
-                            'name': chat['name'],
-                            'avatarUrl': chat['avatarUrl'],
-                          },
-                        );
+          ? _buildEmptyState(context)
+          : ListView.separated(
+              itemCount: chatList.length,
+              separatorBuilder: (context, index) =>
+                  const Divider(height: 1, indent: 72),
+              itemBuilder: (context, index) {
+                final chat = chatList[index];
+                return ChatListItem(
+                  id: chat['id'],
+                  name: chat['name'],
+                  avatarUrl: chat['avatarUrl'],
+                  lastMessage: chat['lastMessage'],
+                  timestamp: DateTime.parse(chat['timestamp']),
+                  unreadCount: chat['unreadCount'],
+                  onTap: () {
+                    // Mark chat as read when opened
+                    chatListViewModel.markChatAsRead(chat['id']);
+
+                    Navigator.of(context).pushNamed(
+                      AppRoutes.chat,
+                      arguments: {
+                        'userId': chat['userId'],
+                        'name': chat['name'],
+                        'avatarUrl': chat['avatarUrl'],
                       },
                     );
                   },
-                ),
+                );
+              },
+            ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           // Navigate to search users screen with the intent to start a new chat

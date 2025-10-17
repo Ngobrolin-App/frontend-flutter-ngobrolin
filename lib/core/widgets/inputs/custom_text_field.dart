@@ -56,10 +56,7 @@ class CustomTextField extends StatelessWidget {
       textInputAction: textInputAction,
       onFieldSubmitted: onSubmitted,
       textCapitalization: textCapitalization,
-      style: const TextStyle(
-        fontSize: 16,
-        color: AppColors.text,
-      ),
+      style: const TextStyle(fontSize: 16, color: AppColors.text),
       decoration: InputDecoration(
         hintText: hintText,
         labelText: labelText,

@@ -18,10 +18,7 @@ class AuthRepository {
     try {
       final response = await _apiService.post<Map<String, dynamic>>(
         '/auth/login',
-        data: {
-          'username': username,
-          'password': password,
-        },
+        data: {'username': username, 'password': password},
       );
 
       final authResponse = AuthResponse.fromJson(response);
@@ -50,11 +47,7 @@ class AuthRepository {
     try {
       final response = await _apiService.post<Map<String, dynamic>>(
         '/auth/register',
-        data: {
-          'username': username,
-          'name': name,
-          'password': password,
-        },
+        data: {'username': username, 'name': name, 'password': password},
       );
 
       final authResponse = AuthResponse.fromJson(response);
@@ -77,10 +70,7 @@ class AuthRepository {
   /// Request password reset
   Future<bool> forgotPassword(String email) async {
     try {
-      await _apiService.post<Map<String, dynamic>>(
-        '/auth/forgot-password',
-        data: {'email': email},
-      );
+      await _apiService.post<Map<String, dynamic>>('/auth/forgot-password', data: {'email': email});
       return true;
     } catch (e) {
       if (e is ApiException) {
@@ -122,10 +112,12 @@ class AuthRepository {
       final userJson = prefs.getString(_userKey);
       if (userJson == null) return null;
 
-      return User.fromJson(Map<String, dynamic>.from(
-        // ignore: unnecessary_cast
-        (prefs.getString(_userKey) as String) as Map<String, dynamic>,
-      ));
+      return User.fromJson(
+        Map<String, dynamic>.from(
+          // ignore: unnecessary_cast
+          (prefs.getString(_userKey) as String) as Map<String, dynamic>,
+        ),
+      );
     } catch (e) {
       return null;
     }

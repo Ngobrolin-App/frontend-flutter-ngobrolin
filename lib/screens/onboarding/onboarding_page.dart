@@ -21,13 +21,9 @@ class OnboardingPage extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           // Image
-          Image.asset(
-            image,
-            height: MediaQuery.of(context).size.height * 0.4,
-            fit: BoxFit.contain,
-          ),
+          Image.asset(image, height: MediaQuery.of(context).size.height * 0.4, fit: BoxFit.contain),
           const SizedBox(height: 40),
-          
+
           // Title
           Text(
             title,
@@ -39,14 +35,11 @@ class OnboardingPage extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
-          
+
           // Description
           Text(
             description,
-            style: const TextStyle(
-              fontSize: 16,
-              color: AppColors.text,
-            ),
+            style: const TextStyle(fontSize: 16, color: AppColors.text),
             textAlign: TextAlign.center,
           ),
         ],

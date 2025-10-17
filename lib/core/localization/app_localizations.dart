@@ -14,10 +14,7 @@ class AppLocalizations {
 
   static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
 
-  static final Map<String, Map<String, String>> _localizedValues = {
-    'en': enUS,
-    'id': idID,
-  };
+  static final Map<String, Map<String, String>> _localizedValues = {'en': enUS, 'id': idID};
 
   String translate(String key) {
     return _localizedValues[locale.languageCode]?[key] ?? key;
@@ -53,6 +50,6 @@ class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> 
 
 extension LocalizationExtension on BuildContext {
   AppLocalizations get loc => AppLocalizations.of(this);
-  
+
   String tr(String key) => AppLocalizations.of(this).translate(key);
 }

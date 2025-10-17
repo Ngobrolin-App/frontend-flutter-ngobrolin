@@ -44,10 +44,7 @@ class _PasswordFieldState extends State<PasswordField> {
       textInputAction: widget.textInputAction,
       onSubmitted: widget.onSubmitted,
       suffixIcon: IconButton(
-        icon: Icon(
-          _obscureText ? Icons.visibility_off : Icons.visibility,
-          color: Colors.grey,
-        ),
+        icon: Icon(_obscureText ? Icons.visibility_off : Icons.visibility, color: Colors.grey),
         onPressed: () {
           setState(() {
             _obscureText = !_obscureText;

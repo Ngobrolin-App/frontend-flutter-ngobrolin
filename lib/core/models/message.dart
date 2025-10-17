@@ -54,13 +54,5 @@ class Message extends Equatable {
   bool isSentByMe(String currentUserId) => senderId == currentUserId;
 
   @override
-  List<Object?> get props => [
-        id,
-        senderId,
-        receiverId,
-        content,
-        isRead,
-        createdAt,
-        readAt,
-      ];
+  List<Object?> get props => [id, senderId, receiverId, content, isRead, createdAt, readAt];
 }

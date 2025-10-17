@@ -38,9 +38,7 @@ class SettingsRepository {
   /// Get private account setting
   Future<bool> getPrivateAccountSetting() async {
     try {
-      final response = await _apiService.get<Map<String, dynamic>>(
-        '/settings/privacy',
-      );
+      final response = await _apiService.get<Map<String, dynamic>>('/settings/privacy');
       return response['isPrivate'] as bool;
     } catch (e) {
       if (e is ApiException) {
@@ -55,9 +53,7 @@ class SettingsRepository {
     try {
       await _apiService.put<Map<String, dynamic>>(
         '/settings/privacy',
-        data: {
-          'isPrivate': isPrivate,
-        },
+        data: {'isPrivate': isPrivate},
       );
       return true;
     } catch (e) {
@@ -71,13 +67,9 @@ class SettingsRepository {
   /// Get blocked users
   Future<List<User>> getBlockedUsers() async {
     try {
-      final response = await _apiService.get<List<dynamic>>(
-        '/settings/blocked-users',
-      );
-      
-      return (response)
-          .map((item) => User.fromJson(item as Map<String, dynamic>))
-          .toList();
+      final response = await _apiService.get<List<dynamic>>('/settings/blocked-users');
+
+      return (response).map((item) => User.fromJson(item as Map<String, dynamic>)).toList();
     } catch (e) {
       if (e is ApiException) {
         rethrow;
@@ -91,9 +83,7 @@ class SettingsRepository {
     try {
       await _apiService.post<Map<String, dynamic>>(
         '/settings/blocked-users',
-        data: {
-          'userId': userId,
-        },
+        data: {'userId': userId},
       );
       return true;
     } catch (e) {
@@ -107,9 +97,7 @@ class SettingsRepository {
   /// Unblock a user
   Future<bool> unblockUser(String userId) async {
     try {
-      await _apiService.delete<Map<String, dynamic>>(
-        '/settings/blocked-users/$userId',
-      );
+      await _apiService.delete<Map<String, dynamic>>('/settings/blocked-users/$userId');
       return true;
     } catch (e) {
       if (e is ApiException) {

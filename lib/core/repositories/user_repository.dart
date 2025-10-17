@@ -11,9 +11,7 @@ class UserRepository {
   /// Get user profile by ID
   Future<User> getUserById(String userId) async {
     try {
-      final response = await _apiService.get<Map<String, dynamic>>(
-        '/users/$userId',
-      );
+      final response = await _apiService.get<Map<String, dynamic>>('/users/$userId');
       return User.fromJson(response);
     } catch (e) {
       if (e is ApiException) {
@@ -36,11 +34,8 @@ class UserRepository {
       if (bio != null) data['bio'] = bio;
       if (isPrivate != null) data['isPrivate'] = isPrivate;
 
-      final response = await _apiService.put<Map<String, dynamic>>(
-        '/users/$userId',
-        data: data,
-      );
-      
+      final response = await _apiService.put<Map<String, dynamic>>('/users/$userId', data: data);
+
       return User.fromJson(response);
     } catch (e) {
       if (e is ApiException) {
@@ -59,10 +54,7 @@ class UserRepository {
     try {
       await _apiService.put<Map<String, dynamic>>(
         '/users/$userId/password',
-        data: {
-          'currentPassword': currentPassword,
-          'newPassword': newPassword,
-        },
+        data: {'currentPassword': currentPassword, 'newPassword': newPassword},
       );
       return true;
     } catch (e) {
@@ -80,9 +72,7 @@ class UserRepository {
       // This would typically use FormData with Dio
       final response = await _apiService.post<Map<String, dynamic>>(
         '/users/$userId/avatar',
-        data: {
-          'filePath': filePath,
-        },
+        data: {'filePath': filePath},
       );
       return response['avatarUrl'] as String;
     } catch (e) {
@@ -100,10 +90,8 @@ class UserRepository {
         '/users/search',
         queryParameters: {'q': query},
       );
-      
-      return (response)
-          .map((item) => User.fromJson(item as Map<String, dynamic>))
-          .toList();
+
+      return (response).map((item) => User.fromJson(item as Map<String, dynamic>)).toList();
     } catch (e) {
       if (e is ApiException) {
         rethrow;
@@ -119,10 +107,8 @@ class UserRepository {
         '/users/random',
         queryParameters: {'limit': limit},
       );
-      
-      return (response)
-          .map((item) => User.fromJson(item as Map<String, dynamic>))
-          .toList();
+
+      return (response).map((item) => User.fromJson(item as Map<String, dynamic>)).toList();
     } catch (e) {
       if (e is ApiException) {
         rethrow;

@@ -4,7 +4,7 @@ import '../base_view_model.dart';
 
 class AuthViewModel extends BaseViewModel {
   final AuthRepository _authRepository;
-  
+
   String? _token;
   String? get token => _token;
 
@@ -14,8 +14,8 @@ class AuthViewModel extends BaseViewModel {
   User? _user;
   User? get user => _user;
 
-  AuthViewModel({AuthRepository? authRepository}) 
-      : _authRepository = authRepository ?? AuthRepository() {
+  AuthViewModel({AuthRepository? authRepository})
+    : _authRepository = authRepository ?? AuthRepository() {
     _checkAuthStatus();
   }
 
@@ -38,17 +38,18 @@ class AuthViewModel extends BaseViewModel {
   /// Signs in a user with username and password
   Future<bool> signIn(String username, String password) async {
     return await runBusyFuture(() async {
-      try {
-        final authResponse = await _authRepository.signIn(username, password);
-        _token = authResponse.token;
-        _user = authResponse.user;
-        _authenticated = true;
-        return true;
-      } catch (e) {
-        setError(e.toString());
-        return false;
-      }
-    }) ?? false;
+          try {
+            final authResponse = await _authRepository.signIn(username, password);
+            _token = authResponse.token;
+            _user = authResponse.user;
+            _authenticated = true;
+            return true;
+          } catch (e) {
+            setError(e.toString());
+            return false;
+          }
+        }) ??
+        false;
   }
 
   /// Registers a new user
@@ -58,33 +59,35 @@ class AuthViewModel extends BaseViewModel {
     required String password,
   }) async {
     return await runBusyFuture(() async {
-      try {
-        final authResponse = await _authRepository.signUp(
-          username: username,
-          name: name,
-          password: password,
-        );
-        _token = authResponse.token;
-        _user = authResponse.user;
-        _authenticated = true;
-        return true;
-      } catch (e) {
-        setError(e.toString());
-        return false;
-      }
-    }) ?? false;
+          try {
+            final authResponse = await _authRepository.signUp(
+              username: username,
+              name: name,
+              password: password,
+            );
+            _token = authResponse.token;
+            _user = authResponse.user;
+            _authenticated = true;
+            return true;
+          } catch (e) {
+            setError(e.toString());
+            return false;
+          }
+        }) ??
+        false;
   }
 
   /// Sends a password reset request
   Future<bool> forgotPassword(String email) async {
     return await runBusyFuture(() async {
-      try {
-        return await _authRepository.forgotPassword(email);
-      } catch (e) {
-        setError(e.toString());
-        return false;
-      }
-    }) ?? false;
+          try {
+            return await _authRepository.forgotPassword(email);
+          } catch (e) {
+            setError(e.toString());
+            return false;
+          }
+        }) ??
+        false;
   }
 
   /// Signs out the current user

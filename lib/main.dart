@@ -72,7 +72,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ChangeNotifierProvider(create: (_) => SocketProvider()..init()),
-        
+
         // ViewModels with dependency injection
         ChangeNotifierProvider(create: (_) => serviceLocator<AuthViewModel>()),
         ChangeNotifierProvider(create: (_) => serviceLocator<ProfileViewModel>()),
