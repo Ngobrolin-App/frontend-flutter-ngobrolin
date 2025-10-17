@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'package:iconify_flutter/icons/material_symbols.dart';
 import 'package:provider/provider.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/providers/auth_provider.dart';
@@ -77,7 +79,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         title: Text(context.tr('profile')),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings),
+            icon: Iconify(MaterialSymbols.settings_rounded, color: AppColors.white),
             onPressed: () {
               Navigator.of(context).pushNamed(AppRoutes.settingsRoute);
             },

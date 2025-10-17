@@ -6,7 +6,7 @@ import '../base_view_model.dart';
 class SettingsViewModel extends BaseViewModel {
   final SettingsRepository _settingsRepository;
 
-  Locale _locale = const Locale('en');
+  Locale _locale = const Locale('id');
   Locale get locale => _locale;
 
   bool _privateAccount = false;

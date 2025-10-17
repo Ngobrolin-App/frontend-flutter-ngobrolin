@@ -17,11 +17,11 @@ class SettingsRepository {
       final prefs = await SharedPreferences.getInstance();
       final localeString = prefs.getString(_localeKey);
       if (localeString == null) {
-        return const Locale('en'); // Default locale
+        return const Locale('id'); // Default locale
       }
       return Locale(localeString);
     } catch (e) {
-      return const Locale('en'); // Default locale on error
+      return const Locale('id'); // Default locale on error
     }
   }
 

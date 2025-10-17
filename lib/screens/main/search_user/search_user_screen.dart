@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'package:iconify_flutter/icons/material_symbols.dart';
+import 'package:iconify_flutter/icons/ri.dart';
 import 'package:provider/provider.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/viewmodels/search/search_user_view_model.dart';
@@ -77,8 +80,14 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
             : Text(context.tr('users')),
         actions: [
           _isSearching
-              ? IconButton(icon: const Icon(Icons.close), onPressed: _stopSearch)
-              : IconButton(icon: const Icon(Icons.search), onPressed: _startSearch),
+              ? IconButton(
+                  icon: Iconify(MaterialSymbols.close_rounded, color: AppColors.white),
+                  onPressed: _stopSearch,
+                )
+              : IconButton(
+                  icon: Iconify(Ri.search_2_line, color: AppColors.white),
+                  onPressed: _startSearch,
+                ),
         ],
       ),
       body: searchViewModel.isLoading

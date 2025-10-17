@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'package:iconify_flutter/icons/ph.dart';
+import 'package:iconify_flutter/icons/ri.dart';
+import 'package:iconify_flutter/icons/material_symbols.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import 'chat_list/chat_list_screen.dart';
@@ -33,18 +37,21 @@ class _MainScreenState extends State<MainScreen> {
         },
         items: [
           BottomNavigationBarItem(
-            icon: const Icon(Icons.chat_bubble_outline),
-            activeIcon: const Icon(Icons.chat_bubble),
+            icon: Iconify(Ph.chat_dots_light, color: AppColors.deactiveButton),
+            activeIcon: Iconify(Ph.chat_dots_fill, color: AppColors.primary),
             label: context.tr('chats'),
           ),
           BottomNavigationBarItem(
-            icon: const Icon(Icons.search),
-            activeIcon: const Icon(Icons.search),
+            icon: Iconify(Ri.search_2_line, color: AppColors.deactiveButton),
+            activeIcon: Iconify(Ri.search_eye_fill, color: AppColors.primary),
             label: context.tr('users'),
           ),
           BottomNavigationBarItem(
-            icon: const Icon(Icons.person_outline),
-            activeIcon: const Icon(Icons.person),
+            icon: Iconify(
+              MaterialSymbols.person_2_outline_rounded,
+              color: AppColors.deactiveButton,
+            ),
+            activeIcon: Iconify(MaterialSymbols.person_2_rounded, color: AppColors.primary),
             label: context.tr('profile'),
           ),
         ],

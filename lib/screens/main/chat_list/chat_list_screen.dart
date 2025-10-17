@@ -5,6 +5,7 @@ import 'package:iconify_flutter/icons/material_symbols.dart';
 import 'package:provider/provider.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/viewmodels/chat/chat_list_view_model.dart';
+import '../../../core/widgets/buttons/primary_button.dart';
 import '../../../core/widgets/cards/chat_list_item.dart';
 import '../../../routes/app_routes.dart';
 import '../../../theme/app_colors.dart';
@@ -22,10 +23,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
     super.initState();
     // Fetch chat list when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final chatListViewModel = Provider.of<ChatListViewModel>(
-        context,
-        listen: false,
-      );
+      final chatListViewModel = Provider.of<ChatListViewModel>(context, listen: false);
       chatListViewModel.fetchChatList();
     });
   }
@@ -40,10 +38,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
         title: Text(context.tr('chats')),
         actions: [
           IconButton(
-            icon: Iconify(
-              MaterialSymbols.settings_rounded,
-              color: AppColors.white,
-            ),
+            icon: Iconify(MaterialSymbols.settings_rounded, color: AppColors.white),
             onPressed: () {
               Navigator.of(context).pushNamed(AppRoutes.settingsRoute);
             },
@@ -56,8 +51,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
           ? _buildEmptyState(context)
           : ListView.separated(
               itemCount: chatList.length,
-              separatorBuilder: (context, index) =>
-                  const Divider(height: 1, indent: 72),
+              separatorBuilder: (context, index) => const Divider(height: 1, indent: 72),
               itemBuilder: (context, index) {
                 final chat = chatList[index];
                 return ChatListItem(
@@ -86,9 +80,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           // Navigate to search users screen with the intent to start a new chat
-          Navigator.of(
-            context,
-          ).pushNamed(AppRoutes.main, arguments: {'tabIndex': 1});
+          Navigator.of(context).pushNamed(AppRoutes.main, arguments: {'tabIndex': 1});
         },
         backgroundColor: AppColors.accent,
         shape: CircleBorder(),
@@ -102,35 +94,22 @@ class _ChatListScreenState extends State<ChatListScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Image.asset(
-            'assets/empty_state/img-empty-state.png',
-            width: 150,
-            height: 150,
-          ),
+          Image.asset('assets/empty_state/img-empty-state.png', width: 150, height: 150),
           const SizedBox(height: 16),
           Text(
             context.tr('no_chats'),
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 8),
-          Text(
-            context.tr('start_new_chat'),
-            style: const TextStyle(fontSize: 16, color: AppColors.grey),
-          ),
           const SizedBox(height: 24),
-          ElevatedButton.icon(
+          PrimaryButton(
+            padding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+            text: context.tr('start_new_chat'),
             onPressed: () {
               // Navigate to search users screen
-              Navigator.of(
-                context,
-              ).pushNamed(AppRoutes.main, arguments: {'tabIndex': 1});
+              Navigator.of(context).pushNamed(AppRoutes.main, arguments: {'tabIndex': 1});
             },
-            icon: const Icon(Icons.add),
-            label: Text(context.tr('start_new_chat')),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.accent,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            ),
+            icon: const Iconify(MaterialSymbols.add_rounded, color: Colors.white),
+            isFullWidth: false,
           ),
         ],
       ),
