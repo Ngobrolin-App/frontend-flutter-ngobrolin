@@ -45,6 +45,7 @@ const Map<String, String> enUS = {
   'start_chat': 'Start Chat',
   'message': 'Message',
   'logout': 'Logout',
+  'change_password': 'Change Password',
 
   // Settings
   'blocked_users': 'Blocked Users',
@@ -57,6 +58,11 @@ const Map<String, String> enUS = {
   'no': 'No',
   'are_you_sure_logout': 'Are you sure you want to logout?',
   'are_you_sure_block': 'Are you sure you want to block this user?',
+  'no_blocked_users': 'No blocked users',
+  'no_blocked_users_description': 'No users have been blocked yet.',
+  'unblock': 'Unblock',
+  'unblock_user': 'Unblock User',
+  'unblock_user_confirmation': 'Are you sure you want to unblock this user?',
 
   // Chat
   'type_message': 'Type a message...',

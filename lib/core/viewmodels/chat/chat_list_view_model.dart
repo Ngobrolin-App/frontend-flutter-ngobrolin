@@ -42,6 +42,94 @@ class ChatListViewModel extends BaseViewModel {
         false;
   }
 
+  /// Fetches dummy chat list for testing purposes
+  Future<bool> fetchChatListDummy() async {
+    return await runBusyFuture(() async {
+          try {
+            // Create dummy chat data
+            final dummyChats = [
+              Chat(
+                id: '1',
+                userId: 'user1',
+                name: 'John Doe',
+                username: 'johndoe',
+                avatarUrl: 'https://via.placeholder.com/150',
+                lastMessage: 'Hey, how are you doing?',
+                timestamp: DateTime.now().subtract(const Duration(minutes: 5)),
+                unreadCount: 2,
+              ),
+              Chat(
+                id: '2',
+                userId: 'user2',
+                name: 'Jane Smith',
+                username: 'janesmith',
+                avatarUrl: 'https://via.placeholder.com/150',
+                lastMessage: 'See you tomorrow!',
+                timestamp: DateTime.now().subtract(const Duration(hours: 1)),
+                unreadCount: 0,
+              ),
+              Chat(
+                id: '3',
+                userId: 'user3',
+                name: 'Mike Johnson',
+                username: 'mikejohnson',
+                avatarUrl: 'https://via.placeholder.com/150',
+                lastMessage: 'Thanks for the help earlier',
+                timestamp: DateTime.now().subtract(const Duration(hours: 3)),
+                unreadCount: 1,
+              ),
+              Chat(
+                id: '4',
+                userId: 'user4',
+                name: 'Sarah Wilson',
+                username: 'sarahwilson',
+                avatarUrl: 'https://via.placeholder.com/150',
+                lastMessage: 'Let\'s meet up this weekend',
+                timestamp: DateTime.now().subtract(const Duration(days: 1)),
+                unreadCount: 0,
+              ),
+              Chat(
+                id: '5',
+                userId: 'user5',
+                name: 'David Brown',
+                username: 'davidbrown',
+                avatarUrl: 'https://via.placeholder.com/150',
+                lastMessage: 'Good morning! How\'s your day going?',
+                timestamp: DateTime.now().subtract(const Duration(days: 2)),
+                unreadCount: 3,
+              ),
+            ];
+
+            // Convert to map format for compatibility with existing UI
+            _chatList = dummyChats
+                .map(
+                  (chat) => {
+                    'id': chat.id,
+                    'userId': chat.userId,
+                    'name': chat.name,
+                    'username': chat.username,
+                    'avatarUrl': chat.avatarUrl,
+                    'lastMessage': chat.lastMessage,
+                    'timestamp': chat.timestamp.toIso8601String(),
+                    'unreadCount': chat.unreadCount,
+                  },
+                )
+                .toList();
+
+            // Sort chats by timestamp (newest first)
+            _chatList.sort(
+              (a, b) => DateTime.parse(b['timestamp']).compareTo(DateTime.parse(a['timestamp'])),
+            );
+
+            return true;
+          } catch (e) {
+            setError(e.toString());
+            return false;
+          }
+        }) ??
+        false;
+  }
+
   /// Updates the chat list with a new message
   void updateWithNewMessage(String chatId, String message, String timestamp) {
     final index = _chatList.indexWhere((chat) => chat['id'] == chatId);

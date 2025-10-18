@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/material_symbols.dart';
 import 'package:iconify_flutter/icons/ri.dart';
+import 'package:iconify_flutter/icons/mdi.dart';
 import 'package:provider/provider.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/viewmodels/search/search_user_view_model.dart';
@@ -26,7 +27,8 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
     // Initialize search with empty query to get random users
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final searchViewModel = Provider.of<SearchUserViewModel>(context, listen: false);
-      searchViewModel.searchUsers();
+      // searchViewModel.searchUsers();
+      searchViewModel.searchUsersDummy();
     });
   }
 
@@ -123,7 +125,7 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
                       },
                     );
                   },
-                  actionIcon: Icons.chat_bubble_outline,
+                  actionWidget: Iconify(Mdi.message_plus_outline, color: AppColors.white, size: 16),
                   actionText: context.tr('message'),
                 );
               },

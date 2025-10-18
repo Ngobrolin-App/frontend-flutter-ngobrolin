@@ -10,6 +10,7 @@ class UserListItem extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback? onActionTap;
   final IconData? actionIcon;
+  final Widget? actionWidget;
   final String? actionText;
 
   const UserListItem({
@@ -21,6 +22,7 @@ class UserListItem extends StatelessWidget {
     required this.onTap,
     this.onActionTap,
     this.actionIcon,
+    this.actionWidget,
     this.actionText,
   }) : super(key: key);
 
@@ -71,7 +73,7 @@ class UserListItem extends StatelessWidget {
               ),
             ),
             // Action button
-            if (onActionTap != null && (actionIcon != null || actionText != null))
+            if (onActionTap != null && (actionIcon != null || actionWidget != null || actionText != null))
               InkWell(
                 onTap: onActionTap,
                 borderRadius: BorderRadius.circular(20),
@@ -84,7 +86,10 @@ class UserListItem extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (actionIcon != null) ...[
+                      if (actionWidget != null) ...[
+                        actionWidget!,
+                        if (actionText != null) const SizedBox(width: 4),
+                      ] else if (actionIcon != null) ...[
                         Icon(actionIcon, color: Colors.white, size: 16),
                         if (actionText != null) const SizedBox(width: 4),
                       ],

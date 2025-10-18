@@ -10,8 +10,10 @@ import '../viewmodels/auth/auth_view_model.dart';
 import '../viewmodels/chat/chat_list_view_model.dart';
 import '../viewmodels/chat/chat_view_model.dart';
 import '../viewmodels/profile/profile_view_model.dart';
+import '../viewmodels/profile/user_profile_view_model.dart';
 import '../viewmodels/search/search_user_view_model.dart';
 import '../viewmodels/settings/settings_view_model.dart';
+import '../viewmodels/settings/blocked_users_view_model.dart';
 
 /// Service locator instance
 final GetIt serviceLocator = GetIt.instance;
@@ -44,6 +46,12 @@ void setupServiceLocator() {
     () => ProfileViewModel(userRepository: serviceLocator<UserRepository>()),
   );
   serviceLocator.registerFactory(
+    () => UserProfileViewModel(
+      userRepository: serviceLocator<UserRepository>(),
+      settingsRepository: serviceLocator<SettingsRepository>(),
+    ),
+  );
+  serviceLocator.registerFactory(
     () => ChatViewModel(chatRepository: serviceLocator<ChatRepository>()),
   );
   serviceLocator.registerFactory(
@@ -54,5 +62,8 @@ void setupServiceLocator() {
   );
   serviceLocator.registerFactory(
     () => SettingsViewModel(settingsRepository: serviceLocator<SettingsRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => BlockedUsersViewModel(settingsRepository: serviceLocator<SettingsRepository>()),
   );
 }

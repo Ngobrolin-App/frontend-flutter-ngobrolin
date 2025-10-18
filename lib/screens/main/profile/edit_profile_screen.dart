@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'package:iconify_flutter/icons/material_symbols.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/widgets/buttons/primary_button.dart';
 import '../../../core/widgets/inputs/custom_text_field.dart';
@@ -135,7 +137,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               color: AppColors.accent,
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                            child: Iconify(
+                              MaterialSymbols.android_camera,
+                              color: AppColors.white,
+                              size: 20,
+                            ),
                           ),
                         ),
                       ),

@@ -7,7 +7,9 @@ import '../screens/auth/login/login_screen.dart';
 import '../screens/auth/register/register_screen.dart';
 import '../screens/main/main_screen.dart';
 import '../screens/chat/chat_screen.dart';
+import '../screens/chat/user_profile_screen.dart';
 import '../screens/settings/settings_screen.dart';
+import '../screens/settings/blocked_users_screen.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -61,35 +63,5 @@ class AppRoutes {
               Scaffold(body: Center(child: Text('No route defined for ${settings.name}'))),
         );
     }
-  }
-}
-
-// Placeholder classes for screens that haven't been created yet
-class BlockedUsersScreen extends StatelessWidget {
-  const BlockedUsersScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(body: Center(child: Text('Blocked Users Screen')));
-  }
-}
-
-class UserProfileScreen extends StatelessWidget {
-  final String userId;
-  final String name;
-  final String username;
-  final String? avatarUrl;
-
-  const UserProfileScreen({
-    Key? key,
-    required this.userId,
-    required this.name,
-    required this.username,
-    this.avatarUrl,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(body: Center(child: Text('User Profile Screen: $name')));
   }
 }

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'package:iconify_flutter/icons/ic.dart';
+import 'package:iconify_flutter/icons/material_symbols.dart';
 import '../../core/localization/app_localizations.dart';
-import '../../core/providers/settings_provider.dart';
+import '../../core/viewmodels/settings/blocked_users_view_model.dart';
 import '../../theme/app_colors.dart';
 
 class BlockedUsersScreen extends StatefulWidget {
@@ -12,60 +15,65 @@ class BlockedUsersScreen extends StatefulWidget {
 }
 
 class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
-  // Mock data for blocked users
-  final Map<String, Map<String, dynamic>> _blockedUsersData = {
-    '1': {'id': '1', 'name': 'John Doe', 'username': 'johndoe', 'avatarUrl': null},
-    '2': {'id': '2', 'name': 'Jane Smith', 'username': 'janesmith', 'avatarUrl': null},
-  };
+  @override
+  void initState() {
+    super.initState();
+    // Fetch blocked users when screen loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final blockedUsersViewModel = Provider.of<BlockedUsersViewModel>(context, listen: false);
+      // blockedUsersViewModel.fetchBlockedUsers();
+      blockedUsersViewModel.fetchBlockedUsersDummy();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final settingsProvider = Provider.of<SettingsProvider>(context);
-    final blockedUserIds = settingsProvider.blockedAccounts;
+    return Consumer<BlockedUsersViewModel>(
+      builder: (context, blockedUsersViewModel, child) {
+        final blockedUsers = blockedUsersViewModel.blockedUsers;
+        final isLoading = blockedUsersViewModel.isLoading;
 
-    // Filter blocked users based on the provider's blocked IDs
-    final blockedUsers = _blockedUsersData.entries
-        .where((entry) => blockedUserIds.contains(entry.key))
-        .map((entry) => entry.value)
-        .toList();
-
-    return Scaffold(
-      appBar: AppBar(title: Text(context.tr('blocked_users'))),
-      body: blockedUsers.isEmpty
-          ? _buildEmptyState(context)
-          : ListView.separated(
-              itemCount: blockedUsers.length,
-              separatorBuilder: (context, index) => const Divider(height: 1),
-              itemBuilder: (context, index) {
-                final user = blockedUsers[index];
-                return ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: AppColors.lightGrey,
-                    backgroundImage: user['avatarUrl'] != null
-                        ? NetworkImage(user['avatarUrl'])
-                        : null,
-                    child: user['avatarUrl'] == null
-                        ? Text(
-                            user['name'][0].toUpperCase(),
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
-                            ),
-                          )
-                        : null,
-                  ),
-                  title: Text(user['name']),
-                  subtitle: Text('@${user['username']}'),
-                  trailing: TextButton(
-                    onPressed: () => _unblockUser(context, user['id']),
-                    child: Text(
-                      context.tr('unblock'),
-                      style: const TextStyle(color: AppColors.primary),
-                    ),
-                  ),
-                );
-              },
-            ),
+        return Scaffold(
+          appBar: AppBar(title: Text(context.tr('blocked_users'))),
+          body: isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : blockedUsers.isEmpty
+              ? _buildEmptyState(context)
+              : ListView.separated(
+                  itemCount: blockedUsers.length,
+                  separatorBuilder: (context, index) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final user = blockedUsers[index];
+                    return ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: AppColors.lightGrey,
+                        backgroundImage: user['avatarUrl'] != null
+                            ? NetworkImage(user['avatarUrl'])
+                            : null,
+                        child: user['avatarUrl'] == null
+                            ? Text(
+                                user['name'][0].toUpperCase(),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary,
+                                ),
+                              )
+                            : null,
+                      ),
+                      title: Text(user['name']),
+                      subtitle: Text('@${user['username']}'),
+                      trailing: TextButton(
+                        onPressed: () => _unblockUser(context, user['id'], blockedUsersViewModel),
+                        child: Text(
+                          context.tr('unblock'),
+                          style: const TextStyle(color: AppColors.primary),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+        );
+      },
     );
   }
 
@@ -74,7 +82,7 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.block, size: 80, color: AppColors.lightGrey),
+          const Iconify(Ic.round_block, size: 80, color: AppColors.lightGrey),
           const SizedBox(height: 16),
           Text(
             context.tr('no_blocked_users'),
@@ -91,7 +99,11 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
     );
   }
 
-  void _unblockUser(BuildContext context, String userId) {
+  void _unblockUser(
+    BuildContext context,
+    String userId,
+    BlockedUsersViewModel blockedUsersViewModel,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -106,18 +118,17 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
             child: Text(context.tr('cancel')),
           ),
           TextButton(
-            onPressed: () {
-              // Unblock the user
-              final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-              settingsProvider.unblockAccount(userId);
-
+            onPressed: () async {
               Navigator.of(context).pop();
+
+              // Unblock the user
+              final success = await blockedUsersViewModel.unblockUser(userId);
 
               // Show confirmation
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(context.tr('user_unblocked')),
-                  backgroundColor: Colors.green,
+                  content: Text(success ? context.tr('user_unblocked') : 'Failed to unblock user'),
+                  backgroundColor: success ? Colors.green : Colors.red,
                 ),
               );
             },

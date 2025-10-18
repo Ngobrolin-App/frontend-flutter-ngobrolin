@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'package:iconify_flutter/icons/fa.dart';
+import 'package:iconify_flutter/icons/material_symbols.dart';
+import 'package:iconify_flutter/icons/ic.dart';
+import 'package:iconify_flutter/icons/mdi.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/providers/settings_provider.dart';
 import '../../core/viewmodels/settings/settings_view_model.dart';
@@ -41,8 +46,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   subtitle: Text(
                     settingsViewModel.locale.languageCode == 'en' ? 'English' : 'Indonesia',
                   ),
-                  leading: const Icon(Icons.language),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  leading: const Iconify(Fa.language, color: AppColors.text),
+                  trailing: const Iconify(
+                    MaterialSymbols.arrow_forward_ios_rounded,
+                    color: AppColors.text,
+                    size: 16,
+                  ),
                   onTap: () => _showLanguageDialog(context),
                 ),
 
@@ -58,7 +67,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     await settingsViewModel.togglePrivateAccount(value);
                     settingsProvider.togglePrivateAccount(value);
                   },
-                  secondary: const Icon(Icons.lock_outline),
+                  secondary: const Iconify(MaterialSymbols.lock_outline, color: AppColors.text),
                 ),
 
                 const Divider(),
@@ -66,8 +75,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 // Blocked users
                 ListTile(
                   title: Text(context.tr('blocked_users')),
-                  leading: const Icon(Icons.block),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  leading: const Iconify(Ic.round_block, color: AppColors.text),
+                  trailing: const Iconify(
+                    MaterialSymbols.arrow_forward_ios_rounded,
+                    color: AppColors.text,
+                    size: 16,
+                  ),
                   onTap: () {
                     Navigator.of(context).pushNamed(AppRoutes.blockedUsers);
                   },
@@ -78,7 +91,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 // About app
                 ListTile(
                   title: const Text('About Ngobrolin'),
-                  leading: const Icon(Icons.info_outline),
+                  leading: const Iconify(Mdi.information_outline, color: AppColors.text),
                   onTap: () {
                     _showAboutDialog(context);
                   },

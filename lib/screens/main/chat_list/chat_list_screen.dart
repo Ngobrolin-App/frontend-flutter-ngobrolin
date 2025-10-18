@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/bx.dart';
+import 'package:iconify_flutter/icons/mdi.dart';
 import 'package:iconify_flutter/icons/material_symbols.dart';
 import 'package:provider/provider.dart';
 import '../../../core/localization/app_localizations.dart';
@@ -24,7 +25,8 @@ class _ChatListScreenState extends State<ChatListScreen> {
     // Fetch chat list when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final chatListViewModel = Provider.of<ChatListViewModel>(context, listen: false);
-      chatListViewModel.fetchChatList();
+      // chatListViewModel.fetchChatList();
+      chatListViewModel.fetchChatListDummy();
     });
   }
 
@@ -84,7 +86,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
         },
         backgroundColor: AppColors.accent,
         shape: CircleBorder(),
-        child: Iconify(Bx.bxs_message_rounded_add, color: AppColors.white),
+        child: Iconify(Mdi.message_plus, color: AppColors.white),
       ),
     );
   }

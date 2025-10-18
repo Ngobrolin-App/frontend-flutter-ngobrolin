@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'package:iconify_flutter/icons/ic.dart';
+import 'package:iconify_flutter/icons/material_symbols.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/providers/socket_provider.dart';
 import '../../core/viewmodels/chat/chat_view_model.dart';
@@ -141,7 +144,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 value: 'block',
                 child: Row(
                   children: [
-                    const Icon(Icons.block, color: AppColors.warning),
+                    Iconify(Ic.round_block, color: AppColors.warning),
                     const SizedBox(width: 8),
                     Text(context.tr('block_account')),
                   ],
@@ -194,7 +197,7 @@ class _ChatScreenState extends State<ChatScreen> {
               children: [
                 // Attachment button
                 IconButton(
-                  icon: const Icon(Icons.attach_file),
+                  icon: Iconify(MaterialSymbols.attach_file, color: AppColors.grey),
                   onPressed: () {
                     // TODO: Implement attachment functionality
                   },
@@ -228,7 +231,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           height: 24,
                           child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accent),
                         )
-                      : const Icon(Icons.send, color: AppColors.accent),
+                      : Iconify(MaterialSymbols.send_rounded, color: AppColors.accent),
                   onPressed: chatViewModel.isLoading ? null : _sendMessage,
                 ),
               ],

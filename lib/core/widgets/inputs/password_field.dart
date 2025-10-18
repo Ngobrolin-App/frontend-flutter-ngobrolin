@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'custom_text_field.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'package:iconify_flutter/icons/material_symbols.dart';
 
 class PasswordField extends StatefulWidget {
   final TextEditingController? controller;
@@ -44,7 +46,12 @@ class _PasswordFieldState extends State<PasswordField> {
       textInputAction: widget.textInputAction,
       onSubmitted: widget.onSubmitted,
       suffixIcon: IconButton(
-        icon: Icon(_obscureText ? Icons.visibility_off : Icons.visibility, color: Colors.grey),
+        icon: Iconify(
+          _obscureText
+              ? MaterialSymbols.visibility_off_rounded
+              : MaterialSymbols.visibility_rounded,
+          color: Colors.grey,
+        ),
         onPressed: () {
           setState(() {
             _obscureText = !_obscureText;

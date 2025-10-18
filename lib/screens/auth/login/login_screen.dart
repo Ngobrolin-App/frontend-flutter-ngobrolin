@@ -29,46 +29,47 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _login() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      // Get the AuthViewModel
-      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    Navigator.of(context).pushReplacementNamed(AppRoutes.main);
+    // if (_formKey.currentState?.validate() ?? false) {
+    //   // Get the AuthViewModel
+    //   final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
 
-      // Also get the legacy AuthProvider for backward compatibility
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    //   // Also get the legacy AuthProvider for backward compatibility
+    //   final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-      try {
-        // Use the new ViewModel for authentication
-        final success = await authViewModel.signIn(
-          _usernameController.text,
-          _passwordController.text,
-        );
+    //   try {
+    //     // Use the new ViewModel for authentication
+    //     final success = await authViewModel.signIn(
+    //       _usernameController.text,
+    //       _passwordController.text,
+    //     );
 
-        // Also update the legacy provider
-        await authProvider.signIn(_usernameController.text, _passwordController.text);
+    //     // Also update the legacy provider
+    //     await authProvider.signIn(_usernameController.text, _passwordController.text);
 
-        if (!mounted) return;
+    //     if (!mounted) return;
 
-        if (success) {
-          // if (true) {
-          // Navigate to main screen on successful login
-          Navigator.of(context).pushReplacementNamed(AppRoutes.main);
-        } else {
-          // Show error message if login failed
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(authViewModel.errorMessage ?? 'Login failed'),
-              backgroundColor: AppColors.warning,
-            ),
-          );
-        }
-      } catch (e) {
-        // Show error message
-        if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: AppColors.warning));
-      }
-    }
+    //     if (success) {
+    //       // if (true) {
+    //       // Navigate to main screen on successful login
+    //       Navigator.of(context).pushReplacementNamed(AppRoutes.main);
+    //     } else {
+    //       // Show error message if login failed
+    //       ScaffoldMessenger.of(context).showSnackBar(
+    //         SnackBar(
+    //           content: Text(authViewModel.errorMessage ?? 'Login failed'),
+    //           backgroundColor: AppColors.warning,
+    //         ),
+    //       );
+    //     }
+    //   } catch (e) {
+    //     // Show error message
+    //     if (!mounted) return;
+    //     ScaffoldMessenger.of(
+    //       context,
+    //     ).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: AppColors.warning));
+    //   }
+    // }
   }
 
   @override

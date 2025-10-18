@@ -13,10 +13,12 @@ import 'core/providers/socket_provider.dart';
 // ViewModels
 import 'core/viewmodels/auth/auth_view_model.dart';
 import 'core/viewmodels/profile/profile_view_model.dart';
+import 'core/viewmodels/profile/user_profile_view_model.dart';
 import 'core/viewmodels/chat/chat_view_model.dart';
 import 'core/viewmodels/chat/chat_list_view_model.dart';
 import 'core/viewmodels/search/search_user_view_model.dart';
 import 'core/viewmodels/settings/settings_view_model.dart';
+import 'core/viewmodels/settings/blocked_users_view_model.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -76,10 +78,12 @@ Future<void> main() async {
         // ViewModels with dependency injection
         ChangeNotifierProvider(create: (_) => serviceLocator<AuthViewModel>()),
         ChangeNotifierProvider(create: (_) => serviceLocator<ProfileViewModel>()),
+        ChangeNotifierProvider(create: (_) => serviceLocator<UserProfileViewModel>()),
         ChangeNotifierProvider(create: (_) => serviceLocator<ChatViewModel>()),
         ChangeNotifierProvider(create: (_) => serviceLocator<ChatListViewModel>()),
         ChangeNotifierProvider(create: (_) => serviceLocator<SearchUserViewModel>()),
         ChangeNotifierProvider(create: (_) => serviceLocator<SettingsViewModel>()),
+        ChangeNotifierProvider(create: (_) => serviceLocator<BlockedUsersViewModel>()),
       ],
       child: const MyApp(),
     ),

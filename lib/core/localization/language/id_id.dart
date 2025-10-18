@@ -45,6 +45,7 @@ const Map<String, String> idID = {
   'start_chat': 'Mulai Obrolan',
   'message': 'Pesan',
   'logout': 'Keluar Akun',
+  'change_password': 'Ganti Password',
 
   // Settings
   'blocked_users': 'Pengguna Diblokir',
@@ -57,6 +58,11 @@ const Map<String, String> idID = {
   'no': 'Tidak',
   'are_you_sure_logout': 'Apakah Kamu yakin ingin keluar?',
   'are_you_sure_block': 'Apakah Kamu yakin ingin memblokir pengguna ini?',
+  'no_blocked_users': 'Belum ada pengguna yang diblokir',
+  'no_blocked_users_description': 'Tidak ada pengguna yang diblokir saat ini.',
+  'unblock': 'Batal Blokir',
+  'unblock_user': 'Batal Blokir',
+  'unblock_user_confirmation': 'Apakah Kamu yakin ingin membatalkan blokir pengguna ini?',
 
   // Chat
   'type_message': 'Ketik pesan...',

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'package:iconify_flutter/icons/mdi.dart';
 import '../../core/localization/app_localizations.dart';
-import '../../core/providers/settings_provider.dart';
+import '../../core/viewmodels/profile/user_profile_view_model.dart';
 import '../../core/widgets/buttons/primary_button.dart';
 import '../../routes/app_routes.dart';
 import '../../theme/app_colors.dart';
@@ -25,46 +27,59 @@ class UserProfileScreen extends StatefulWidget {
 }
 
 class _UserProfileScreenState extends State<UserProfileScreen> {
-  // Mock user data
-  late Map<String, dynamic> _userData;
-  bool _isBlocked = false;
-
   @override
   void initState() {
     super.initState();
-    _userData = {
-      'id': widget.userId,
-      'name': widget.name,
-      'username': widget.username,
-      'bio': 'Hello, I am using Ngobrolin!', // Mock bio
-      'avatarUrl': widget.avatarUrl,
-    };
 
-    // Check if user is blocked
-    final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _isBlocked = settingsProvider.blockedAccounts.contains(widget.userId);
+    // Initialize the ViewModel with user data
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userProfileViewModel = Provider.of<UserProfileViewModel>(context, listen: false);
+      userProfileViewModel.initWithUserData(
+        userId: widget.userId,
+        name: widget.name,
+        username: widget.username,
+        avatarUrl: widget.avatarUrl,
+      );
+    });
   }
 
   void _startChat() {
+    final userProfileViewModel = Provider.of<UserProfileViewModel>(context, listen: false);
+    final userData = userProfileViewModel.userData;
+
     Navigator.of(context).pushReplacementNamed(
       AppRoutes.chat,
-      arguments: {'userId': widget.userId, 'name': widget.name, 'avatarUrl': widget.avatarUrl},
+      arguments: {
+        'userId': userData['id'],
+        'name': userData['name'],
+        'avatarUrl': userData['avatarUrl'],
+      },
     );
   }
 
-  void _toggleBlockUser() {
-    final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+  void _toggleBlockUser() async {
+    final userProfileViewModel = Provider.of<UserProfileViewModel>(context, listen: false);
+    final userData = userProfileViewModel.userData;
+    final isBlocked = userProfileViewModel.isBlocked;
 
-    if (_isBlocked) {
+    if (isBlocked) {
       // Unblock user
-      settingsProvider.unblockAccount(widget.userId);
-      setState(() {
-        _isBlocked = false;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${widget.name} has been unblocked'), backgroundColor: Colors.green),
-      );
+      final success = await userProfileViewModel.unblockUser();
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${userData['name']} has been unblocked'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to unblock ${userData['name']}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } else {
       // Show confirmation dialog
       showDialog(
@@ -75,21 +90,26 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           actions: [
             TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(context.tr('no'))),
             TextButton(
-              onPressed: () {
+              onPressed: () async {
                 Navigator.of(context).pop();
 
                 // Block user
-                settingsProvider.blockAccount(widget.userId);
-                setState(() {
-                  _isBlocked = true;
-                });
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('${widget.name} has been blocked'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
+                final success = await userProfileViewModel.blockUser();
+                if (success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${userData['name']} has been blocked'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to block ${userData['name']}'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               },
               child: Text(context.tr('yes'), style: const TextStyle(color: AppColors.warning)),
             ),
@@ -101,115 +121,131 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(context.tr('profile'))),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Profile header
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              color: AppColors.primary,
-              child: Column(
-                children: [
-                  // Avatar
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundColor: Colors.white,
-                    backgroundImage: _userData['avatarUrl'] != null
-                        ? NetworkImage(_userData['avatarUrl'])
-                        : null,
-                    child: _userData['avatarUrl'] == null
-                        ? Text(
-                            _userData['name'][0].toUpperCase(),
-                            style: const TextStyle(
-                              fontSize: 40,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
-                            ),
-                          )
-                        : null,
-                  ),
-                  const SizedBox(height: 16),
+    return Consumer<UserProfileViewModel>(
+      builder: (context, userProfileViewModel, child) {
+        final userData = userProfileViewModel.userData;
+        final isBlocked = userProfileViewModel.isBlocked;
+        final isLoading = userProfileViewModel.isLoading;
 
-                  // Name
-                  Text(
-                    _userData['name'],
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
+        if (isLoading) {
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
 
-                  // Username
-                  Text(
-                    '@${_userData['username']}',
-                    style: const TextStyle(fontSize: 16, color: Colors.white70),
-                  ),
-                ],
-              ),
-            ),
+        return Scaffold(
+          appBar: AppBar(title: Text(context.tr('profile'))),
+          body: SingleChildScrollView(
+            child: Column(
+              children: [
+                // Profile header
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  color: AppColors.primary,
+                  child: Column(
+                    children: [
+                      // Avatar
+                      CircleAvatar(
+                        radius: 50,
+                        backgroundColor: Colors.white,
+                        backgroundImage: userData['avatarUrl'] != null
+                            ? NetworkImage(userData['avatarUrl'])
+                            : null,
+                        child: userData['avatarUrl'] == null
+                            ? Text(
+                                userData['name'][0].toUpperCase(),
+                                style: const TextStyle(
+                                  fontSize: 40,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary,
+                                ),
+                              )
+                            : null,
+                      ),
+                      const SizedBox(height: 16),
 
-            // Bio
-            if (_userData['bio'] != null && _userData['bio'].isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.tr('bio'),
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(_userData['bio'], style: const TextStyle(fontSize: 16)),
-                  ],
+                      // Name
+                      Text(
+                        userData['name'],
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+
+                      // Username
+                      Text(
+                        '@${userData['username']}',
+                        style: const TextStyle(fontSize: 16, color: Colors.white70),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
 
-            const Divider(),
-
-            // Action buttons
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  // Start chat button (only if not blocked)
-                  if (!_isBlocked)
-                    PrimaryButton(
-                      text: context.tr('start_chat'),
-                      onPressed: _startChat,
-                      icon: const Icon(Icons.chat_bubble_outline, color: Colors.white),
-                    ),
-
-                  const SizedBox(height: 16),
-
-                  // Block/Unblock button
-                  OutlinedButton.icon(
-                    onPressed: _toggleBlockUser,
-                    icon: Icon(
-                      _isBlocked ? Icons.person_add : Icons.block,
-                      color: _isBlocked ? AppColors.primary : AppColors.warning,
-                    ),
-                    label: Text(
-                      _isBlocked ? context.tr('unblock_user') : context.tr('block_account'),
-                      style: TextStyle(color: _isBlocked ? AppColors.primary : AppColors.warning),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: _isBlocked ? AppColors.primary : AppColors.warning),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      minimumSize: const Size(double.infinity, 50),
+                // Bio
+                if (userData['bio'] != null && userData['bio'].isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.tr('bio'),
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(userData['bio'], style: const TextStyle(fontSize: 16)),
+                      ],
                     ),
                   ),
-                ],
-              ),
+
+                const Divider(),
+
+                // Action buttons
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      // Start chat button (only if not blocked)
+                      if (!isBlocked)
+                        PrimaryButton(
+                          text: context.tr('start_chat'),
+                          onPressed: _startChat,
+                          icon: const Iconify(Mdi.message_plus, color: AppColors.white),
+                        ),
+
+                      const SizedBox(height: 16),
+
+                      // Block/Unblock button
+                      OutlinedButton.icon(
+                        onPressed: _toggleBlockUser,
+                        icon: Icon(
+                          isBlocked ? Icons.person_add : Icons.block,
+                          color: isBlocked ? AppColors.primary : AppColors.warning,
+                        ),
+                        label: Text(
+                          isBlocked ? context.tr('unblock_user') : context.tr('block_account'),
+                          style: TextStyle(
+                            color: isBlocked ? AppColors.primary : AppColors.warning,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(
+                            color: isBlocked ? AppColors.primary : AppColors.warning,
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          minimumSize: const Size(double.infinity, 50),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
