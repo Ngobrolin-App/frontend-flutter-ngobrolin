@@ -24,7 +24,17 @@ Room Chat: App bar (back button, partner chat name), chat section (chat bubble, 
 Settings: private account, blocked user, option language (eng, id)
 Blocked Account: list pengguna yang telah diblokir
 
+====================== TECH STACK =================================
+Flutter
+WebSocket (Socket.io library)
+Firebase Cloud Messaging
+Arsitektur MVVM
+State management Provider
+Node.js, Express.js 
+PostgreSQL
+Bcrypt
 
+=========================== USER INTERFACE ===============================
 Color Palette:
 Primary – #075E54
 Ini adalah warna utama yang digunakan untuk bagian header, tombol kirim pesan, atau elemen navigasi penting. Memberikan kesan profesional, tegas, dan mudah dikenali.
@@ -43,18 +53,6 @@ Abu-abu muda untuk teks sekunder seperti waktu pesan atau status “dibaca”. T
 Deactive Button - #A8A8A8
 Warning - #A80000
 Background General - #F2F2F2
-
-
-Tech Stack:
-Flutter
-WebSocket (Socket.io library)
-Firebase Cloud Messaging
-Arsitektur MVVM
-State management Provider
-Node.js, Express.js 
-PostgreSQL
-Bcrypt
-
 
 UI Wording (Indonesia dan english):
 NGOBROLIN
@@ -97,3 +95,57 @@ Ya
 Tidak
 Apakah Kamu yakin ingin keluar?
 Apakah Kamu yakin ingin memblokir pengguna ini?
+Lupa Password
+Ganti Password
+
+================= DATABASE =============================
+tbluser
+id (uuid, pk)
+username (varchar, unik)
+name (varchar)
+password (varchar, hasil bcrypt)
+bio (text, nullable)
+avatarUrl(text, nullable)
+language (varchar(5), default 'id')
+isPrivate (boolean, default false)
+createdAt (timestamp)
+updatedAt (timestamp
+
+tblconversations 
+id (uuid, pk)
+type (varchar, default 'private', enum: 'private', 'group')
+name (varchar, nullable) — hanya dipakai kalau grup
+group_image (text, nullable) — foto grup (opsional)
+created_at (timestamp)
+Note: Untuk chat pribadi, name dan group_image bisa NULL.
+
+tblconversation_participants
+id (uuid, pk)
+conversation_id (uuid, fk → conversations.id)
+user_id (uuid, fk → users.id)
+last_read_message_id (uuid, nullable, fk → messages.id) — untuk status read
+joined_at (timestamp)
+Note: Untuk private chat, otomatis akan berisi dua baris data (dua user).
+
+tblmessages
+id (uuid, pk)
+conversation_id (uuid, fk → conversations.id)
+sender_id (uuid, fk → users.id)
+content (text)
+type (varchar, default 'text')
+is_read (boolean, default false) — bisa dihapus nanti kalau tracking per user
+created_at (timestamp)
+Note: Jika ingin tracking read per user, gunakan conversation_participants.last_read_message_id.
+
+tblblocked_users
+id (uuid, pk)
+user_id (uuid, fk → users.id) — yang memblokir
+blocked_user_id (uuid, fk → users.id) — yang diblokir
+created_at (timestamp)
+Note: Server perlu memvalidasi:user A tidak bisa mengirim pesan ke user B jika diblokir; tapi blokir tidak berlaku untuk grup (opsional, bisa kamu desain nanti)
+
+tblfcm_tokens
+id (uuid, pk)
+user_id (uuid, fk → users.id)
+token (text, unik)
+created_at (timestamp)
