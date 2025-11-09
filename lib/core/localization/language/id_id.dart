@@ -38,6 +38,7 @@ const Map<String, String> idID = {
   // Profile
   'edit_profile': 'Ganti Profil',
   'bio': 'Bio',
+  'current_password': 'Password Saat Ini',
   'new_password': 'Password Baru',
   'confirm_new_password': 'Konfirmasi Password Baru',
   'save_changes': 'Simpan Perubahan',
@@ -46,6 +47,7 @@ const Map<String, String> idID = {
   'message': 'Pesan',
   'logout': 'Keluar Akun',
   'change_password': 'Ganti Password',
+  'profile_updated': 'Profil berhasil diperbarui',
 
   // Settings
   'blocked_users': 'Pengguna Diblokir',

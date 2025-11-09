@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// A singleton class that provides a configured Dio instance for API requests.
 class DioClient {
@@ -29,7 +30,9 @@ class DioClient {
       connectTimeout: const Duration(seconds: 30),
       receiveTimeout: const Duration(seconds: 30),
       sendTimeout: const Duration(seconds: 30),
-      headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+      headers: {
+        'Accept': 'application/json',
+      },
     );
 
     // Add logging interceptor
@@ -48,17 +51,16 @@ class DioClient {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          // Get token from secure storage or shared preferences
-          // final token = await _getToken();
-          // if (token != null) {
-          //   options.headers['Authorization'] = 'Bearer $token';
-          // }
+          final prefs = await SharedPreferences.getInstance();
+          final token = prefs.getString('auth_token');
+          if (token != null && token.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
           return handler.next(options);
         },
         onError: (DioException error, handler) {
-          // Handle common errors like 401 Unauthorized
           if (error.response?.statusCode == 401) {
-            // Handle token refresh or logout
+            // Optionally handle token refresh/logout
           }
           return handler.next(error);
         },
@@ -66,12 +68,10 @@ class DioClient {
     );
   }
 
-  /// Update authorization token
   void updateToken(String token) {
     _dio.options.headers['Authorization'] = 'Bearer $token';
   }
 
-  /// Clear authorization token
   void clearToken() {
     _dio.options.headers.remove('Authorization');
   }

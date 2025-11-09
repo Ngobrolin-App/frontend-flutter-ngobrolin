@@ -23,16 +23,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    // Initialize profile data
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final profileViewModel = Provider.of<ProfileViewModel>(context, listen: false);
-      profileViewModel.initWithUserData({
-        'id': 'current_user',
-        'name': 'Current User',
-        'username': 'currentuser',
-        'bio': 'Hello, I am using Ngobrolin!',
-        'avatarUrl': null,
-      });
+      profileViewModel.fetchCurrentProfile();
     });
   }
 
@@ -74,6 +67,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final profileViewModel = Provider.of<ProfileViewModel>(context);
     final userData = profileViewModel.userData;
 
+    // Amankan akses data untuk avatar/name/username
+    final displayName = ((userData['name'] ?? '') as String).trim();
+    final avatarUrl = (userData['avatarUrl'] as String?);
+    final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
+
     return Scaffold(
       appBar: AppBar(
         title: Text(context.tr('profile')),
@@ -102,12 +100,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         CircleAvatar(
                           radius: 50,
                           backgroundColor: Colors.white,
-                          backgroundImage: userData['avatarUrl'] != null
-                              ? NetworkImage(userData['avatarUrl'])
+                          backgroundImage: (avatarUrl != null && avatarUrl.isNotEmpty)
+                              ? NetworkImage(avatarUrl)
                               : null,
-                          child: userData['avatarUrl'] == null
+                          child: (avatarUrl == null || avatarUrl.isEmpty)
                               ? Text(
-                                  userData['name'][0].toUpperCase(),
+                                  initial,
                                   style: const TextStyle(
                                     fontSize: 40,
                                     fontWeight: FontWeight.bold,
@@ -120,7 +118,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                         // Name
                         Text(
-                          userData['name'],
+                          displayName.isNotEmpty ? displayName : 'User',
                           style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -131,7 +129,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                         // Username
                         Text(
-                          '@${userData['username']}',
+                          '@${((userData['username'] ?? '') as String).trim()}',
                           style: const TextStyle(fontSize: 16, color: Colors.white70),
                         ),
                       ],
@@ -162,12 +160,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     child: PrimaryButton(
                       text: context.tr('edit_profile'),
-                      onPressed: () {
-                        Navigator.of(context).push(
+                      onPressed: () async {
+                        await Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (context) => EditProfileScreen(userData: userData),
                           ),
                         );
+                        if (mounted) {
+                          profileViewModel.fetchCurrentProfile();
+                        }
                       },
                     ),
                   ),

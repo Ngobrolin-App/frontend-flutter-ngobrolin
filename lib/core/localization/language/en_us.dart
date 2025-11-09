@@ -38,6 +38,7 @@ const Map<String, String> enUS = {
   // Profile
   'edit_profile': 'Edit Profile',
   'bio': 'Bio',
+  'current_password': 'Current Password',
   'new_password': 'New Password',
   'confirm_new_password': 'Confirm New Password',
   'save_changes': 'Save Changes',
@@ -46,6 +47,7 @@ const Map<String, String> enUS = {
   'message': 'Message',
   'logout': 'Logout',
   'change_password': 'Change Password',
+  'profile_updated': 'Profile updated successfully',
 
   // Settings
   'blocked_users': 'Blocked Users',

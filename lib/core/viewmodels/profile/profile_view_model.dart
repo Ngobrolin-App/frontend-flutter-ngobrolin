@@ -26,12 +26,11 @@ class ProfileViewModel extends BaseViewModel {
   }
 
   /// Fetches user profile data from the API
-  Future<bool> fetchUserProfile(String userId) async {
+  Future<bool> fetchCurrentProfile() async {
     return await runBusyFuture(() async {
           try {
-            final user = await _userRepository.getUserById(userId);
+            final user = await _userRepository.getCurrentProfile();
 
-            // Convert to map format for compatibility with existing UI
             _userData = {
               'id': user.id,
               'name': user.name,
@@ -50,7 +49,6 @@ class ProfileViewModel extends BaseViewModel {
         false;
   }
 
-  /// Updates user profile information
   Future<bool> updateProfile({
     String? name,
     String? bio,

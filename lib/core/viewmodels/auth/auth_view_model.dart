@@ -1,6 +1,7 @@
 import '../../models/user.dart';
 import '../../repositories/auth_repository.dart';
 import '../base_view_model.dart';
+import '../../services/api/dio_client.dart';
 
 class AuthViewModel extends BaseViewModel {
   final AuthRepository _authRepository;
@@ -27,6 +28,9 @@ class AuthViewModel extends BaseViewModel {
       if (_authenticated) {
         _token = await _authRepository.getToken();
         _user = await _authRepository.getCurrentUser();
+        if (_token != null && _token!.isNotEmpty) {
+          DioClient().updateToken(_token!);
+        }
       }
     } catch (e) {
       setError(e.toString());
@@ -38,17 +42,20 @@ class AuthViewModel extends BaseViewModel {
   /// Signs in a user with username and password
   Future<bool> signIn(String username, String password) async {
     return await runBusyFuture(() async {
-          try {
-            final authResponse = await _authRepository.signIn(username, password);
-            _token = authResponse.token;
-            _user = authResponse.user;
-            _authenticated = true;
-            return true;
-          } catch (e) {
-            setError(e.toString());
-            return false;
-          }
-        }) ??
+      try {
+        final authResponse = await _authRepository.signIn(username, password);
+        _token = authResponse.token;
+        _user = authResponse.user;
+        _authenticated = true;
+        if (_token != null) {
+          DioClient().updateToken(_token!);
+        }
+        return true;
+      } catch (e) {
+        setError(e.toString());
+        return false;
+      }
+    }) ??
         false;
   }
 
@@ -95,6 +102,7 @@ class AuthViewModel extends BaseViewModel {
     runBusyFuture(() async {
       try {
         await _authRepository.signOut();
+        DioClient().clearToken();
         _token = null;
         _authenticated = false;
         _user = null;

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/providers/auth_provider.dart';
 import '../../routes/app_routes.dart';
 import '../../theme/app_colors.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -26,6 +27,8 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    // Inisialisasi status auth (ambil token dari SharedPreferences)
+    await authProvider.init();
 
     // Check if user is authenticated
     if (authProvider.authenticated) {
@@ -46,9 +49,11 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<bool> _isFirstTimeUser() async {
-    // TODO: Implement first time user check with SharedPreferences
-    // For now, always return true to show onboarding
-    return true;
+    // Implement first time user check with SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    // Jika belum ada flag onboarding_completed, anggap first-time (true)
+    final completed = prefs.getBool('onboarding_completed') ?? false;
+    return !completed;
   }
 
   @override

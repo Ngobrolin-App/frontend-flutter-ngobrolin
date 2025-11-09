@@ -3,6 +3,8 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/material_symbols.dart';
+import 'package:ngobrolin_app/core/viewmodels/profile/profile_view_model.dart';
+import 'package:provider/provider.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/widgets/buttons/primary_button.dart';
 import '../../../core/widgets/inputs/custom_text_field.dart';
@@ -24,6 +26,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _bioController;
   late TextEditingController _passwordController;
   late TextEditingController _confirmPasswordController;
+  late TextEditingController _currentPasswordController;
 
   File? _imageFile;
   bool _isLoading = false;
@@ -36,6 +39,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _bioController = TextEditingController(text: widget.userData['bio']);
     _passwordController = TextEditingController();
     _confirmPasswordController = TextEditingController();
+    _currentPasswordController = TextEditingController();
   }
 
   @override
@@ -44,6 +48,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _bioController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _currentPasswordController.dispose();
     super.dispose();
   }
 
@@ -65,19 +70,25 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       });
 
       try {
-        // TODO: Implement API call to update profile
-        await Future.delayed(const Duration(seconds: 1)); // Simulate API call
+        final profileVM = Provider.of<ProfileViewModel>(context, listen: false);
+
+        final updated = await profileVM.updateProfile(
+          name: _nameController.text.trim(),
+          bio: _bioController.text.trim(),
+          avatarUrl: _imageFile?.path,
+          newPassword: _changePassword ? _passwordController.text.trim() : null,
+          currentPassword: _changePassword ? _currentPasswordController.text.trim() : null,
+        );
 
         if (!mounted) return;
 
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('profile_updated')), backgroundColor: Colors.green),
-        );
-
-        Navigator.of(context).pop();
+        if (updated) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.tr('profile_updated')), backgroundColor: Colors.green),
+          );
+          Navigator.of(context).pop();
+        }
       } catch (e) {
-        // Show error message
         if (!mounted) return;
         ScaffoldMessenger.of(
           context,
@@ -186,6 +197,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
                 // Password fields (only shown if change password is selected)
                 if (_changePassword) ...[
+                  const SizedBox(height: 16),
+                  PasswordField(
+                    controller: _currentPasswordController,
+                    labelText: context.tr('current_password'),
+                    validator: (value) {
+                      if (_changePassword) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your current password';
+                        }
+                      }
+                      return null;
+                    },
+                  ),
                   const SizedBox(height: 16),
                   PasswordField(
                     controller: _passwordController,

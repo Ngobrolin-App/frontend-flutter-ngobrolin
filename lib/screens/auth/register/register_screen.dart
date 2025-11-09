@@ -47,8 +47,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
           name: _nameController.text,
           password: _passwordController.text,
         );
-
-        // Also update the legacy provider
+    
+        // Also update the legacy provider (sinkronisasi state)
         await authProvider.signUp(_usernameController.text, _passwordController.text);
 
         if (!mounted) return;

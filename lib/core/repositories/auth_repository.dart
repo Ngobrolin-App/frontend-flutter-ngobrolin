@@ -1,4 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import '../models/auth_response.dart';
 import '../models/user.dart';
 import '../services/api/api_exception.dart';
@@ -109,30 +110,25 @@ class AuthRepository {
   Future<User?> getCurrentUser() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final userJson = prefs.getString(_userKey);
-      if (userJson == null) return null;
+      final userJsonStr = prefs.getString(_userKey);
+      if (userJsonStr == null) return null;
 
-      return User.fromJson(
-        Map<String, dynamic>.from(
-          // ignore: unnecessary_cast
-          (prefs.getString(_userKey) as String) as Map<String, dynamic>,
-        ),
-      );
-    } catch (e) {
+      final Map<String, dynamic> decoded = jsonDecode(userJsonStr) as Map<String, dynamic>;
+      return User.fromJson(decoded);
+    } catch (_) {
       return null;
     }
+  }
+
+  Future<void> _saveAuthData(AuthResponse authResponse) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_tokenKey, authResponse.token);
+    await prefs.setString(_userKey, jsonEncode(authResponse.user.toJson()));
   }
 
   /// Check if the user is authenticated
   Future<bool> isAuthenticated() async {
     final token = await getToken();
     return token != null;
-  }
-
-  /// Save authentication data to shared preferences
-  Future<void> _saveAuthData(AuthResponse authResponse) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_tokenKey, authResponse.token);
-    await prefs.setString(_userKey, authResponse.user.toJson().toString());
   }
 }

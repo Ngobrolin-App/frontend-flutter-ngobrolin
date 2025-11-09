@@ -10,6 +10,7 @@ class SocketProvider extends ChangeNotifier {
 
   void init({String? token}) {
     final baseUrl = dotenv.env['WS_BASE_URL'] ?? 'ws://localhost:3000';
+    print('baseUrl: $baseUrl');
     _socket.connect(url: baseUrl, token: token);
 
     _socket.on('connect', (_) {

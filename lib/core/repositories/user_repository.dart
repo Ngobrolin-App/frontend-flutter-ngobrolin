@@ -1,6 +1,7 @@
 import '../models/user.dart';
 import '../services/api/api_exception.dart';
 import '../services/api/api_service.dart';
+import 'package:dio/dio.dart';
 
 /// Repository for user related operations
 class UserRepository {
@@ -8,20 +9,28 @@ class UserRepository {
 
   UserRepository({ApiService? apiService}) : _apiService = apiService ?? ApiService();
 
-  /// Get user profile by ID
+  /// Get user profile by ID (backend expects POST /users/get-user with body)
   Future<User> getUserById(String userId) async {
     try {
-      final response = await _apiService.get<Map<String, dynamic>>('/users/$userId');
-      return User.fromJson(response);
+      final response = await _apiService.post<Map<String, dynamic>>('/users/get-user', data: {'userId': userId});
+      return User.fromJson(response['user'] as Map<String, dynamic>);
     } catch (e) {
-      if (e is ApiException) {
-        rethrow;
-      }
+      if (e is ApiException) rethrow;
       throw ApiException(message: e.toString());
     }
   }
 
-  /// Update user profile
+  /// Update user profile details (name, bio, isPrivate)
+  Future<User> getCurrentProfile() async {
+    try {
+      final response = await _apiService.post<Map<String, dynamic>>('/users/profile/get');
+      return User.fromJson(response['user'] as Map<String, dynamic>);
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(message: e.toString());
+    }
+  }
+
   Future<User> updateProfile({
     required String userId,
     String? name,
@@ -34,51 +43,46 @@ class UserRepository {
       if (bio != null) data['bio'] = bio;
       if (isPrivate != null) data['isPrivate'] = isPrivate;
 
-      final response = await _apiService.put<Map<String, dynamic>>('/users/$userId', data: data);
-
-      return User.fromJson(response);
+      final response =
+          await _apiService.post<Map<String, dynamic>>('/users/profile/update', data: data);
+      return User.fromJson(response['user'] as Map<String, dynamic>);
     } catch (e) {
-      if (e is ApiException) {
-        rethrow;
-      }
+      if (e is ApiException) rethrow;
       throw ApiException(message: e.toString());
     }
   }
 
-  /// Update user password
+  /// Update user password via the same edit-profile endpoint
   Future<bool> updatePassword({
     required String userId,
     required String currentPassword,
     required String newPassword,
   }) async {
     try {
-      await _apiService.put<Map<String, dynamic>>(
-        '/users/$userId/password',
+      await _apiService.post<Map<String, dynamic>>(
+        '/users/profile/update',
         data: {'currentPassword': currentPassword, 'newPassword': newPassword},
       );
       return true;
     } catch (e) {
-      if (e is ApiException) {
-        rethrow;
-      }
+      if (e is ApiException) rethrow;
       throw ApiException(message: e.toString());
     }
   }
 
-  /// Upload profile picture
+  /// Upload profile picture using multipart/form-data on edit-profile endpoint
   Future<String> uploadProfilePicture(String userId, String filePath) async {
     try {
-      // TODO: Implement file upload
-      // This would typically use FormData with Dio
-      final response = await _apiService.post<Map<String, dynamic>>(
-        '/users/$userId/avatar',
-        data: {'filePath': filePath},
-      );
-      return response['avatarUrl'] as String;
+      final formData = FormData.fromMap({
+        'avatar': await MultipartFile.fromFile(filePath),
+      });
+
+      final response =
+          await _apiService.post<Map<String, dynamic>>('/users/profile/update', data: formData);
+      final user = User.fromJson(response['user'] as Map<String, dynamic>);
+      return user.avatarUrl ?? '';
     } catch (e) {
-      if (e is ApiException) {
-        rethrow;
-      }
+      if (e is ApiException) rethrow;
       throw ApiException(message: e.toString());
     }
   }
