@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/material_symbols.dart';
@@ -20,21 +22,37 @@ class SearchUserScreen extends StatefulWidget {
 class _SearchUserScreenState extends State<SearchUserScreen> {
   final TextEditingController _searchController = TextEditingController();
   bool _isSearching = false;
+  Timer? _debounce;
+
+  // Scroll controller for pagination
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    // Initialize search with empty query to get random users
+    // Mulai dengan query kosong agar backend mengembalikan semua user
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final searchViewModel = Provider.of<SearchUserViewModel>(context, listen: false);
-      // searchViewModel.searchUsers();
-      searchViewModel.searchUsersDummy();
+      searchViewModel.setSearchQuery('');
+
+      // Attach scroll listener for load more
+      _scrollController.addListener(() {
+        final vm = Provider.of<SearchUserViewModel>(context, listen: false);
+        if (_scrollController.position.pixels >=
+                _scrollController.position.maxScrollExtent - 200 &&
+            vm.hasMore &&
+            !vm.isLoadingMore) {
+          vm.loadMore();
+        }
+      });
     });
   }
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -56,8 +74,12 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
   }
 
   void _updateSearchQuery(String query) {
-    final searchViewModel = Provider.of<SearchUserViewModel>(context, listen: false);
-    searchViewModel.setSearchQuery(query);
+    // Debounce 400ms sebelum memanggil search
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 400), () {
+      final searchViewModel = Provider.of<SearchUserViewModel>(context, listen: false);
+      searchViewModel.setSearchQuery(query);
+    });
   }
 
   @override
@@ -66,69 +88,82 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
     final users = searchViewModel.users;
 
     return Scaffold(
-      appBar: AppBar(
-        title: _isSearching
-            ? TextField(
-                controller: _searchController,
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: context.tr('search_users'),
-                  border: InputBorder.none,
-                  hintStyle: const TextStyle(color: Colors.white70),
-                ),
-                style: const TextStyle(color: Colors.white),
-                onChanged: _updateSearchQuery,
-              )
-            : Text(context.tr('users')),
-        actions: [
-          _isSearching
-              ? IconButton(
-                  icon: Iconify(MaterialSymbols.close_rounded, color: AppColors.white),
-                  onPressed: _stopSearch,
-                )
-              : IconButton(
-                  icon: Iconify(Ri.search_2_line, color: AppColors.white),
-                  onPressed: _startSearch,
-                ),
-        ],
-      ),
+      appBar: AppBar(title: Text(context.tr('users'))),
       body: searchViewModel.isLoading
           ? const Center(child: CircularProgressIndicator())
-          : ListView.separated(
-              itemCount: users.length,
-              separatorBuilder: (context, index) => const Divider(height: 1, indent: 72),
-              itemBuilder: (context, index) {
-                final user = users[index];
-                return UserListItem(
-                  id: user['id'],
-                  name: user['name'],
-                  username: user['username'],
-                  avatarUrl: user['avatarUrl'],
-                  onTap: () {
-                    Navigator.of(context).pushNamed(
-                      AppRoutes.userProfile,
-                      arguments: {
-                        'userId': user['id'],
-                        'name': user['name'],
-                        'username': user['username'],
-                        'avatarUrl': user['avatarUrl'],
-                      },
-                    );
-                  },
-                  onActionTap: () {
-                    Navigator.of(context).pushNamed(
-                      AppRoutes.chat,
-                      arguments: {
-                        'userId': user['id'],
-                        'name': user['name'],
-                        'avatarUrl': user['avatarUrl'],
-                      },
-                    );
-                  },
-                  actionWidget: Iconify(Mdi.message_plus_outline, color: AppColors.white, size: 16),
-                  actionText: context.tr('message'),
-                );
-              },
+          : Column(
+              children: [
+                // Search bar di bawah AppBar
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: context.tr('search_users'),
+                      prefixIcon: const Icon(Icons.search),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(24)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    ),
+                    onChanged: _updateSearchQuery,
+                  ),
+                ),
+                Expanded(
+                  child: ListView.separated(
+                    controller: _scrollController,
+                    itemCount: users.length + (searchViewModel.isLoadingMore ? 1 : 0),
+                    separatorBuilder: (context, index) => const Divider(height: 1, indent: 72),
+                    itemBuilder: (context, index) {
+                      if (index >= users.length) {
+                        return const Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Center(child: CircularProgressIndicator()),
+                        );
+                      }
+
+                      final user = users[index];
+                      // Amankan nilai yang mungkin null/kosong
+                      final rawName = (user['name'] as String? ?? '').trim();
+                      final rawUsername = (user['username'] as String? ?? '').trim();
+                      final displayName = rawName.isNotEmpty ? rawName : rawUsername;
+                      final avatarUrl = user['avatarUrl'] as String?;
+
+                      return UserListItem(
+                        id: user['id'] as String,
+                        name: displayName,
+                        username: rawUsername,
+                        avatarUrl: avatarUrl,
+                        onTap: () {
+                          Navigator.of(context).pushNamed(
+                            AppRoutes.userProfile,
+                            arguments: {
+                              'userId': user['id'],
+                              'name': displayName,
+                              'username': rawUsername,
+                              'avatarUrl': avatarUrl,
+                            },
+                          );
+                        },
+                        onActionTap: () {
+                          Navigator.of(context).pushNamed(
+                            AppRoutes.chat,
+                            arguments: {
+                              'userId': user['id'],
+                              'name': displayName,
+                              'avatarUrl': avatarUrl,
+                            },
+                          );
+                        },
+                        actionWidget: Iconify(
+                          Mdi.message_plus_outline,
+                          color: AppColors.white,
+                          size: 16,
+                        ),
+                        actionText: context.tr('message'),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
     );
   }

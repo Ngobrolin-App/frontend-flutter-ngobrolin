@@ -14,6 +14,7 @@ class UserProfileViewModel extends BaseViewModel {
     'username': '',
     'bio': '',
     'avatarUrl': null,
+    'isPrivate': false,
   };
 
   Map<String, dynamic> get userData => _userData;
@@ -41,6 +42,7 @@ class UserProfileViewModel extends BaseViewModel {
       'username': username,
       'bio': bio ?? 'Hello, I am using Ngobrolin!',
       'avatarUrl': avatarUrl,
+      'isPrivate': false, // default sebelum fetch
     };
     _checkIfUserBlocked();
     notifyListeners();
@@ -58,6 +60,7 @@ class UserProfileViewModel extends BaseViewModel {
           'username': user.username,
           'bio': user.bio ?? 'Hello, I am using Ngobrolin!',
           'avatarUrl': user.avatarUrl,
+          'isPrivate': user.isPrivate,
         };
 
         await _checkIfUserBlocked();

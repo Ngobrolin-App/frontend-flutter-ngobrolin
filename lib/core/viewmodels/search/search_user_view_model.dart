@@ -11,49 +11,84 @@ class SearchUserViewModel extends BaseViewModel {
   String _searchQuery = '';
   String get searchQuery => _searchQuery;
 
+  // Pagination state
+  int _page = 1;
+  final int _limit = 20;
+  bool _hasMore = true;
+  bool _isLoadingMore = false;
+  bool get isLoadingMore => _isLoadingMore;
+  bool get hasMore => _hasMore;
+
   SearchUserViewModel({UserRepository? userRepository})
-    : _userRepository = userRepository ?? UserRepository();
+      : _userRepository = userRepository ?? UserRepository();
 
   /// Sets the search query and triggers a search
   void setSearchQuery(String query) {
     _searchQuery = query;
+    // Reset pagination when query changes
+    _page = 1;
+    _hasMore = true;
     searchUsers();
   }
 
-  /// Searches for users based on the current query
+  /// Searches for users based on the current query (first page)
   Future<bool> searchUsers() async {
     return await runBusyFuture(() async {
-          try {
-            List<User> userResults;
+      try {
+        final userResults = await _userRepository.searchUsers(_searchQuery, page: _page, limit: _limit);
 
-            if (_searchQuery.isEmpty) {
-              // If search query is empty, return random users
-              userResults = await _userRepository.getRandomUsers();
-            } else {
-              // Search users based on query
-              userResults = await _userRepository.searchUsers(_searchQuery);
-            }
+        _users = userResults
+            .map(
+              (user) => {
+                'id': user.id,
+                'name': user.name,
+                'username': user.username,
+                'bio': user.bio ?? '',
+                'avatarUrl': user.avatarUrl,
+              },
+            )
+            .toList();
 
-            // Convert to map format for compatibility with existing UI
-            _users = userResults
-                .map(
-                  (user) => {
-                    'id': user.id,
-                    'name': user.name,
-                    'username': user.username,
-                    'bio': user.bio ?? '',
-                    'avatarUrl': user.avatarUrl,
-                  },
-                )
-                .toList();
+        // Determine if more pages are available
+        _hasMore = userResults.length == _limit;
+        return true;
+      } catch (e) {
+        setError(e.toString());
+        return false;
+      }
+    }) ?? false;
+  }
 
-            return true;
-          } catch (e) {
-            setError(e.toString());
-            return false;
-          }
-        }) ??
-        false;
+  /// Loads next page and appends to list
+  Future<void> loadMore() async {
+    if (_isLoadingMore || !_hasMore) return;
+    _isLoadingMore = true;
+    notifyListeners();
+
+    try {
+      _page += 1;
+      final userResults = await _userRepository.searchUsers(_searchQuery, page: _page, limit: _limit);
+
+      final mapped = userResults
+          .map((user) => {
+                'id': user.id,
+                'name': user.name,
+                'username': user.username,
+                'bio': user.bio ?? '',
+                'avatarUrl': user.avatarUrl,
+              })
+          .toList();
+
+      _users.addAll(mapped);
+      _hasMore = userResults.length == _limit;
+    } catch (e) {
+      setError(e.toString());
+      // Rollback page increment on error
+      _page = (_page > 1) ? _page - 1 : 1;
+    } finally {
+      _isLoadingMore = false;
+      notifyListeners();
+    }
   }
 
   /// Searches for users with dummy data for testing purposes

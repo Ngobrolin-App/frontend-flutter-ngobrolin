@@ -49,16 +49,16 @@ class _LoginScreenState extends State<LoginScreen> {
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(authViewModel.errorMessage ?? 'Login failed'),
+              content: Text(authViewModel.errorMessage ?? context.tr('login_failed')),
               backgroundColor: AppColors.warning,
             ),
           );
         }
       } catch (e) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: AppColors.warning),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: AppColors.warning));
       }
     }
   }
@@ -108,7 +108,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     prefixIcon: const Icon(Icons.person_outline),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter your username';
+                        return context.tr('please_enter_username');
                       }
                       return null;
                     },
@@ -123,7 +123,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     labelText: context.tr('password'),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter your password';
+                        return context.tr('please_enter_password');
                       }
                       return null;
                     },

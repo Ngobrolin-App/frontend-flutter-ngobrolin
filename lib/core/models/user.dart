@@ -54,6 +54,22 @@ class User extends Equatable {
     );
   }
 
+  /// Safely creates a User from a minimal JSON (timestamps optional)
+  static User fromMinimalJson(Map<String, dynamic> json) {
+    final createdAtStr = json['createdAt'] as String?;
+    final updatedAtStr = json['updatedAt'] as String?;
+    return User(
+      id: json['id'] as String,
+      username: json['username'] as String,
+      name: json['name'] as String,
+      bio: json['bio'] as String?,
+      avatarUrl: json['avatarUrl'] as String?,
+      isPrivate: (json['isPrivate'] as bool?) ?? false,
+      createdAt: createdAtStr != null ? DateTime.parse(createdAtStr) : DateTime.now(),
+      updatedAt: updatedAtStr != null ? DateTime.parse(updatedAtStr) : DateTime.now(),
+    );
+  }
+
   @override
   List<Object?> get props => [id, username, name, bio, avatarUrl, isPrivate, createdAt, updatedAt];
 }

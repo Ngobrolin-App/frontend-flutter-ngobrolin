@@ -47,7 +47,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           name: _nameController.text,
           password: _passwordController.text,
         );
-    
+
         // Also update the legacy provider (sinkronisasi state)
         await authProvider.signUp(_usernameController.text, _passwordController.text);
 
@@ -67,7 +67,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           // Show error message if registration failed
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(authViewModel.errorMessage ?? 'Registration failed'),
+              content: Text(authViewModel.errorMessage ?? context.tr('registration_failed')),
               backgroundColor: AppColors.warning,
             ),
           );
@@ -144,10 +144,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     prefixIcon: const Icon(Icons.alternate_email),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter a username';
+                        return context.tr('please_enter_username');
                       }
                       if (value.contains(' ')) {
-                        return 'Username cannot contain spaces';
+                        return context.tr('username_cannot_contain_spaces');
                       }
                       return null;
                     },
@@ -162,10 +162,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     labelText: context.tr('password'),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter a password';
+                        return context.tr('please_enter_password');
                       }
                       if (value.length < 6) {
-                        return 'Password must be at least 6 characters';
+                        return context.tr('password_must_be_at_least_6_characters');
                       }
                       return null;
                     },
@@ -180,10 +180,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     labelText: context.tr('confirm_password'),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please confirm your password';
+                        return context.tr('please_confirm_your_password');
                       }
                       if (value != _passwordController.text) {
-                        return 'Passwords do not match';
+                        return context.tr('passwords_do_not_match');
                       }
                       return null;
                     },

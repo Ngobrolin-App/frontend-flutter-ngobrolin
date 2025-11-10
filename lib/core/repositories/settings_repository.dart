@@ -38,8 +38,10 @@ class SettingsRepository {
   /// Get private account setting
   Future<bool> getPrivateAccountSetting() async {
     try {
-      final response = await _apiService.get<Map<String, dynamic>>('/settings/privacy');
-      return response['isPrivate'] as bool;
+      // Backend menggunakan POST /users/profile/get
+      final response = await _apiService.post<Map<String, dynamic>>('/users/profile/get');
+      final user = response['user'] as Map<String, dynamic>? ?? {};
+      return (user['isPrivate'] as bool?) ?? false;
     } catch (e) {
       if (e is ApiException) {
         rethrow;
@@ -51,8 +53,9 @@ class SettingsRepository {
   /// Update private account setting
   Future<bool> updatePrivateAccountSetting(bool isPrivate) async {
     try {
-      await _apiService.put<Map<String, dynamic>>(
-        '/settings/privacy',
+      // Backend menggunakan POST /users/profile/update
+      await _apiService.post<Map<String, dynamic>>(
+        '/users/profile/update',
         data: {'isPrivate': isPrivate},
       );
       return true;
@@ -64,12 +67,33 @@ class SettingsRepository {
     }
   }
 
-  /// Get blocked users
-  Future<List<User>> getBlockedUsers() async {
+  /// Get blocked users (POST /users/blocked/list) with pagination
+  Future<List<User>> getBlockedUsers({int page = 1, int limit = 20}) async {
     try {
-      final response = await _apiService.get<List<dynamic>>('/settings/blocked-users');
+      final response = await _apiService.post<Map<String, dynamic>>(
+        '/users/blocked/list',
+        data: {
+          'page': page,
+          'limit': limit,
+        },
+      );
 
-      return (response).map((item) => User.fromJson(item as Map<String, dynamic>)).toList();
+      // Tahan terhadap variasi payload: `blockedUsers`, `users`, atau `data`
+      final dynamicRawList =
+          response['blockedUsers'] ?? response['users'] ?? response['data'] ?? [];
+
+      final list = (dynamicRawList is List) ? dynamicRawList : <dynamic>[];
+
+      return list
+          .map((item) {
+            final map = (item is Map<String, dynamic>) ? item : <String, dynamic>{};
+            // Item mungkin langsung user, atau dibungkus dalam `blockedUser`
+            final userJson = map.containsKey('blockedUser')
+                ? (map['blockedUser'] as Map<String, dynamic>? ?? <String, dynamic>{})
+                : map;
+            return User.fromMinimalJson(userJson);
+          })
+          .toList();
     } catch (e) {
       if (e is ApiException) {
         rethrow;
@@ -78,13 +102,10 @@ class SettingsRepository {
     }
   }
 
-  /// Block a user
+  /// Block a user (POST /users/block)
   Future<bool> blockUser(String userId) async {
     try {
-      await _apiService.post<Map<String, dynamic>>(
-        '/settings/blocked-users',
-        data: {'userId': userId},
-      );
+      await _apiService.post<Map<String, dynamic>>('/users/block', data: {'userId': userId});
       return true;
     } catch (e) {
       if (e is ApiException) {
@@ -94,10 +115,10 @@ class SettingsRepository {
     }
   }
 
-  /// Unblock a user
+  /// Unblock a user (POST /users/unblock)
   Future<bool> unblockUser(String userId) async {
     try {
-      await _apiService.delete<Map<String, dynamic>>('/settings/blocked-users/$userId');
+      await _apiService.post<Map<String, dynamic>>('/users/unblock', data: {'userId': userId});
       return true;
     } catch (e) {
       if (e is ApiException) {
@@ -107,15 +128,16 @@ class SettingsRepository {
     }
   }
 
-  /// Check if a user is blocked
+  /// Check blocked (dua arah) via /users/get-user: 403 => blocked
   Future<bool> isUserBlocked(String userId) async {
     try {
-      final response = await _apiService.get<Map<String, dynamic>>(
-        '/settings/blocked-users/$userId/status',
-      );
-      return response['isBlocked'] as bool;
+      await _apiService.post<Map<String, dynamic>>('/users/get-user', data: {'userId': userId});
+      return false;
     } catch (e) {
       if (e is ApiException) {
+        if (e.statusCode == 403) {
+          return true;
+        }
         rethrow;
       }
       throw ApiException(message: e.toString());

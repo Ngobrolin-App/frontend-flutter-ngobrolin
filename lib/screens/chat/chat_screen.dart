@@ -31,8 +31,24 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     // Initialize chat with the user
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final chatViewModel = Provider.of<ChatViewModel>(context, listen: false);
+      final settingsViewModel = Provider.of<SettingsViewModel>(context, listen: false);
+
+      // Cek blokir (dua arah). Jika diblokir, jangan mulai chat.
+      final isBlocked = await settingsViewModel.isUserBlocked(widget.userId);
+      if (isBlocked) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.tr('user_is_blocked_cannot_start_chat')),
+            backgroundColor: Colors.red,
+          ),
+        );
+        Navigator.of(context).pop();
+        return;
+      }
+
       chatViewModel.initChat(widget.userId, widget.name, widget.avatarUrl);
 
       // Scroll to bottom when screen loads
@@ -85,7 +101,7 @@ class _ChatScreenState extends State<ChatScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to send message: ${e.toString()}'),
+          content: Text('${context.tr('failed_to_send_message')}: ${e.toString()}'),
           backgroundColor: AppColors.warning,
         ),
       );
@@ -187,7 +203,7 @@ class _ChatScreenState extends State<ChatScreen> {
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 4,
                   offset: const Offset(0, -2),
                 ),

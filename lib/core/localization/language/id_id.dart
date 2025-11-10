@@ -24,6 +24,16 @@ const Map<String, String> idID = {
   'already_have_account': 'Sudah memiliki akun?',
   'login': 'Masuk',
   'forgot_password': 'Lupa Password?',
+  'registration_successful': 'Pendaftaran Berhasil',
+  'registration_failed': 'Pendaftaran Gagal',
+  'login_failed': 'Login Gagal',
+  'please_enter_name': 'Silakan masukkan nama Anda',
+  'please_enter_username': 'Silakan masukkan username Anda',
+  'please_enter_password': 'Silakan masukkan password Anda',
+  'username_cannot_contain_spaces': 'Username tidak dapat mengandung spasi',
+  'password_must_be_at_least_6_characters': 'Password harus minimal 6 karakter',
+  'please_confirm_your_password': 'Silakan konfirmasi password Anda',
+  'passwords_do_not_match': 'Password tidak cocok',
 
   // Main Navigation
   'chats': 'Obrolan',
@@ -65,18 +75,25 @@ const Map<String, String> idID = {
   'unblock': 'Batal Blokir',
   'unblock_user': 'Batal Blokir',
   'unblock_user_confirmation': 'Apakah Kamu yakin ingin membatalkan blokir pengguna ini?',
+  'user_unblocked': 'Pengguna dibatalkan blokir',
+  'about_ngobrolin': 'Tentang Ngobrolin',
+  'about_ngobrolin_description':
+      'Ngobrolin adalah aplikasi obrolan yang memungkinkan pengguna untuk berbagi cerita, berinteraksi, dan tetap dekat dengan siapa pun.',
+  '2025_ngobrolin': '@2025 Ngobrolin',
 
   // Chat
   'type_message': 'Ketik pesan...',
   'no_messages': 'Belum ada pesan',
   'no_chats': 'Belum ada obrolan',
   'start_new_chat': 'Mulai obrolan baru',
+  'user_is_blocked_cannot_start_chat': 'Pengguna ini diblokir. Kamu tidak bisa memulai obrolan.',
 
   // Errors
   'error_occurred': 'Terjadi kesalahan',
   'try_again': 'Coba lagi',
   'no_internet': 'Tidak ada koneksi internet',
   'check_connection': 'Silakan periksa koneksi Anda dan coba lagi',
+  'failed_to_send_message': 'Gagal mengirim pesan',
 
   // Misc
   'cancel': 'Batal',
@@ -86,4 +103,10 @@ const Map<String, String> idID = {
   'back': 'Kembali',
   'search': 'Cari',
   'loading': 'Memuat...',
+
+  // Pesan khusus block/unblock dengan nama
+  'has_been_unblocked': 'telah dibatalkan blokir',
+  'failed_to_unblock': 'Gagal membatalkan blokir',
+  'has_been_blocked': 'telah diblokir',
+  'failed_to_block': 'Gagal memblokir',
 };

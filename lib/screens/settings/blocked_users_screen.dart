@@ -21,8 +21,7 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
     // Fetch blocked users when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final blockedUsersViewModel = Provider.of<BlockedUsersViewModel>(context, listen: false);
-      // blockedUsersViewModel.fetchBlockedUsers();
-      blockedUsersViewModel.fetchBlockedUsersDummy();
+      blockedUsersViewModel.fetchBlockedUsers();
     });
   }
 
@@ -38,40 +37,50 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
           body: isLoading
               ? const Center(child: CircularProgressIndicator())
               : blockedUsers.isEmpty
-              ? _buildEmptyState(context)
-              : ListView.separated(
-                  itemCount: blockedUsers.length,
-                  separatorBuilder: (context, index) => const Divider(height: 1),
-                  itemBuilder: (context, index) {
-                    final user = blockedUsers[index];
-                    return ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: AppColors.lightGrey,
-                        backgroundImage: user['avatarUrl'] != null
-                            ? NetworkImage(user['avatarUrl'])
-                            : null,
-                        child: user['avatarUrl'] == null
-                            ? Text(
-                                user['name'][0].toUpperCase(),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.primary,
-                                ),
-                              )
-                            : null,
-                      ),
-                      title: Text(user['name']),
-                      subtitle: Text('@${user['username']}'),
-                      trailing: TextButton(
-                        onPressed: () => _unblockUser(context, user['id'], blockedUsersViewModel),
-                        child: Text(
-                          context.tr('unblock'),
-                          style: const TextStyle(color: AppColors.primary),
-                        ),
-                      ),
-                    );
-                  },
-                ),
+                  ? _buildEmptyState(context)
+                  : ListView.separated(
+                      itemCount: blockedUsers.length,
+                      separatorBuilder: (context, index) => const Divider(height: 1),
+                      itemBuilder: (context, index) {
+                        final user = blockedUsers[index];
+
+                        // Amankan nilai yang mungkin null/kosong
+                        final rawName = (user['name'] as String? ?? '').trim();
+                        final rawUsername = (user['username'] as String? ?? '').trim();
+                        final displayName = rawName.isNotEmpty ? rawName : rawUsername;
+                        final avatarUrl = (user['avatarUrl'] as String?)?.trim();
+
+                        return ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: AppColors.lightGrey,
+                            backgroundImage: (avatarUrl != null && avatarUrl.isNotEmpty)
+                                ? NetworkImage(avatarUrl)
+                                : null,
+                            child: (avatarUrl == null || avatarUrl.isEmpty)
+                                ? Text(
+                                    displayName.isNotEmpty
+                                        ? displayName[0].toUpperCase()
+                                        : '?',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.primary,
+                                    ),
+                                  )
+                                : null,
+                          ),
+                          title: Text(displayName.isNotEmpty ? displayName : rawUsername),
+                          subtitle: Text(rawUsername.isNotEmpty ? '@$rawUsername' : ''),
+                          trailing: TextButton(
+                            onPressed: () =>
+                                _unblockUser(context, user['id'] as String, blockedUsersViewModel),
+                            child: Text(
+                              context.tr('unblock'),
+                              style: const TextStyle(color: AppColors.primary),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
         );
       },
     );

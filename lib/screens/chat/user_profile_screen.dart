@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ngobrolin_app/core/viewmodels/auth/auth_view_model.dart';
 import 'package:provider/provider.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/mdi.dart';
@@ -31,7 +32,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   void initState() {
     super.initState();
 
-    // Initialize the ViewModel with user data
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final userProfileViewModel = Provider.of<UserProfileViewModel>(context, listen: false);
       userProfileViewModel.initWithUserData(
@@ -40,6 +40,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         username: widget.username,
         avatarUrl: widget.avatarUrl,
       );
+      // Ambil data terbaru dari backend
+      userProfileViewModel.fetchUserProfile(widget.userId);
     });
   }
 
@@ -68,14 +70,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${userData['name']} has been unblocked'),
+            content: Text("${userData['name']} ${context.tr('has_been_unblocked')}"),
             backgroundColor: Colors.green,
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to unblock ${userData['name']}'),
+            content: Text("${context.tr('failed_to_unblock')} ${userData['name']}"),
             backgroundColor: Colors.red,
           ),
         );
@@ -98,14 +100,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 if (success) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('${userData['name']} has been blocked'),
+                      content: Text("${userData['name']} ${context.tr('has_been_blocked')}"),
                       backgroundColor: Colors.green,
                     ),
                   );
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Failed to block ${userData['name']}'),
+                      content: Text("${context.tr('failed_to_block')} ${userData['name']}"),
                       backgroundColor: Colors.red,
                     ),
                   );
@@ -131,19 +133,24 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
         }
 
+        // Tentukan self vs target dan status privat
+        final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+        final currentUserId = authViewModel.user?.id;
+        final isSelf = currentUserId == userData['id'];
+        final isPrivate = (userData['isPrivate'] == true);
+        final canStartChat = !isBlocked && (!isPrivate || isSelf);
+
         return Scaffold(
           appBar: AppBar(title: Text(context.tr('profile'))),
           body: SingleChildScrollView(
             child: Column(
               children: [
-                // Profile header
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(24),
                   color: AppColors.primary,
                   child: Column(
                     children: [
-                      // Avatar
                       CircleAvatar(
                         radius: 50,
                         backgroundColor: Colors.white,
@@ -152,7 +159,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                             : null,
                         child: userData['avatarUrl'] == null
                             ? Text(
-                                userData['name'][0].toUpperCase(),
+                                (((userData['name'] ?? '') as String).trim().isNotEmpty)
+                                    ? ((userData['name'] as String).trim()[0].toUpperCase())
+                                    : '?',
                                 style: const TextStyle(
                                   fontSize: 40,
                                   fontWeight: FontWeight.bold,
@@ -162,8 +171,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                             : null,
                       ),
                       const SizedBox(height: 16),
-
-                      // Name
                       Text(
                         userData['name'],
                         style: const TextStyle(
@@ -173,8 +180,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         ),
                       ),
                       const SizedBox(height: 4),
-
-                      // Username
                       Text(
                         '@${userData['username']}',
                         style: const TextStyle(fontSize: 16, color: Colors.white70),
@@ -188,7 +193,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Text(
                           context.tr('bio'),
@@ -207,8 +212,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
-                      // Start chat button (only if not blocked)
-                      if (!isBlocked)
+                      // Start chat button: hanya jika tidak diblokir dan bukan target privat
+                      if (canStartChat)
                         PrimaryButton(
                           text: context.tr('start_chat'),
                           onPressed: _startChat,

@@ -90,7 +90,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                 // About app
                 ListTile(
-                  title: const Text('About Ngobrolin'),
+                  title: Text(context.tr('about_ngobrolin')),
                   leading: const Iconify(Mdi.information_outline, color: AppColors.text),
                   onTap: () {
                     _showAboutDialog(context);
@@ -173,20 +173,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showDialog(
       context: context,
       builder: (context) => AboutDialog(
-        applicationName: 'Ngobrolin',
+        applicationName: context.tr('app_name'),
         applicationVersion: '1.0.0',
         applicationIcon: Image.asset(
           'assets/apps_logo/app-icon-ngobrolin-enhanced-transparent.png',
           width: 50,
           height: 50,
         ),
-        applicationLegalese: '© 2023 Ngobrolin',
-        children: [
-          const SizedBox(height: 16),
-          const Text(
-            'Ngobrolin is a chat application that allows you to connect with friends and family.',
-          ),
-        ],
+        applicationLegalese: context.tr('2025_ngobrolin'),
+        children: [const SizedBox(height: 16), Text(context.tr('about_ngobrolin_description'))],
       ),
     );
   }

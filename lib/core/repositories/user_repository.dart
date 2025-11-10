@@ -13,7 +13,7 @@ class UserRepository {
   Future<User> getUserById(String userId) async {
     try {
       final response = await _apiService.post<Map<String, dynamic>>('/users/get-user', data: {'userId': userId});
-      return User.fromJson(response['user'] as Map<String, dynamic>);
+      return User.fromMinimalJson(response['user'] as Map<String, dynamic>);
     } catch (e) {
       if (e is ApiException) rethrow;
       throw ApiException(message: e.toString());
@@ -87,15 +87,20 @@ class UserRepository {
     }
   }
 
-  /// Search users
-  Future<List<User>> searchUsers(String query) async {
+  /// Search users with pagination
+  Future<List<User>> searchUsers(String query, {int page = 1, int limit = 20}) async {
     try {
-      final response = await _apiService.get<List<dynamic>>(
+      final response = await _apiService.post<Map<String, dynamic>>(
         '/users/search',
-        queryParameters: {'q': query},
+        data: {
+          'q': query,
+          'page': page,
+          'limit': limit,
+        },
       );
 
-      return (response).map((item) => User.fromJson(item as Map<String, dynamic>)).toList();
+      final usersList = response['users'] as List<dynamic>;
+      return usersList.map((item) => User.fromMinimalJson(item as Map<String, dynamic>)).toList();
     } catch (e) {
       if (e is ApiException) {
         rethrow;
