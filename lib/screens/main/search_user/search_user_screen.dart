@@ -38,8 +38,7 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
       // Attach scroll listener for load more
       _scrollController.addListener(() {
         final vm = Provider.of<SearchUserViewModel>(context, listen: false);
-        if (_scrollController.position.pixels >=
-                _scrollController.position.maxScrollExtent - 200 &&
+        if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200 &&
             vm.hasMore &&
             !vm.isLoadingMore) {
           vm.loadMore();
@@ -88,7 +87,17 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
     final users = searchViewModel.users;
 
     return Scaffold(
-      appBar: AppBar(title: Text(context.tr('users'))),
+      appBar: AppBar(
+        title: Text(context.tr('users')),
+        actions: [
+          IconButton(
+            icon: Iconify(MaterialSymbols.settings_rounded, color: AppColors.white),
+            onPressed: () {
+              Navigator.of(context).pushNamed(AppRoutes.settingsRoute);
+            },
+          ),
+        ],
+      ),
       body: searchViewModel.isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(
