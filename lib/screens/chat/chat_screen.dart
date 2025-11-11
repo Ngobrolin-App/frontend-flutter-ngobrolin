@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ngobrolin_app/core/viewmodels/auth/auth_view_model.dart';
 import 'package:provider/provider.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/ic.dart';
@@ -30,10 +31,11 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
-    // Initialize chat with the user
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final chatViewModel = Provider.of<ChatViewModel>(context, listen: false);
       final settingsViewModel = Provider.of<SettingsViewModel>(context, listen: false);
+      final socketProvider = Provider.of<SocketProvider>(context, listen: false);
+      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
 
       // Cek blokir (dua arah). Jika diblokir, jangan mulai chat.
       final isBlocked = await settingsViewModel.isUserBlocked(widget.userId);
@@ -53,6 +55,38 @@ class _ChatScreenState extends State<ChatScreen> {
 
       // Scroll to bottom when screen loads
       _scrollToBottom();
+
+      // Join conversation room for realtime updates
+      if (chatViewModel.conversationId != null) {
+        socketProvider.joinConversation(chatViewModel.conversationId!);
+      }
+
+      // Listen to new_message events dan abaikan pesan dari diri sendiri
+      socketProvider.on('new_message', (data) {
+        try {
+          final msg = (data['message'] as Map<String, dynamic>);
+          final convId = msg['conversation_id'] as String?;
+          final senderId = msg['sender_id'] as String?;
+          final myId = authViewModel.user?.id;
+
+          if (convId != null && convId == chatViewModel.conversationId) {
+            // Hindari duplikasi: abaikan echo pesan yang dikirim oleh saya
+            if (myId != null && senderId != null && senderId == myId) {
+              return;
+            }
+            chatViewModel.handleIncomingMessage({
+              'id': msg['id'] ?? '',
+              'senderId': senderId ?? '',
+              'content': msg['content'] ?? '',
+              'timestamp': msg['created_at'] ?? DateTime.now().toIso8601String(),
+              'isRead': false,
+            });
+            _scrollToBottom();
+          }
+        } catch (_) {}
+      });
+
+      _scrollToBottom();
     });
   }
 
@@ -60,6 +94,15 @@ class _ChatScreenState extends State<ChatScreen> {
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
+
+    // Tinggalkan room dan lepas listener untuk menghindari duplikasi
+    final chatViewModel = Provider.of<ChatViewModel>(context, listen: false);
+    final socketProvider = Provider.of<SocketProvider>(context, listen: false);
+    if (chatViewModel.conversationId != null) {
+      socketProvider.leaveConversation(chatViewModel.conversationId!);
+    }
+    socketProvider.off('new_message');
+
     super.dispose();
   }
 
@@ -89,7 +132,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
         // Also send via socket for backward compatibility
         final socketProvider = Provider.of<SocketProvider>(context, listen: false);
-        socketProvider.sendMessage(toUserId: widget.userId, content: message);
+        // Tetap emit via socket untuk peserta lain; listener sudah memfilter pesan dari diri sendiri
+        socketProvider.sendMessage(conversationId: chatViewModel.conversationId!, content: message);
       }
 
       // Scroll to bottom after sending message
@@ -112,6 +156,9 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     final chatViewModel = Provider.of<ChatViewModel>(context);
     final messages = chatViewModel.messages;
+    // Ambil myId dari AuthViewModel untuk menentukan posisi bubble
+    final authViewModel = Provider.of<AuthViewModel>(context);
+    final myId = authViewModel.user?.id;
 
     return Scaffold(
       appBar: AppBar(
@@ -177,23 +224,24 @@ class _ChatScreenState extends State<ChatScreen> {
             child: chatViewModel.isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : messages.isEmpty
-                ? _buildEmptyState(context)
-                : ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.all(16),
-                    itemCount: messages.length,
-                    itemBuilder: (context, index) {
-                      final message = messages[index];
-                      final isMe = message['senderId'] == 'current_user';
+                    ? _buildEmptyState(context)
+                    : ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.all(16),
+                        itemCount: messages.length,
+                        itemBuilder: (context, index) {
+                          final message = messages[index];
+                          // Posisi kanan bila pengirim adalah user saat ini
+                          final isMe = myId != null && message['senderId'] == myId;
 
-                      return ChatBubble(
-                        message: message['content'],
-                        timestamp: DateTime.parse(message['timestamp']),
-                        isMe: isMe,
-                        isRead: message['isRead'] ?? false,
-                      );
-                    },
-                  ),
+                          return ChatBubble(
+                            message: message['content'],
+                            timestamp: DateTime.parse(message['timestamp']),
+                            isMe: isMe,
+                            isRead: message['isRead'] ?? false,
+                          );
+                        },
+                      ),
           ),
 
           // Message input

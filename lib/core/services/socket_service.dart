@@ -24,6 +24,20 @@ class SocketService {
     _socket?.emit(event, data);
   }
 
+  // Lepas listener event tertentu
+  void off(String event) {
+    _socket?.off(event);
+  }
+
+  // Join/leave conversation rooms
+  void joinConversation(String conversationId) {
+    _socket?.emit('join_conversation', {'conversationId': conversationId});
+  }
+
+  void leaveConversation(String conversationId) {
+    _socket?.emit('leave_conversation', {'conversationId': conversationId});
+  }
+
   void disconnect() {
     _socket?.disconnect();
     _socket?.dispose();

@@ -28,7 +28,7 @@ class ChatRepository {
     try {
       final response = await _apiService.post<Map<String, dynamic>>(
         '/conversations/list',
-        // Backend controller membaca dari query, jadi kirim sebagai queryParameters
+        // Backend membaca dari req.query, jadi kirim sebagai queryParameters
         queryParameters: {'page': page, 'limit': limit},
       );
 
@@ -49,7 +49,9 @@ class ChatRepository {
         final lastCreatedAtStr = lastMessage != null
             ? (lastMessage['created_at'] as String?)
             : (conv['joined_at'] as String?);
-        final timestamp = lastCreatedAtStr != null ? DateTime.parse(lastCreatedAtStr) : DateTime.now();
+        final timestamp = lastCreatedAtStr != null
+            ? DateTime.parse(lastCreatedAtStr)
+            : DateTime.now();
 
         final lastReadId = conv['last_read_message_id'] as String?;
         final lastMsgId = lastMessage != null ? lastMessage['id'] as String? : null;
@@ -71,9 +73,7 @@ class ChatRepository {
         final chatId = conv['id'] as String;
 
         // userId untuk navigasi ke chat; saat private pakai partner.id, saat group fallback ke conversation id
-        final userId = !isGroup
-            ? (partner?['id'] as String? ?? chatId)
-            : chatId;
+        final userId = !isGroup ? (partner?['id'] as String? ?? chatId) : chatId;
 
         return Chat(
           id: chatId,
@@ -106,23 +106,6 @@ class ChatRepository {
       final response = await _apiService.get<List<dynamic>>('/chats/$chatId/messages');
 
       return (response).map((item) => Message.fromJson(item as Map<String, dynamic>)).toList();
-    } catch (e) {
-      if (e is ApiException) {
-        rethrow;
-      }
-      throw ApiException(message: e.toString());
-    }
-  }
-
-  /// Send a message
-  Future<Message> sendMessage({required String receiverId, required String content}) async {
-    try {
-      final response = await _apiService.post<Map<String, dynamic>>(
-        '/messages',
-        data: {'receiverId': receiverId, 'content': content},
-      );
-
-      return Message.fromJson(response);
     } catch (e) {
       if (e is ApiException) {
         rethrow;
@@ -173,6 +156,87 @@ class ChatRepository {
       if (e is ApiException) {
         rethrow;
       }
+      throw ApiException(message: e.toString());
+    }
+  }
+
+  // Tambahkan helper untuk dapat/membuat conversation privat dan mengembalikan id-nya
+  Future<String> getOrCreateConversationId(String participantId) async {
+    try {
+      final response = await _apiService.post<Map<String, dynamic>>(
+        '/conversations/create',
+        data: {'type': 'private', 'participantId': participantId},
+      );
+      final conversation = response['conversation'] as Map<String, dynamic>;
+      return conversation['id'] as String;
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(message: e.toString());
+    }
+  }
+
+  // Ambil pesan berdasarkan conversationId sesuai backend
+  Future<List<Message>> getMessagesByConversation({required String conversationId}) async {
+    try {
+      final response = await _apiService.post<Map<String, dynamic>>(
+        '/messages/get',
+        data: {'conversationId': conversationId},
+      );
+
+      final items = (response['messages'] as List<dynamic>)
+          .map((e) => e as Map<String, dynamic>)
+          .toList();
+
+      // Map snake_case dari backend ke model frontend (camelCase)
+      return items.map((item) {
+        final senderId =
+            (item['sender_id']?.toString()) ?? (item['sender']?['id']?.toString() ?? '');
+        final createdAtStr = (item['created_at'] as String?) ?? DateTime.now().toIso8601String();
+
+        return Message(
+          id: item['id'] as String,
+          senderId: senderId,
+          // Frontend model membutuhkan receiverId; untuk percakapan gunakan conversationId
+          receiverId: conversationId,
+          content: (item['content'] as String?) ?? '',
+          isRead: (item['is_read'] as bool?) ?? false,
+          createdAt: DateTime.parse(createdAtStr),
+          readAt: null,
+        );
+      }).toList();
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(message: e.toString());
+    }
+  }
+
+  /// Send a message (kontrak baru: pakai conversationId dan endpoint backend)
+  Future<Message> sendMessage({
+    required String conversationId,
+    required String content,
+    String type = 'text',
+  }) async {
+    try {
+      final response = await _apiService.post<Map<String, dynamic>>(
+        '/messages/send',
+        data: {'conversationId': conversationId, 'content': content, 'type': type},
+      );
+
+      final data = response['data'] as Map<String, dynamic>;
+      final senderId = (data['sender_id']?.toString()) ?? (data['sender']?['id']?.toString() ?? '');
+      final createdAtStr = (data['created_at'] as String?) ?? DateTime.now().toIso8601String();
+
+      return Message(
+        id: data['id'] as String,
+        senderId: senderId,
+        receiverId: conversationId,
+        content: (data['content'] as String?) ?? '',
+        isRead: false,
+        createdAt: DateTime.parse(createdAtStr),
+        readAt: null,
+      );
+    } catch (e) {
+      if (e is ApiException) rethrow;
       throw ApiException(message: e.toString());
     }
   }

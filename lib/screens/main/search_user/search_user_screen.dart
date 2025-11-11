@@ -135,12 +135,14 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
                       final rawUsername = (user['username'] as String? ?? '').trim();
                       final displayName = rawName.isNotEmpty ? rawName : rawUsername;
                       final avatarUrl = user['avatarUrl'] as String?;
+                      final isPrivate = user['isPrivate'] as bool? ?? false;
 
                       return UserListItem(
                         id: user['id'] as String,
                         name: displayName,
                         username: rawUsername,
                         avatarUrl: avatarUrl,
+                        isPrivate: isPrivate,
                         onTap: () {
                           Navigator.of(context).pushNamed(
                             AppRoutes.userProfile,

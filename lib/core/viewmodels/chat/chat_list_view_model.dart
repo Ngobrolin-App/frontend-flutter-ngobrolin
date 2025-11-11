@@ -160,12 +160,23 @@ class ChatListViewModel extends BaseViewModel {
   }
 
   /// Updates the chat list with a new message
-  void updateWithNewMessage(String chatId, String message, String timestamp) {
+  void updateWithNewMessage(
+    String chatId,
+    String message,
+    String timestamp, {
+    String? senderId,
+    String? currentUserId,
+  }) {
     final index = _chatList.indexWhere((chat) => chat['id'] == chatId);
     if (index != -1) {
       _chatList[index]['lastMessage'] = message;
       _chatList[index]['timestamp'] = timestamp;
-      _chatList[index]['unreadCount'] = _chatList[index]['unreadCount'] + 1;
+
+      // Increment unread only if message is not from current user
+      final shouldIncrementUnread = senderId == null || currentUserId == null || senderId != currentUserId;
+      if (shouldIncrementUnread) {
+        _chatList[index]['unreadCount'] = (_chatList[index]['unreadCount'] as int) + 1;
+      }
 
       // Sort chats by timestamp (newest first)
       _chatList.sort(

@@ -29,74 +29,83 @@ class ChatViewModel extends BaseViewModel {
   }
 
   /// Loads chat messages from the API
+  // Conversation ID for joining/leaving realtime rooms
+  String? _conversationId;
+  String? get conversationId => _conversationId;
+
   Future<bool> _loadMessages() async {
     return await runBusyFuture(() async {
-          try {
-            // Create or get chat with this user
-            final chat = await _chatRepository.createOrGetChat(_partnerId);
+      try {
+        // Dapatkan atau buat percakapan privat dengan partner
+        final convId = await _chatRepository.getOrCreateConversationId(_partnerId);
+        _conversationId = convId;
 
-            // Get messages for this chat
-            final messages = await _chatRepository.getMessages(chat.id);
+        // Ambil pesan untuk conversation ini
+        final messages = await _chatRepository.getMessagesByConversation(conversationId: convId);
 
-            // Convert to map format for compatibility with existing UI
-            _messages = messages
-                .map(
-                  (message) => {
-                    'id': message.id,
-                    'senderId': message.senderId,
-                    'content': message.content,
-                    'timestamp': message.createdAt.toIso8601String(),
-                    'isRead': message.isRead,
-                  },
-                )
-                .toList();
+        // Konversi ke map agar cocok dengan UI
+        _messages = messages
+            .map(
+              (message) => {
+                'id': message.id,
+                'senderId': message.senderId,
+                'content': message.content,
+                'timestamp': message.createdAt.toIso8601String(),
+                'isRead': message.isRead,
+              },
+            )
+            .toList();
 
-            // Mark messages as read
-            final lastMessageId = messages.isNotEmpty ? messages.last.id : null;
-            if (lastMessageId != null) {
-              await _chatRepository.markAsRead(
-                conversationId: chat.id,
-                messageId: lastMessageId,
-              );
-            }
+        // Tandai pesan terakhir sebagai read jika ada
+        final lastMessageId = messages.isNotEmpty ? messages.last.id : null;
+        if (lastMessageId != null) {
+          await _chatRepository.markAsRead(
+            conversationId: convId,
+            messageId: lastMessageId,
+          );
+        }
 
-            return true;
-          } catch (e) {
-            setError(e.toString());
-            return false;
-          }
-        }) ??
-        false;
+        return true;
+      } catch (e) {
+        setError(e.toString());
+        return false;
+      }
+    }) ?? false;
   }
 
   /// Sends a new message
   Future<bool> sendMessage(String content) async {
     if (content.trim().isEmpty) return false;
+    if (_conversationId == null) {
+      // Jika belum ada conversationId, coba muat dulu
+      final loaded = await _loadMessages();
+      if (!loaded || _conversationId == null) return false;
+    }
 
     return await runBusyFuture(() async {
-          try {
-            // Send message via repository
-            final message = await _chatRepository.sendMessage(
-              receiverId: _partnerId,
-              content: content,
-            );
+      try {
+        // Kirim pesan via repository memakai conversationId
+        final message = await _chatRepository.sendMessage(
+          conversationId: _conversationId!,
+          content: content,
+        );
 
-            // Add message to local list
-            _messages.add({
-              'id': message.id,
-              'senderId': message.senderId,
-              'content': message.content,
-              'timestamp': message.createdAt.toIso8601String(),
-              'isRead': message.isRead,
-            });
+        // Tambahkan ke list lokal
+        _messages.add({
+          'id': message.id,
+          'senderId': message.senderId,
+          'content': message.content,
+          'timestamp': message.createdAt.toIso8601String(),
+          'isRead': message.isRead,
+        });
 
-            return true;
-          } catch (e) {
-            setError(e.toString());
-            return false;
-          }
-        }) ??
-        false;
+        notifyListeners();
+        return true;
+      } catch (e) {
+        setError(e.toString());
+        return false;
+      }
+    }) ?? false;
   }
 
   /// Handles incoming messages (e.g., from WebSocket)

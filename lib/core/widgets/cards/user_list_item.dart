@@ -12,6 +12,7 @@ class UserListItem extends StatelessWidget {
   final IconData? actionIcon;
   final Widget? actionWidget;
   final String? actionText;
+  final bool isPrivate;
 
   const UserListItem({
     Key? key,
@@ -24,6 +25,7 @@ class UserListItem extends StatelessWidget {
     this.actionIcon,
     this.actionWidget,
     this.actionText,
+    this.isPrivate = false,
   }) : super(key: key);
 
   @override
@@ -73,7 +75,9 @@ class UserListItem extends StatelessWidget {
               ),
             ),
             // Action button
-            if (onActionTap != null && (actionIcon != null || actionWidget != null || actionText != null))
+            if (onActionTap != null &&
+                (actionIcon != null || actionWidget != null || actionText != null) &&
+                !isPrivate)
               InkWell(
                 onTap: onActionTap,
                 borderRadius: BorderRadius.circular(20),

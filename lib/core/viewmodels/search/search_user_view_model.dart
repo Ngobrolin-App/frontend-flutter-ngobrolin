@@ -20,7 +20,7 @@ class SearchUserViewModel extends BaseViewModel {
   bool get hasMore => _hasMore;
 
   SearchUserViewModel({UserRepository? userRepository})
-      : _userRepository = userRepository ?? UserRepository();
+    : _userRepository = userRepository ?? UserRepository();
 
   /// Sets the search query and triggers a search
   void setSearchQuery(String query) {
@@ -34,29 +34,35 @@ class SearchUserViewModel extends BaseViewModel {
   /// Searches for users based on the current query (first page)
   Future<bool> searchUsers() async {
     return await runBusyFuture(() async {
-      try {
-        final userResults = await _userRepository.searchUsers(_searchQuery, page: _page, limit: _limit);
+          try {
+            final userResults = await _userRepository.searchUsers(
+              _searchQuery,
+              page: _page,
+              limit: _limit,
+            );
 
-        _users = userResults
-            .map(
-              (user) => {
-                'id': user.id,
-                'name': user.name,
-                'username': user.username,
-                'bio': user.bio ?? '',
-                'avatarUrl': user.avatarUrl,
-              },
-            )
-            .toList();
+            _users = userResults
+                .map(
+                  (user) => {
+                    'id': user.id,
+                    'name': user.name,
+                    'username': user.username,
+                    'bio': user.bio ?? '',
+                    'avatarUrl': user.avatarUrl,
+                    'isPrivate': user.isPrivate,
+                  },
+                )
+                .toList();
 
-        // Determine if more pages are available
-        _hasMore = userResults.length == _limit;
-        return true;
-      } catch (e) {
-        setError(e.toString());
-        return false;
-      }
-    }) ?? false;
+            // Determine if more pages are available
+            _hasMore = userResults.length == _limit;
+            return true;
+          } catch (e) {
+            setError(e.toString());
+            return false;
+          }
+        }) ??
+        false;
   }
 
   /// Loads next page and appends to list
@@ -67,16 +73,22 @@ class SearchUserViewModel extends BaseViewModel {
 
     try {
       _page += 1;
-      final userResults = await _userRepository.searchUsers(_searchQuery, page: _page, limit: _limit);
+      final userResults = await _userRepository.searchUsers(
+        _searchQuery,
+        page: _page,
+        limit: _limit,
+      );
 
       final mapped = userResults
-          .map((user) => {
-                'id': user.id,
-                'name': user.name,
-                'username': user.username,
-                'bio': user.bio ?? '',
-                'avatarUrl': user.avatarUrl,
-              })
+          .map(
+            (user) => {
+              'id': user.id,
+              'name': user.name,
+              'username': user.username,
+              'bio': user.bio ?? '',
+              'avatarUrl': user.avatarUrl,
+            },
+          )
           .toList();
 
       _users.addAll(mapped);

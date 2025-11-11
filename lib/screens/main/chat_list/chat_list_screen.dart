@@ -3,6 +3,8 @@ import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/bx.dart';
 import 'package:iconify_flutter/icons/mdi.dart';
 import 'package:iconify_flutter/icons/material_symbols.dart';
+import 'package:ngobrolin_app/core/providers/socket_provider.dart';
+import 'package:ngobrolin_app/core/viewmodels/auth/auth_view_model.dart';
 import 'package:provider/provider.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/viewmodels/chat/chat_list_view_model.dart';
@@ -26,11 +28,33 @@ class _ChatListScreenState extends State<ChatListScreen> {
     super.initState();
     _scrollController = ScrollController();
 
-    // Fetch chat list when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final chatListViewModel = Provider.of<ChatListViewModel>(context, listen: false);
+      final socketProvider = Provider.of<SocketProvider>(context, listen: false);
+      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+
       chatListViewModel.fetchChatList();
-      // chatListViewModel.fetchChatListDummy();
+
+      // Listen to conversation updates dan filter pesan dari diri sendiri
+      socketProvider.on('conversation_updated', (data) {
+        try {
+          final convId = data['conversationId'] as String?;
+          final last = data['lastMessage'] as Map<String, dynamic>?;
+          final senderId = last?['sender_id'] as String?;
+          final myId = authViewModel.user?.id;
+          if (convId != null && last != null) {
+            final content = last['content'] as String? ?? '';
+            final createdAt = last['created_at'] as String? ?? DateTime.now().toIso8601String();
+            chatListViewModel.updateWithNewMessage(
+              convId,
+              content,
+              createdAt,
+              senderId: senderId,
+              currentUserId: myId,
+            );
+          }
+        } catch (_) {}
+      });
     });
 
     _scrollController.addListener(() {
@@ -44,6 +68,11 @@ class _ChatListScreenState extends State<ChatListScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
+
+    // Lepas listener agar tidak dobel saat kembali ke layar
+    final socketProvider = Provider.of<SocketProvider>(context, listen: false);
+    socketProvider.off('conversation_updated');
+
     super.dispose();
   }
 
