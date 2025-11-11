@@ -39,10 +39,10 @@ class ChatViewModel extends BaseViewModel {
         // Dapatkan atau buat percakapan privat dengan partner
         final convId = await _chatRepository.getOrCreateConversationId(_partnerId);
         _conversationId = convId;
-
+  
         // Ambil pesan untuk conversation ini
         final messages = await _chatRepository.getMessagesByConversation(conversationId: convId);
-
+  
         // Konversi ke map agar cocok dengan UI
         _messages = messages
             .map(
@@ -55,7 +55,10 @@ class ChatViewModel extends BaseViewModel {
               },
             )
             .toList();
-
+  
+        // Tambahkan notify agar UI langsung rebuild setelah data dimuat
+        notifyListeners();
+  
         // Tandai pesan terakhir sebagai read jika ada
         final lastMessageId = messages.isNotEmpty ? messages.last.id : null;
         if (lastMessageId != null) {
@@ -64,7 +67,7 @@ class ChatViewModel extends BaseViewModel {
             messageId: lastMessageId,
           );
         }
-
+  
         return true;
       } catch (e) {
         setError(e.toString());
@@ -110,9 +113,11 @@ class ChatViewModel extends BaseViewModel {
 
   /// Handles incoming messages (e.g., from WebSocket)
   void handleIncomingMessage(Map<String, dynamic> message) {
-    if (message['senderId'] == _partnerId) {
-      _messages.add(message);
-      notifyListeners();
+    // Dedup: jangan tambahkan jika id sudah ada
+    final exists = _messages.any((m) => m['id'] == message['id']);
+    if (!exists) {
+        _messages.add(message);
+        notifyListeners();
     }
   }
 

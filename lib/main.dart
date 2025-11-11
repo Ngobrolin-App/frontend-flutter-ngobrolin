@@ -127,6 +127,29 @@ class _MyAppState extends State<MyApp> {
           }
         } catch (_) {}
       });
+
+      // Tambah listener global untuk 'new_message' agar chat list ikut update
+      socketProvider.on('new_message', (data) {
+        try {
+          final msg = data['message'] as Map<String, dynamic>?;
+          if (msg == null) return;
+          final convId = msg['conversation_id'] as String?;
+          final content = msg['content'] as String? ?? '';
+          final createdAt = msg['created_at'] as String? ?? DateTime.now().toIso8601String();
+          final senderId = msg['sender_id'] as String?;
+          final myId = authViewModel.user?.id;
+
+          if (convId != null) {
+            chatListViewModel.updateWithNewMessage(
+              convId,
+              content,
+              createdAt,
+              senderId: senderId,
+              currentUserId: myId,
+            );
+          }
+        } catch (_) {}
+      });
     });
   }
 
@@ -134,6 +157,8 @@ class _MyAppState extends State<MyApp> {
   void dispose() {
     final socketProvider = Provider.of<SocketProvider>(context, listen: false);
     socketProvider.off('conversation_updated');
+    // Lepas juga listener 'new_message' agar tidak menumpuk
+    socketProvider.off('new_message');
     super.dispose();
   }
 

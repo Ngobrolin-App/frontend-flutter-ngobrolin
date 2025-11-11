@@ -28,6 +28,8 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   bool _joinedRoom = false;
+  VoidCallback? _vmListener;
+  int _lastMessageCount = 0;
 
   @override
   void initState() {
@@ -54,13 +56,20 @@ class _ChatScreenState extends State<ChatScreen> {
 
       chatViewModel.initChat(widget.userId, widget.name, widget.avatarUrl);
 
-      // Join conversation ketika conversationId tersedia (sekali saja)
-      chatViewModel.addListener(() {
+      // Pasang listener: join room sekali dan auto-scroll saat jumlah pesan berubah
+      _vmListener = () {
         if (!_joinedRoom && chatViewModel.conversationId != null) {
           socketProvider.joinConversation(chatViewModel.conversationId!);
           _joinedRoom = true;
         }
-      });
+
+        final count = chatViewModel.messages.length;
+        if (count != _lastMessageCount) {
+          _lastMessageCount = count;
+          WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+        }
+      };
+      chatViewModel.addListener(_vmListener!);
 
       // Jika sudah ada conversationId sejak awal, join langsung
       if (chatViewModel.conversationId != null && !_joinedRoom) {
@@ -68,7 +77,7 @@ class _ChatScreenState extends State<ChatScreen> {
         _joinedRoom = true;
       }
 
-      // Scroll to bottom when screen loads
+      // Scroll awal (akan diulang lagi saat pesan selesai dimuat)
       _scrollToBottom();
 
       // Join conversation room for realtime updates
@@ -76,23 +85,16 @@ class _ChatScreenState extends State<ChatScreen> {
         socketProvider.joinConversation(chatViewModel.conversationId!);
       }
 
-      // Listen to new_message events dan abaikan pesan dari diri sendiri
-      socketProvider.on('joined_conversation', (data) {
-        debugPrint('Joined conversation: ${data['conversationId']}');
-      });
+      // Listen to new_message events tanpa memfilter pesan dari diri sendiri
       socketProvider.on('new_message', (data) {
         debugPrint('Incoming new_message: $data');
         try {
           final msg = (data['message'] as Map<String, dynamic>);
           final convId = msg['conversation_id'] as String?;
           final senderId = msg['sender_id'] as String?;
-          final myId = authViewModel.user?.id;
+          // final myId = authViewModel.user?.id; // tidak lagi digunakan untuk memfilter
 
           if (convId != null && convId == chatViewModel.conversationId) {
-            // Hindari duplikasi: abaikan echo pesan yang dikirim oleh saya
-            if (myId != null && senderId != null && senderId == myId) {
-              return;
-            }
             chatViewModel.handleIncomingMessage({
               'id': msg['id'] ?? '',
               'senderId': senderId ?? '',
@@ -122,6 +124,12 @@ class _ChatScreenState extends State<ChatScreen> {
     }
     socketProvider.off('new_message');
 
+    // Lepas listener ViewModel agar tidak bocor
+    if (_vmListener != null) {
+      chatViewModel.removeListener(_vmListener!);
+      _vmListener = null;
+    }
+
     super.dispose();
   }
 
@@ -143,16 +151,14 @@ class _ChatScreenState extends State<ChatScreen> {
       // Get the ChatViewModel
       final chatViewModel = Provider.of<ChatViewModel>(context, listen: false);
 
-      // Send message using the ViewModel
+      // Kirim pesan via API (backend akan broadcast via socket)
       final success = await chatViewModel.sendMessage(message);
 
       if (success) {
         _messageController.clear();
 
-        // Also send via socket for backward compatibility
-        final socketProvider = Provider.of<SocketProvider>(context, listen: false);
-        // Tetap emit via socket untuk peserta lain; listener sudah memfilter pesan dari diri sendiri
-        socketProvider.sendMessage(conversationId: chatViewModel.conversationId!, content: message);
+        // Hapus emit via socket untuk mencegah duplikasi di backend
+        // socketProvider.sendMessage(conversationId: chatViewModel.conversationId!, content: message);
       }
 
       // Scroll to bottom after sending message
