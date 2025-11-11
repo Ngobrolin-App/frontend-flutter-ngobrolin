@@ -91,8 +91,51 @@ Future<void> main() async {
 }
 
 // class MyApp
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final socketProvider = Provider.of<SocketProvider>(context, listen: false);
+      final chatListViewModel = Provider.of<ChatListViewModel>(context, listen: false);
+      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+
+      socketProvider.on('conversation_updated', (data) {
+        try {
+          final convId = data['conversationId'] as String?;
+          final last = data['lastMessage'] as Map<String, dynamic>?;
+          final senderId = last?['sender_id'] as String?;
+          final myId = authViewModel.user?.id;
+
+          if (convId != null && last != null) {
+            final content = last['content'] as String? ?? '';
+            final createdAt = last['created_at'] as String? ?? DateTime.now().toIso8601String();
+            chatListViewModel.updateWithNewMessage(
+              convId,
+              content,
+              createdAt,
+              senderId: senderId,
+              currentUserId: myId,
+            );
+          }
+        } catch (_) {}
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    final socketProvider = Provider.of<SocketProvider>(context, listen: false);
+    socketProvider.off('conversation_updated');
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

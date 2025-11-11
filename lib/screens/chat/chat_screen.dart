@@ -27,6 +27,7 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  bool _joinedRoom = false;
 
   @override
   void initState() {
@@ -53,6 +54,20 @@ class _ChatScreenState extends State<ChatScreen> {
 
       chatViewModel.initChat(widget.userId, widget.name, widget.avatarUrl);
 
+      // Join conversation ketika conversationId tersedia (sekali saja)
+      chatViewModel.addListener(() {
+        if (!_joinedRoom && chatViewModel.conversationId != null) {
+          socketProvider.joinConversation(chatViewModel.conversationId!);
+          _joinedRoom = true;
+        }
+      });
+
+      // Jika sudah ada conversationId sejak awal, join langsung
+      if (chatViewModel.conversationId != null && !_joinedRoom) {
+        socketProvider.joinConversation(chatViewModel.conversationId!);
+        _joinedRoom = true;
+      }
+
       // Scroll to bottom when screen loads
       _scrollToBottom();
 
@@ -62,7 +77,11 @@ class _ChatScreenState extends State<ChatScreen> {
       }
 
       // Listen to new_message events dan abaikan pesan dari diri sendiri
+      socketProvider.on('joined_conversation', (data) {
+        debugPrint('Joined conversation: ${data['conversationId']}');
+      });
       socketProvider.on('new_message', (data) {
+        debugPrint('Incoming new_message: $data');
         try {
           final msg = (data['message'] as Map<String, dynamic>);
           final convId = msg['conversation_id'] as String?;
@@ -220,28 +239,29 @@ class _ChatScreenState extends State<ChatScreen> {
       body: Column(
         children: [
           // Chat messages
+          // in build() -> Expanded(child: ...)
           Expanded(
-            child: chatViewModel.isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : messages.isEmpty
-                    ? _buildEmptyState(context)
-                    : ListView.builder(
-                        controller: _scrollController,
-                        padding: const EdgeInsets.all(16),
-                        itemCount: messages.length,
-                        itemBuilder: (context, index) {
-                          final message = messages[index];
-                          // Posisi kanan bila pengirim adalah user saat ini
-                          final isMe = myId != null && message['senderId'] == myId;
+              child: (chatViewModel.isLoading && messages.isEmpty)
+                  ? const Center(child: CircularProgressIndicator())
+                  : messages.isEmpty
+                      ? _buildEmptyState(context)
+                      : ListView.builder(
+                          controller: _scrollController,
+                          padding: const EdgeInsets.all(16),
+                          itemCount: messages.length,
+                          itemBuilder: (context, index) {
+                              final message = messages[index];
+                              // Posisi kanan bila pengirim adalah user saat ini
+                              final isMe = myId != null && message['senderId'] == myId;
 
-                          return ChatBubble(
-                            message: message['content'],
-                            timestamp: DateTime.parse(message['timestamp']),
-                            isMe: isMe,
-                            isRead: message['isRead'] ?? false,
-                          );
-                        },
-                      ),
+                              return ChatBubble(
+                                message: message['content'],
+                                timestamp: DateTime.parse(message['timestamp']),
+                                isMe: isMe,
+                                isRead: message['isRead'] ?? false,
+                              );
+                            },
+                          ),
           ),
 
           // Message input

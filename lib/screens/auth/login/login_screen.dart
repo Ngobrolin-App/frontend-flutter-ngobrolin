@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ngobrolin_app/core/providers/socket_provider.dart';
 import 'package:provider/provider.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/providers/auth_provider.dart';
@@ -45,6 +46,9 @@ class _LoginScreenState extends State<LoginScreen> {
         if (!mounted) return;
 
         if (success) {
+          final socketProvider = Provider.of<SocketProvider>(context, listen: false);
+          await socketProvider.init(token: authViewModel.token);
+
           Navigator.of(context).pushReplacementNamed(AppRoutes.main);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(

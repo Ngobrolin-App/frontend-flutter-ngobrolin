@@ -6,14 +6,25 @@ class SocketService {
   bool get isConnected => _socket?.connected ?? false;
 
   void connect({required String url, String? token}) {
+    print('SocketService: connecting to $url with token: ${token != null ? 'present' : 'null'}');
     final opts = IO.OptionBuilder()
         .setTransports(['websocket'])
+        .setPath('/socket.io')
         .enableAutoConnect()
         .setTimeout(10000)
         .setExtraHeaders(token != null ? {'Authorization': 'Bearer $token'} : {})
         .build();
 
     _socket = IO.io(url, opts);
+
+    _socket?.on('connecting', (_) => print('Socket connecting...'));
+    _socket?.on('connect', (_) => print('Socket connected'));
+    _socket?.on('connect_error', (err) => print('Socket connect_error: $err'));
+    _socket?.on('error', (err) => print('Socket error: $err'));
+    _socket?.on('disconnect', (_) => print('Socket disconnect'));
+    _socket?.on('reconnect', (attempt) => print('Socket reconnect: $attempt'));
+    _socket?.on('reconnect_attempt', (attempt) => print('Socket reconnect_attempt: $attempt'));
+    _socket?.on('reconnect_failed', (_) => print('Socket reconnect_failed'));
   }
 
   void on(String event, void Function(dynamic data) handler) {

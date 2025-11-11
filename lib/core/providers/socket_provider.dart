@@ -9,23 +9,30 @@ class SocketProvider extends ChangeNotifier {
   bool _connected = false;
   bool get connected => _connected;
 
-  void init({String? token}) {
+  Future<void> init({String? token}) async {
     final baseUrl = dotenv.env['WS_BASE_URL'] ?? 'http://localhost:3000';
-    print('baseUrl: $baseUrl');
+    print('SocketProvider.init: baseUrl=$baseUrl');
 
-    // Ambil token dari SharedPreferences jika tidak diberikan
     String? authToken = token;
-    SharedPreferences.getInstance().then((prefs) {
-      authToken ??= prefs.getString('auth_token');
-    });
+    if (authToken == null || authToken.isEmpty) {
+      final prefs = await SharedPreferences.getInstance();
+      authToken = prefs.getString('auth_token');
+    }
+    print('SocketProvider.init: token ${authToken != null && authToken.isNotEmpty ? 'present' : 'null'}');
+
+    // Putuskan koneksi lama sebelum membuat yang baru
+    if (_socket.isConnected) {
+      print('SocketProvider.init: disconnecting previous socket');
+      _socket.disconnect();
+    }
 
     _socket.connect(url: baseUrl, token: authToken);
 
     _socket.on('connect', (_) {
+      print('SocketProvider: connected');
       _connected = true;
 
-      // Emit authenticate agar backend mengenali userId untuk room & sender_id
-      if (authToken != null && authToken!.isNotEmpty) {
+      if (authToken != null && authToken.isNotEmpty) {
         _socket.emit('authenticate', {'token': authToken});
       }
 
@@ -33,16 +40,16 @@ class SocketProvider extends ChangeNotifier {
     });
 
     _socket.on('disconnect', (_) {
+      print('SocketProvider: disconnected');
       _connected = false;
       notifyListeners();
     });
 
-    // Example chat event bindings
+    // Contoh event pesan
     _socket.on('message', (data) {
+      print('SocketProvider: Incoming message: $data');
       // handle incoming message
-      if (kDebugMode) {
-        print('Incoming message: $data');
-      }
+      notifyListeners();
     });
   }
 

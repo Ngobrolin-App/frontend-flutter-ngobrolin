@@ -27,34 +27,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
   void initState() {
     super.initState();
     _scrollController = ScrollController();
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final chatListViewModel = Provider.of<ChatListViewModel>(context, listen: false);
-      final socketProvider = Provider.of<SocketProvider>(context, listen: false);
-      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-
       chatListViewModel.fetchChatList();
-
-      // Listen to conversation updates dan filter pesan dari diri sendiri
-      socketProvider.on('conversation_updated', (data) {
-        try {
-          final convId = data['conversationId'] as String?;
-          final last = data['lastMessage'] as Map<String, dynamic>?;
-          final senderId = last?['sender_id'] as String?;
-          final myId = authViewModel.user?.id;
-          if (convId != null && last != null) {
-            final content = last['content'] as String? ?? '';
-            final createdAt = last['created_at'] as String? ?? DateTime.now().toIso8601String();
-            chatListViewModel.updateWithNewMessage(
-              convId,
-              content,
-              createdAt,
-              senderId: senderId,
-              currentUserId: myId,
-            );
-          }
-        } catch (_) {}
-      });
     });
 
     _scrollController.addListener(() {
@@ -68,11 +43,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
-
-    // Lepas listener agar tidak dobel saat kembali ke layar
-    final socketProvider = Provider.of<SocketProvider>(context, listen: false);
-    socketProvider.off('conversation_updated');
-
+    // socketProvider.off('conversation_updated'); // dihapus, sudah global
     super.dispose();
   }
 
