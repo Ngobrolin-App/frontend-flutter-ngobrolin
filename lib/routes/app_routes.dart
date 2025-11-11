@@ -33,7 +33,7 @@ class AppRoutes {
       case register:
         return MaterialPageRoute(builder: (_) => const RegisterScreen());
       case main:
-        return MaterialPageRoute(builder: (_) => const MainScreen());
+        return MaterialPageRoute(builder: (_) => const MainScreen(), settings: settings);
       case chat:
         final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(

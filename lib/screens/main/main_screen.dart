@@ -18,6 +18,24 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
+  bool _initializedFromArgs = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initializedFromArgs) {
+      final args = ModalRoute.of(context)?.settings.arguments;
+      if (args is Map && args['tabIndex'] is int) {
+        final idx = args['tabIndex'] as int;
+        if (idx >= 0) {
+          setState(() {
+            _currentIndex = idx;
+          });
+        }
+      }
+      _initializedFromArgs = true;
+    }
+  }
   final List<Widget> _screens = [
     const ChatListScreen(),
     const SearchUserScreen(),

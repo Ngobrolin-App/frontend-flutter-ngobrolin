@@ -52,7 +52,13 @@ class ChatViewModel extends BaseViewModel {
                 .toList();
 
             // Mark messages as read
-            await _chatRepository.markAsRead(chat.id);
+            final lastMessageId = messages.isNotEmpty ? messages.last.id : null;
+            if (lastMessageId != null) {
+              await _chatRepository.markAsRead(
+                conversationId: chat.id,
+                messageId: lastMessageId,
+              );
+            }
 
             return true;
           } catch (e) {

@@ -19,15 +19,32 @@ class ChatListScreen extends StatefulWidget {
 }
 
 class _ChatListScreenState extends State<ChatListScreen> {
+  late final ScrollController _scrollController;
+
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController();
+
     // Fetch chat list when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final chatListViewModel = Provider.of<ChatListViewModel>(context, listen: false);
-      // chatListViewModel.fetchChatList();
-      chatListViewModel.fetchChatListDummy();
+      chatListViewModel.fetchChatList();
+      // chatListViewModel.fetchChatListDummy();
     });
+
+    _scrollController.addListener(() {
+      final vm = Provider.of<ChatListViewModel>(context, listen: false);
+      if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+        vm.loadMore();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -47,11 +64,12 @@ class _ChatListScreenState extends State<ChatListScreen> {
           ),
         ],
       ),
-      body: chatListViewModel.isLoading
+      body: chatListViewModel.isLoading && chatList.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : chatList.isEmpty
           ? _buildEmptyState(context)
           : ListView.separated(
+              controller: _scrollController,
               itemCount: chatList.length,
               separatorBuilder: (context, index) => const Divider(height: 1, indent: 72),
               itemBuilder: (context, index) {

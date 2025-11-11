@@ -8,14 +8,40 @@ class ChatListViewModel extends BaseViewModel {
   List<Map<String, dynamic>> _chatList = [];
   List<Map<String, dynamic>> get chatList => _chatList;
 
+  // Pagination state
+  int _page = 1;
+  final int _limit = 20;
+  bool _hasMore = true;
+  bool get hasMore => _hasMore;
+
+  // Cache lastMessageId per conversation for mark-as-read
+  final Map<String, String?> _lastMessageIdByConversation = {};
+
   ChatListViewModel({ChatRepository? chatRepository})
     : _chatRepository = chatRepository ?? ChatRepository();
 
-  /// Fetches the list of chats from the API
+  /// Fetches the list of chats from the API (backend + pagination)
   Future<bool> fetchChatList() async {
+    _page = 1;
+    _hasMore = true;
+    _chatList = [];
+    _lastMessageIdByConversation.clear();
+
     return await runBusyFuture(() async {
           try {
-            final chats = await _chatRepository.getChatList();
+            final result = await _chatRepository.getConversationList(page: _page, limit: _limit);
+            final chats = (result['chats'] as List<Chat>);
+            final rawConversations = (result['rawConversations'] as List<dynamic>)
+                .map((e) => e as Map<String, dynamic>)
+                .toList();
+            final pagination = (result['pagination'] as Map<String, dynamic>);
+
+            // Map raw lastMessageId
+            for (final conv in rawConversations) {
+              final convId = conv['id'] as String;
+              final lastMessage = conv['lastMessage'] as Map<String, dynamic>?;
+              _lastMessageIdByConversation[convId] = lastMessage != null ? lastMessage['id'] as String? : null;
+            }
 
             // Convert to map format for compatibility with existing UI
             _chatList = chats
@@ -29,9 +55,12 @@ class ChatListViewModel extends BaseViewModel {
                     'lastMessage': chat.lastMessage,
                     'timestamp': chat.timestamp.toIso8601String(),
                     'unreadCount': chat.unreadCount,
+                    'lastMessageId': _lastMessageIdByConversation[chat.id], // tambahan
                   },
                 )
                 .toList();
+
+            _hasMore = (pagination['page'] as int) < (pagination['totalPages'] as int);
 
             return true;
           } catch (e) {
@@ -147,12 +176,73 @@ class ChatListViewModel extends BaseViewModel {
     }
   }
 
-  /// Marks a chat as read
-  void markChatAsRead(String chatId) async {
-    try {
-      await _chatRepository.markAsRead(chatId);
+  /// Load more chats (pagination)
+  Future<bool> loadMore() async {
+    if (!_hasMore || isLoading) return false;
 
-      final index = _chatList.indexWhere((chat) => chat['id'] == chatId);
+    return await runBusyFuture(() async {
+          try {
+            _page += 1;
+            final result = await _chatRepository.getConversationList(page: _page, limit: _limit);
+            final chats = (result['chats'] as List<Chat>);
+            final rawConversations = (result['rawConversations'] as List<dynamic>)
+                .map((e) => e as Map<String, dynamic>)
+                .toList();
+            final pagination = (result['pagination'] as Map<String, dynamic>);
+
+            // Map raw lastMessageId
+            for (final conv in rawConversations) {
+              final convId = conv['id'] as String;
+              final lastMessage = conv['lastMessage'] as Map<String, dynamic>?;
+              _lastMessageIdByConversation[convId] = lastMessage != null ? lastMessage['id'] as String? : null;
+            }
+
+            final additional = chats
+                .map(
+                  (chat) => {
+                    'id': chat.id,
+                    'userId': chat.userId,
+                    'name': chat.name,
+                    'username': chat.username,
+                    'avatarUrl': chat.avatarUrl,
+                    'lastMessage': chat.lastMessage,
+                    'timestamp': chat.timestamp.toIso8601String(),
+                    'unreadCount': chat.unreadCount,
+                    'lastMessageId': _lastMessageIdByConversation[chat.id],
+                  },
+                )
+                .toList();
+
+            _chatList.addAll(additional);
+            _hasMore = (pagination['page'] as int) < (pagination['totalPages'] as int);
+
+            return true;
+          } catch (e) {
+            setError(e.toString());
+            _page -= 1; // rollback page on failure
+            return false;
+          }
+        }) ??
+        false;
+  }
+
+  /// Marks a chat as read
+  void markChatAsRead(String conversationId) async {
+    try {
+      final lastMessageId = _lastMessageIdByConversation[conversationId];
+      if (lastMessageId == null) {
+        // Tidak ada lastMessage, tidak perlu call API
+        final index = _chatList.indexWhere((chat) => chat['id'] == conversationId);
+        if (index != -1) {
+          _chatList[index]['unreadCount'] = 0;
+          notifyListeners();
+        }
+        return;
+      }
+
+      await _chatRepository.markAsRead(conversationId: conversationId, messageId: lastMessageId);
+
+      final index = _chatList.indexWhere((chat) => chat['id'] == conversationId);
       if (index != -1) {
         _chatList[index]['unreadCount'] = 0;
         notifyListeners();
