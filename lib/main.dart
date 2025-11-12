@@ -102,12 +102,25 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final socketProvider = Provider.of<SocketProvider>(context, listen: false);
       final chatListViewModel = Provider.of<ChatListViewModel>(context, listen: false);
       final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
 
+      // Join semua room percakapan milik user agar listener new_message di main aktif
+      final fetched = await chatListViewModel.fetchChatList();
+      if (fetched) {
+        for (final chat in chatListViewModel.chatList) {
+          final convId = chat['id'] as String?;
+          if (convId != null) {
+            socketProvider.joinConversation(convId);
+          }
+        }
+      }
+
+      // Listener conversation_updated sudah benar (user room)
       socketProvider.on('conversation_updated', (data) {
+        print('-------- conversation_updated: $data');
         try {
           final convId = data['conversationId'] as String?;
           final last = data['lastMessage'] as Map<String, dynamic>?;
@@ -128,8 +141,9 @@ class _MyAppState extends State<MyApp> {
         } catch (_) {}
       });
 
-      // Tambah listener global untuk 'new_message' agar chat list ikut update
-      socketProvider.on('new_message', (data) {
+      // Tambahkan listener global untuk new_message agar chat list ikut update
+      socketProvider.on('new_message', (data) async {
+        print('-------- main new_message: $data');
         try {
           final msg = data['message'] as Map<String, dynamic>?;
           if (msg == null) return;
@@ -140,7 +154,8 @@ class _MyAppState extends State<MyApp> {
           final myId = authViewModel.user?.id;
 
           if (convId != null) {
-            chatListViewModel.updateWithNewMessage(
+            // Upsert: update jika ada, reload jika belum ada (chat baru / pagination)
+            await chatListViewModel.updateWithNewMessage(
               convId,
               content,
               createdAt,
@@ -157,7 +172,7 @@ class _MyAppState extends State<MyApp> {
   void dispose() {
     final socketProvider = Provider.of<SocketProvider>(context, listen: false);
     socketProvider.off('conversation_updated');
-    // Lepas juga listener 'new_message' agar tidak menumpuk
+    // Lepas listener new_message agar tidak terjadi duplikasi
     socketProvider.off('new_message');
     super.dispose();
   }

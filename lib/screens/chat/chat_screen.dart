@@ -154,6 +154,7 @@ class _ChatScreenState extends State<ChatScreen> {
       // Kirim pesan via API (backend akan broadcast via socket)
       final success = await chatViewModel.sendMessage(message);
 
+      print('-------- Success send message: $success');
       if (success) {
         _messageController.clear();
 
@@ -247,27 +248,27 @@ class _ChatScreenState extends State<ChatScreen> {
           // Chat messages
           // in build() -> Expanded(child: ...)
           Expanded(
-              child: (chatViewModel.isLoading && messages.isEmpty)
-                  ? const Center(child: CircularProgressIndicator())
-                  : messages.isEmpty
-                      ? _buildEmptyState(context)
-                      : ListView.builder(
-                          controller: _scrollController,
-                          padding: const EdgeInsets.all(16),
-                          itemCount: messages.length,
-                          itemBuilder: (context, index) {
-                              final message = messages[index];
-                              // Posisi kanan bila pengirim adalah user saat ini
-                              final isMe = myId != null && message['senderId'] == myId;
+            child: (chatViewModel.isLoading && messages.isEmpty)
+                ? const Center(child: CircularProgressIndicator())
+                : messages.isEmpty
+                ? _buildEmptyState(context)
+                : ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.all(16),
+                    itemCount: messages.length,
+                    itemBuilder: (context, index) {
+                      final message = messages[index];
+                      // Posisi kanan bila pengirim adalah user saat ini
+                      final isMe = myId != null && message['senderId'] == myId;
 
-                              return ChatBubble(
-                                message: message['content'],
-                                timestamp: DateTime.parse(message['timestamp']),
-                                isMe: isMe,
-                                isRead: message['isRead'] ?? false,
-                              );
-                            },
-                          ),
+                      return ChatBubble(
+                        message: message['content'],
+                        timestamp: DateTime.parse(message['timestamp']),
+                        isMe: isMe,
+                        isRead: message['isRead'] ?? false,
+                      );
+                    },
+                  ),
           ),
 
           // Message input

@@ -34,46 +34,47 @@ class ChatViewModel extends BaseViewModel {
   String? get conversationId => _conversationId;
 
   Future<bool> _loadMessages() async {
+    print('-------- Load messages for partnerId: $_partnerId');
     return await runBusyFuture(() async {
-      try {
-        // Dapatkan atau buat percakapan privat dengan partner
-        final convId = await _chatRepository.getOrCreateConversationId(_partnerId);
-        _conversationId = convId;
-  
-        // Ambil pesan untuk conversation ini
-        final messages = await _chatRepository.getMessagesByConversation(conversationId: convId);
-  
-        // Konversi ke map agar cocok dengan UI
-        _messages = messages
-            .map(
-              (message) => {
-                'id': message.id,
-                'senderId': message.senderId,
-                'content': message.content,
-                'timestamp': message.createdAt.toIso8601String(),
-                'isRead': message.isRead,
-              },
-            )
-            .toList();
-  
-        // Tambahkan notify agar UI langsung rebuild setelah data dimuat
-        notifyListeners();
-  
-        // Tandai pesan terakhir sebagai read jika ada
-        final lastMessageId = messages.isNotEmpty ? messages.last.id : null;
-        if (lastMessageId != null) {
-          await _chatRepository.markAsRead(
-            conversationId: convId,
-            messageId: lastMessageId,
-          );
-        }
-  
-        return true;
-      } catch (e) {
-        setError(e.toString());
-        return false;
-      }
-    }) ?? false;
+          try {
+            // Dapatkan atau buat percakapan privat dengan partner
+            final convId = await _chatRepository.getOrCreateConversationId(_partnerId);
+            _conversationId = convId;
+
+            // Ambil pesan untuk conversation ini
+            final messages = await _chatRepository.getMessagesByConversation(
+              conversationId: convId,
+            );
+
+            // Konversi ke map agar cocok dengan UI — pastikan Map<String, dynamic>
+            _messages = messages
+                .map(
+                  (message) => Map<String, dynamic>.from({
+                    'id': message.id,
+                    'senderId': message.senderId,
+                    'content': message.content,
+                    'timestamp': message.createdAt.toIso8601String(),
+                    'isRead': message.isRead,
+                  }),
+                )
+                .toList();
+
+            // Trigger rebuild segera setelah data dimuat
+            notifyListeners();
+
+            // Tandai pesan terakhir sebagai read jika ada
+            final lastMessageId = messages.isNotEmpty ? messages.last.id : null;
+            if (lastMessageId != null) {
+              await _chatRepository.markAsRead(conversationId: convId, messageId: lastMessageId);
+            }
+
+            return true;
+          } catch (e) {
+            setError(e.toString());
+            return false;
+          }
+        }) ??
+        false;
   }
 
   /// Sends a new message
@@ -86,29 +87,36 @@ class ChatViewModel extends BaseViewModel {
     }
 
     return await runBusyFuture(() async {
-      try {
-        // Kirim pesan via repository memakai conversationId
-        final message = await _chatRepository.sendMessage(
-          conversationId: _conversationId!,
-          content: content,
-        );
+          try {
+            // Kirim pesan via repository memakai conversationId
+            final message = await _chatRepository.sendMessage(
+              conversationId: _conversationId!,
+              content: content,
+            );
 
-        // Tambahkan ke list lokal
-        _messages.add({
-          'id': message.id,
-          'senderId': message.senderId,
-          'content': message.content,
-          'timestamp': message.createdAt.toIso8601String(),
-          'isRead': message.isRead,
-        });
+            print('-------- Success send message: $message');
+            print('-------- _messages: $_messages');
 
-        notifyListeners();
-        return true;
-      } catch (e) {
-        setError(e.toString());
-        return false;
-      }
-    }) ?? false;
+            // // Tambahkan ke list lokal
+            // _messages.add({
+            //   'id': message.id,
+            //   'senderId': message.senderId,
+            //   'content': message.content,
+            //   'timestamp': message.createdAt.toIso8601String(),
+            //   'isRead': message.isRead,
+            // });
+
+            print('-------- Success add message: $_messages');
+
+            notifyListeners();
+            return true;
+          } catch (e) {
+            print('-------- Error send message: $e');
+            setError(e.toString());
+            return false;
+          }
+        }) ??
+        false;
   }
 
   /// Handles incoming messages (e.g., from WebSocket)
@@ -116,8 +124,8 @@ class ChatViewModel extends BaseViewModel {
     // Dedup: jangan tambahkan jika id sudah ada
     final exists = _messages.any((m) => m['id'] == message['id']);
     if (!exists) {
-        _messages.add(message);
-        notifyListeners();
+      _messages.add(message);
+      notifyListeners();
     }
   }
 

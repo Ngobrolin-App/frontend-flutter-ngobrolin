@@ -160,13 +160,13 @@ class ChatListViewModel extends BaseViewModel {
   }
 
   /// Updates the chat list with a new message
-  void updateWithNewMessage(
+  Future<void> updateWithNewMessage(
     String chatId,
     String message,
     String timestamp, {
     String? senderId,
     String? currentUserId,
-  }) {
+  }) async {
     final index = _chatList.indexWhere((chat) => chat['id'] == chatId);
     if (index != -1) {
       _chatList[index]['lastMessage'] = message;
@@ -184,7 +184,12 @@ class ChatListViewModel extends BaseViewModel {
       );
 
       notifyListeners();
+      return;
     }
+
+    // Jika percakapan belum ada di list (chat baru atau bukan di halaman saat ini),
+    // reload halaman pertama untuk memunculkan update (termasuk lastMessage dan unread).
+    await fetchChatList();
   }
 
   /// Load more chats (pagination)
