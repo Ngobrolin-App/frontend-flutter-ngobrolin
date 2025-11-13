@@ -33,6 +33,11 @@ class ChatViewModel extends BaseViewModel {
   String? _conversationId;
   String? get conversationId => _conversationId;
 
+  void setConversationId(String id) {
+    _conversationId = id;
+    notifyListeners();
+  }
+
   Future<bool> _loadMessages() async {
     print('-------- Load messages for partnerId: $_partnerId');
     return await runBusyFuture(() async {

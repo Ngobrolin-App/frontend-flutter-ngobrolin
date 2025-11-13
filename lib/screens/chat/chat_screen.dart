@@ -107,6 +107,31 @@ class _ChatScreenState extends State<ChatScreen> {
         } catch (_) {}
       });
 
+      // Listen percakapan baru: jika melibatkan saya dan partner saat ini, set conversationId & join
+      socketProvider.on('conversation_created', (data) {
+        try {
+          final conv = data['conversation'] as Map<String, dynamic>?;
+          if (conv == null) return;
+
+          final participantsRaw = (conv['participants'] as List<dynamic>? ?? [])
+              .map((e) => e as Map<String, dynamic>)
+              .toList();
+          final myId = authViewModel.user?.id;
+          final isMeIncluded = participantsRaw.any((p) => (p['id']?.toString() ?? '') == myId);
+          final isPartnerIncluded = participantsRaw.any(
+            (p) => (p['id']?.toString() ?? '') == widget.userId,
+          );
+
+          if (isMeIncluded && isPartnerIncluded) {
+            final convId = conv['id'] as String?;
+            if (convId != null) {
+              chatViewModel.setConversationId(convId);
+              socketProvider.joinConversation(convId);
+            }
+          }
+        } catch (_) {}
+      });
+
       _scrollToBottom();
     });
   }
@@ -123,6 +148,7 @@ class _ChatScreenState extends State<ChatScreen> {
       socketProvider.leaveConversation(chatViewModel.conversationId!);
     }
     socketProvider.off('new_message');
+    socketProvider.off('conversation_created');
 
     // Lepas listener ViewModel agar tidak bocor
     if (_vmListener != null) {

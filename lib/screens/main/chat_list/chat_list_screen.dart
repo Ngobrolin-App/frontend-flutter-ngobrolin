@@ -29,7 +29,37 @@ class _ChatListScreenState extends State<ChatListScreen> {
     _scrollController = ScrollController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final chatListViewModel = Provider.of<ChatListViewModel>(context, listen: false);
+      final socketProvider = Provider.of<SocketProvider>(context, listen: false);
+      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+
       chatListViewModel.fetchChatList();
+
+      // Realtime: update last message pada chat list
+      socketProvider.on('conversation_updated', (data) {
+        try {
+          final conversationId = data['conversationId'] as String?;
+          final lastMessage = data['lastMessage'] as Map<String, dynamic>?;
+          if (conversationId != null && lastMessage != null) {
+            final content = lastMessage['content'] as String? ?? '';
+            final createdAt = lastMessage['created_at'] as String? ?? DateTime.now().toIso8601String();
+            final senderId = lastMessage['sender_id']?.toString();
+            final currentUserId = authViewModel.user?.id;
+
+            chatListViewModel.updateWithNewMessage(
+              conversationId,
+              content,
+              createdAt,
+              senderId: senderId,
+              currentUserId: currentUserId,
+            );
+          }
+        } catch (_) {}
+      });
+
+      // Realtime: percakapan baru → refresh list agar muncul
+      socketProvider.on('conversation_created', (_) {
+        chatListViewModel.fetchChatList();
+      });
     });
 
     _scrollController.addListener(() {
@@ -43,7 +73,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
-    // socketProvider.off('conversation_updated'); // dihapus, sudah global
+    final socketProvider = Provider.of<SocketProvider>(context, listen: false);
+    socketProvider.off('conversation_updated');
+    socketProvider.off('conversation_created');
     super.dispose();
   }
 
