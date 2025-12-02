@@ -87,7 +87,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
       // Listen to new_message events tanpa memfilter pesan dari diri sendiri
       socketProvider.on('new_message', (data) {
-        debugPrint('Incoming new_message: $data');
+        debugPrint('-------- new_message on chat screen: $data');
         try {
           final msg = (data['message'] as Map<String, dynamic>);
           final convId = msg['conversation_id'] as String?;
@@ -109,6 +109,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
       // Listen percakapan baru: jika melibatkan saya dan partner saat ini, set conversationId & join
       socketProvider.on('conversation_created', (data) {
+        debugPrint('-------- conversation_created on chat screen: $data');
         try {
           final conv = data['conversation'] as Map<String, dynamic>?;
           if (conv == null) return;

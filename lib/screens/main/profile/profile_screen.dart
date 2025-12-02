@@ -138,26 +138,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                   // Bio
                   if (userData['bio'] != null && userData['bio'].isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            context.tr('bio'),
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Text(
+                                context.tr('bio'),
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(userData['bio'], style: const TextStyle(fontSize: 16)),
+                            ],
                           ),
-                          const SizedBox(height: 8),
-                          Text(userData['bio'], style: const TextStyle(fontSize: 16)),
-                        ],
-                      ),
-                    ),
+                        ),
 
-                  const Divider(),
+                        const Divider(),
+                      ],
+                    ),
 
                   // Edit profile button
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                     child: PrimaryButton(
                       text: context.tr('edit_profile'),
                       onPressed: () async {

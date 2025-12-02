@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import '../models/chat.dart';
 import '../models/message.dart';
 import '../services/api/api_exception.dart';
@@ -53,9 +55,7 @@ class ChatRepository {
             ? DateTime.parse(lastCreatedAtStr)
             : DateTime.now();
 
-        final lastReadId = conv['last_read_message_id'] as String?;
-        final lastMsgId = lastMessage != null ? lastMessage['id'] as String? : null;
-        final unreadCount = (lastMsgId != null && lastReadId != lastMsgId) ? 1 : 0;
+        final unreadCount = (conv['unreadCount'] as int?) ?? 0;
 
         // Map untuk private vs group
         final isGroup = type == 'group';
@@ -86,6 +86,8 @@ class ChatRepository {
           unreadCount: unreadCount,
         );
       }).toList();
+
+      print('-------- chats: $chats');
 
       return {
         'chats': chats,

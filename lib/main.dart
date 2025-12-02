@@ -120,7 +120,7 @@ class _MyAppState extends State<MyApp> {
 
       // Listener conversation_updated sudah benar (user room)
       socketProvider.on('conversation_updated', (data) {
-        print('-------- conversation_updated: $data');
+        debugPrint('-------- conversation_updated on main: $data');
         try {
           final convId = data['conversationId'] as String?;
           final last = data['lastMessage'] as Map<String, dynamic>?;
@@ -143,7 +143,7 @@ class _MyAppState extends State<MyApp> {
 
       // Tambahkan listener global untuk new_message agar chat list ikut update
       socketProvider.on('new_message', (data) async {
-        print('-------- main new_message: $data');
+        debugPrint('-------- new_message on main: $data');
         try {
           final msg = data['message'] as Map<String, dynamic>?;
           if (msg == null) return;

@@ -166,11 +166,22 @@ class ChatListViewModel extends BaseViewModel {
     String timestamp, {
     String? senderId,
     String? currentUserId,
+    String? lastMessageId,
   }) async {
+    // Dedup berdasarkan lastMessageId (jika tersedia)
+    if (lastMessageId != null) {
+      final previousId = _lastMessageIdByConversation[chatId];
+      if (previousId == lastMessageId) {
+        return;
+      }
+      _lastMessageIdByConversation[chatId] = lastMessageId;
+    }
+
     final index = _chatList.indexWhere((chat) => chat['id'] == chatId);
     if (index != -1) {
       _chatList[index]['lastMessage'] = message;
       _chatList[index]['timestamp'] = timestamp;
+      _chatList[index]['lastMessageId'] = lastMessageId;
 
       // Increment unread only if message is not from current user
       final shouldIncrementUnread = senderId == null || currentUserId == null || senderId != currentUserId;

@@ -36,14 +36,17 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
       // Realtime: update last message pada chat list
       socketProvider.on('conversation_updated', (data) {
+        debugPrint('-------- conversation_updated on chat list screen: $data');
         try {
           final conversationId = data['conversationId'] as String?;
           final lastMessage = data['lastMessage'] as Map<String, dynamic>?;
           if (conversationId != null && lastMessage != null) {
             final content = lastMessage['content'] as String? ?? '';
-            final createdAt = lastMessage['created_at'] as String? ?? DateTime.now().toIso8601String();
+            final createdAt =
+                lastMessage['created_at'] as String? ?? DateTime.now().toIso8601String();
             final senderId = lastMessage['sender_id']?.toString();
             final currentUserId = authViewModel.user?.id;
+            final lastMessageId = lastMessage['id']?.toString();
 
             chatListViewModel.updateWithNewMessage(
               conversationId,
@@ -51,13 +54,15 @@ class _ChatListScreenState extends State<ChatListScreen> {
               createdAt,
               senderId: senderId,
               currentUserId: currentUserId,
+              lastMessageId: lastMessageId,
             );
           }
         } catch (_) {}
       });
 
       // Realtime: percakapan baru → refresh list agar muncul
-      socketProvider.on('conversation_created', (_) {
+      socketProvider.on('conversation_created', (data) {
+        debugPrint('-------- conversation_created on chat list screen: $data');
         chatListViewModel.fetchChatList();
       });
     });

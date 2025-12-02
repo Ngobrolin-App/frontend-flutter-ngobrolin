@@ -190,22 +190,27 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
                 // Bio
                 if (userData['bio'] != null && userData['bio'].isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          context.tr('bio'),
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              context.tr('bio'),
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(userData['bio'], style: const TextStyle(fontSize: 16)),
+                          ],
                         ),
-                        const SizedBox(height: 8),
-                        Text(userData['bio'], style: const TextStyle(fontSize: 16)),
-                      ],
-                    ),
-                  ),
+                      ),
 
-                const Divider(),
+                      const Divider(),
+                    ],
+                  ),
 
                 // Action buttons
                 Padding(
