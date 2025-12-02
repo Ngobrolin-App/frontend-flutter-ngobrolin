@@ -39,19 +39,22 @@ class ChatViewModel extends BaseViewModel {
   }
 
   Future<bool> _loadMessages() async {
-    print('-------- Load messages for partnerId: $_partnerId');
     return await runBusyFuture(() async {
           try {
-            // Dapatkan atau buat percakapan privat dengan partner
-            final convId = await _chatRepository.getOrCreateConversationId(_partnerId);
+            // Cari percakapan privat yang sudah ada dengan partner tanpa membuat baru
+            final convId = await _chatRepository.findConversationIdWith(_partnerId);
             _conversationId = convId;
 
-            // Ambil pesan untuk conversation ini
+            if (convId == null) {
+              _messages = [];
+              notifyListeners();
+              return true;
+            }
+
             final messages = await _chatRepository.getMessagesByConversation(
               conversationId: convId,
             );
 
-            // Konversi ke map agar cocok dengan UI — pastikan Map<String, dynamic>
             _messages = messages
                 .map(
                   (message) => Map<String, dynamic>.from({
@@ -64,10 +67,8 @@ class ChatViewModel extends BaseViewModel {
                 )
                 .toList();
 
-            // Trigger rebuild segera setelah data dimuat
             notifyListeners();
 
-            // Tandai pesan terakhir sebagai read jika ada
             final lastMessageId = messages.isNotEmpty ? messages.last.id : null;
             if (lastMessageId != null) {
               await _chatRepository.markAsRead(conversationId: convId, messageId: lastMessageId);
@@ -86,37 +87,28 @@ class ChatViewModel extends BaseViewModel {
   Future<bool> sendMessage(String content) async {
     if (content.trim().isEmpty) return false;
     if (_conversationId == null) {
-      // Jika belum ada conversationId, coba muat dulu
-      final loaded = await _loadMessages();
-      if (!loaded || _conversationId == null) return false;
+      final convId = await _chatRepository.getOrCreateConversationId(_partnerId);
+      _conversationId = convId;
     }
 
     return await runBusyFuture(() async {
           try {
-            // Kirim pesan via repository memakai conversationId
             final message = await _chatRepository.sendMessage(
               conversationId: _conversationId!,
               content: content,
             );
 
-            print('-------- Success send message: $message');
-            print('-------- _messages: $_messages');
-
-            // // Tambahkan ke list lokal
             // _messages.add({
             //   'id': message.id,
             //   'senderId': message.senderId,
             //   'content': message.content,
             //   'timestamp': message.createdAt.toIso8601String(),
-            //   'isRead': message.isRead,
+            //   'isRead': true,
             // });
-
-            print('-------- Success add message: $_messages');
 
             notifyListeners();
             return true;
           } catch (e) {
-            print('-------- Error send message: $e');
             setError(e.toString());
             return false;
           }
@@ -126,12 +118,23 @@ class ChatViewModel extends BaseViewModel {
 
   /// Handles incoming messages (e.g., from WebSocket)
   void handleIncomingMessage(Map<String, dynamic> message) {
-    // Dedup: jangan tambahkan jika id sudah ada
     final exists = _messages.any((m) => m['id'] == message['id']);
     if (!exists) {
       _messages.add(message);
       notifyListeners();
     }
+  }
+
+  /// Update read status for a batch of messages
+  void updateMessagesReadStatus(List<String> messageIds) {
+    if (messageIds.isEmpty) return;
+    for (final id in messageIds) {
+      final idx = _messages.indexWhere((m) => m['id'] == id);
+      if (idx != -1) {
+        _messages[idx]['isRead'] = true;
+      }
+    }
+    notifyListeners();
   }
 
   /// Clears the chat history

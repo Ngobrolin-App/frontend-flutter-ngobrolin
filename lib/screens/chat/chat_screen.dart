@@ -92,7 +92,6 @@ class _ChatScreenState extends State<ChatScreen> {
           final msg = (data['message'] as Map<String, dynamic>);
           final convId = msg['conversation_id'] as String?;
           final senderId = msg['sender_id'] as String?;
-          // final myId = authViewModel.user?.id; // tidak lagi digunakan untuk memfilter
 
           if (convId != null && convId == chatViewModel.conversationId) {
             chatViewModel.handleIncomingMessage({
@@ -100,9 +99,23 @@ class _ChatScreenState extends State<ChatScreen> {
               'senderId': senderId ?? '',
               'content': msg['content'] ?? '',
               'timestamp': msg['created_at'] ?? DateTime.now().toIso8601String(),
-              'isRead': false,
+              'isRead': msg['is_read'] as bool? ?? false,
             });
             _scrollToBottom();
+          }
+        } catch (_) {}
+      });
+
+      // Listen perubahan status read massal dari backend
+      socketProvider.on('messages_read_status_updated', (data) {
+        debugPrint('-------- messages_read_status_updated on chat screen: $data');
+        try {
+          final convId = data['conversationId'] as String?;
+          if (convId != null && convId == chatViewModel.conversationId) {
+            final ids = (data['messageIds'] as List<dynamic>? ?? [])
+                .map((e) => e.toString())
+                .toList();
+            chatViewModel.updateMessagesReadStatus(ids);
           }
         } catch (_) {}
       });
@@ -149,6 +162,7 @@ class _ChatScreenState extends State<ChatScreen> {
       socketProvider.leaveConversation(chatViewModel.conversationId!);
     }
     socketProvider.off('new_message');
+    socketProvider.off('messages_read_status_updated');
     socketProvider.off('conversation_created');
 
     // Lepas listener ViewModel agar tidak bocor

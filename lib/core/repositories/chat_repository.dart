@@ -177,6 +177,34 @@ class ChatRepository {
     }
   }
 
+  Future<String?> findConversationIdWith(String participantId) async {
+    try {
+      final response = await _apiService.post<Map<String, dynamic>>(
+        '/conversations/list',
+        queryParameters: {'page': 1, 'limit': 100},
+      );
+      final conversations = (response['conversations'] as List<dynamic>)
+          .map((e) => e as Map<String, dynamic>)
+          .toList();
+      for (final conv in conversations) {
+        final type = conv['type'] as String?;
+        if (type == 'private') {
+          final participants = (conv['participants'] as List<dynamic>? ?? [])
+              .map((p) => p as Map<String, dynamic>)
+              .toList();
+          final found = participants.any((p) => (p['id']?.toString()) == participantId);
+          if (found) {
+            return conv['id'] as String;
+          }
+        }
+      }
+      return null;
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(message: e.toString());
+    }
+  }
+
   // Ambil pesan berdasarkan conversationId sesuai backend
   Future<List<Message>> getMessagesByConversation({required String conversationId}) async {
     try {

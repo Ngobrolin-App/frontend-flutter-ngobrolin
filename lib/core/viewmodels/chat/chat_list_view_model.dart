@@ -40,7 +40,9 @@ class ChatListViewModel extends BaseViewModel {
             for (final conv in rawConversations) {
               final convId = conv['id'] as String;
               final lastMessage = conv['lastMessage'] as Map<String, dynamic>?;
-              _lastMessageIdByConversation[convId] = lastMessage != null ? lastMessage['id'] as String? : null;
+              _lastMessageIdByConversation[convId] = lastMessage != null
+                  ? lastMessage['id'] as String?
+                  : null;
             }
 
             // Convert to map format for compatibility with existing UI
@@ -184,7 +186,8 @@ class ChatListViewModel extends BaseViewModel {
       _chatList[index]['lastMessageId'] = lastMessageId;
 
       // Increment unread only if message is not from current user
-      final shouldIncrementUnread = senderId == null || currentUserId == null || senderId != currentUserId;
+      final shouldIncrementUnread =
+          senderId == null || currentUserId == null || senderId != currentUserId;
       if (shouldIncrementUnread) {
         _chatList[index]['unreadCount'] = (_chatList[index]['unreadCount'] as int) + 1;
       }
@@ -221,7 +224,9 @@ class ChatListViewModel extends BaseViewModel {
             for (final conv in rawConversations) {
               final convId = conv['id'] as String;
               final lastMessage = conv['lastMessage'] as Map<String, dynamic>?;
-              _lastMessageIdByConversation[convId] = lastMessage != null ? lastMessage['id'] as String? : null;
+              _lastMessageIdByConversation[convId] = lastMessage != null
+                  ? lastMessage['id'] as String?
+                  : null;
             }
 
             final additional = chats
