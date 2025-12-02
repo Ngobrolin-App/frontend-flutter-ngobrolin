@@ -103,8 +103,20 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final socketProvider = Provider.of<SocketProvider>(context, listen: false);
       final chatListViewModel = Provider.of<ChatListViewModel>(context, listen: false);
-      await chatListViewModel.fetchChatList();
+      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+
+      // Join semua room percakapan milik user agar listener new_message di main aktif
+      final fetched = await chatListViewModel.fetchChatList();
+      if (fetched) {
+        for (final chat in chatListViewModel.chatList) {
+          final convId = chat['id'] as String?;
+          if (convId != null) {
+            socketProvider.joinConversation(convId);
+          }
+        }
+      }
     });
   }
 

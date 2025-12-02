@@ -88,7 +88,7 @@ class ChatViewModel extends BaseViewModel {
     if (content.trim().isEmpty) return false;
     if (_conversationId == null) {
       final convId = await _chatRepository.getOrCreateConversationId(_partnerId);
-      _conversationId = convId;
+      setConversationId(convId);
     }
 
     return await runBusyFuture(() async {
