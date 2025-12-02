@@ -36,16 +36,14 @@ class ChatListViewModel extends BaseViewModel {
                 .toList();
             final pagination = (result['pagination'] as Map<String, dynamic>);
 
-            // Map raw lastMessageId
+            final Map<String, String> _lastMessageTypeByConversation = {};
             for (final conv in rawConversations) {
               final convId = conv['id'] as String;
               final lastMessage = conv['lastMessage'] as Map<String, dynamic>?;
-              _lastMessageIdByConversation[convId] = lastMessage != null
-                  ? lastMessage['id'] as String?
-                  : null;
+              _lastMessageIdByConversation[convId] = lastMessage != null ? lastMessage['id'] as String? : null;
+              _lastMessageTypeByConversation[convId] = lastMessage != null ? (lastMessage['type'] as String? ?? 'text') : 'text';
             }
 
-            // Convert to map format for compatibility with existing UI
             _chatList = chats
                 .map(
                   (chat) => {
@@ -57,7 +55,8 @@ class ChatListViewModel extends BaseViewModel {
                     'lastMessage': chat.lastMessage,
                     'timestamp': chat.timestamp.toIso8601String(),
                     'unreadCount': chat.unreadCount,
-                    'lastMessageId': _lastMessageIdByConversation[chat.id], // tambahan
+                    'lastMessageId': _lastMessageIdByConversation[chat.id],
+                    'lastMessageType': _lastMessageTypeByConversation[chat.id] ?? 'text',
                   },
                 )
                 .toList();
@@ -169,6 +168,7 @@ class ChatListViewModel extends BaseViewModel {
     String? senderId,
     String? currentUserId,
     String? lastMessageId,
+    String? type,
   }) async {
     // Dedup berdasarkan lastMessageId (jika tersedia)
     if (lastMessageId != null) {
@@ -184,6 +184,9 @@ class ChatListViewModel extends BaseViewModel {
       _chatList[index]['lastMessage'] = message;
       _chatList[index]['timestamp'] = timestamp;
       _chatList[index]['lastMessageId'] = lastMessageId;
+      if (type != null) {
+        _chatList[index]['lastMessageType'] = type;
+      }
 
       // Increment unread only if message is not from current user
       final shouldIncrementUnread =

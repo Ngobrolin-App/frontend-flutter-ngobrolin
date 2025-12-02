@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/ic.dart';
 import 'package:iconify_flutter/icons/material_symbols.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/providers/socket_provider.dart';
 import '../../core/viewmodels/chat/chat_view_model.dart';
@@ -100,6 +102,7 @@ class _ChatScreenState extends State<ChatScreen> {
               'content': msg['content'] ?? '',
               'timestamp': msg['created_at'] ?? DateTime.now().toIso8601String(),
               'isRead': msg['is_read'] as bool? ?? false,
+              'type': (msg['type'] as String?) ?? 'text',
             });
             _scrollToBottom();
           }
@@ -307,6 +310,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         timestamp: DateTime.parse(message['timestamp']),
                         isMe: isMe,
                         isRead: message['isRead'] ?? false,
+                        type: message['type'] ?? 'text',
                       );
                     },
                   ),
@@ -330,8 +334,65 @@ class _ChatScreenState extends State<ChatScreen> {
                 // Attachment button
                 IconButton(
                   icon: Iconify(MaterialSymbols.attach_file, color: AppColors.grey),
-                  onPressed: () {
-                    // TODO: Implement attachment functionality
+                  onPressed: () async {
+                    final choice = await showModalBottomSheet<String>(
+                      context: context,
+                      builder: (ctx) => SafeArea(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 24),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              GestureDetector(
+                                onTap: () => Navigator.pop(ctx, 'image'),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.image),
+                                    const SizedBox(width: 12),
+                                    Expanded(child: Text(context.tr('choose_image'))),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              GestureDetector(
+                                onTap: () => Navigator.pop(ctx, 'file'),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.insert_drive_file),
+                                    const SizedBox(width: 12),
+                                    Expanded(child: Text(context.tr('choose_file'))),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                    if (choice == 'image') {
+                      final picker = ImagePicker();
+                      final picked = await picker.pickImage(
+                        source: ImageSource.gallery,
+                        imageQuality: 80,
+                      );
+                      if (picked != null) {
+                        await Provider.of<ChatViewModel>(
+                          context,
+                          listen: false,
+                        ).sendAttachment(picked.path, 'image');
+                        _scrollToBottom();
+                      }
+                    } else if (choice == 'file') {
+                      final result = await FilePicker.platform.pickFiles(type: FileType.any);
+                      final path = result?.files.first.path;
+                      if (path != null) {
+                        await Provider.of<ChatViewModel>(
+                          context,
+                          listen: false,
+                        ).sendAttachment(path, 'file');
+                        _scrollToBottom();
+                      }
+                    }
                   },
                 ),
 

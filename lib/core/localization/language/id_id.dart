@@ -87,6 +87,10 @@ const Map<String, String> idID = {
   'no_chats': 'Belum ada obrolan',
   'start_new_chat': 'Mulai obrolan baru',
   'user_is_blocked_cannot_start_chat': 'Pengguna ini diblokir. Kamu tidak bisa memulai obrolan.',
+  'choose_image': 'Pilih Gambar',
+  'choose_file': 'Pilih File',
+  'file': 'File',
+  'image': 'Gambar',
 
   // Errors
   'error_occurred': 'Terjadi kesalahan',

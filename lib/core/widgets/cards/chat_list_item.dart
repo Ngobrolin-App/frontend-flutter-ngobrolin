@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'package:iconify_flutter/icons/material_symbols.dart';
 import '../../../theme/app_colors.dart';
 import '../../localization/app_localizations.dart';
 
@@ -8,6 +10,7 @@ class ChatListItem extends StatelessWidget {
   final String name;
   final String? avatarUrl;
   final String lastMessage;
+  final String lastMessageType;
   final DateTime timestamp;
   final int unreadCount;
   final VoidCallback onTap;
@@ -21,6 +24,7 @@ class ChatListItem extends StatelessWidget {
     required this.timestamp,
     this.unreadCount = 0,
     required this.onTap,
+    this.lastMessageType = 'text',
   }) : super(key: key);
 
   @override
@@ -74,15 +78,52 @@ class ChatListItem extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: Text(
-                          lastMessage,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: unreadCount > 0 ? AppColors.text : AppColors.timestamp,
-                            fontWeight: unreadCount > 0 ? FontWeight.w500 : FontWeight.normal,
-                          ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (lastMessageType == 'image') ...[
+                              Iconify(MaterialSymbols.image, size: 18, color: AppColors.timestamp),
+                              const SizedBox(width: 6),
+                              Text(
+                                context.tr('image'),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: unreadCount > 0 ? AppColors.text : AppColors.timestamp,
+                                  fontWeight: unreadCount > 0 ? FontWeight.w500 : FontWeight.normal,
+                                ),
+                              ),
+                            ] else if (lastMessageType == 'file') ...[
+                              Iconify(
+                                MaterialSymbols.file_copy,
+                                size: 18,
+                                color: AppColors.timestamp,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                context.tr('file'),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: unreadCount > 0 ? AppColors.text : AppColors.timestamp,
+                                  fontWeight: unreadCount > 0 ? FontWeight.w500 : FontWeight.normal,
+                                ),
+                              ),
+                            ] else ...[
+                              Text(
+                                lastMessage,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: unreadCount > 0 ? AppColors.text : AppColors.timestamp,
+                                  fontWeight: unreadCount > 0 ? FontWeight.w500 : FontWeight.normal,
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
                       if (unreadCount > 0) ...[

@@ -87,6 +87,10 @@ const Map<String, String> enUS = {
   'no_chats': 'No chats yet',
   'start_new_chat': 'Start a new chat',
   'user_is_blocked_cannot_start_chat': 'This user is blocked. You cannot start a chat.',
+  'choose_image': 'Choose Image',
+  'choose_file': 'Choose File',
+  'file': 'File',
+  'image': 'Image',
 
   // Errors
   'error_occurred': 'An error occurred',

@@ -51,25 +51,29 @@ class ChatViewModel extends BaseViewModel {
               return true;
             }
 
-            final messages = await _chatRepository.getMessagesByConversation(
+            final items = await _chatRepository.getMessagesByConversationRaw(
               conversationId: convId,
             );
 
-            _messages = messages
+            _messages = items
                 .map(
-                  (message) => Map<String, dynamic>.from({
-                    'id': message.id,
-                    'senderId': message.senderId,
-                    'content': message.content,
-                    'timestamp': message.createdAt.toIso8601String(),
-                    'isRead': message.isRead,
-                  }),
+                  (item) => {
+                    'id': item['id']?.toString() ?? '',
+                    'senderId':
+                        (item['sender_id']?.toString()) ??
+                        (item['sender']?['id']?.toString() ?? ''),
+                    'content': item['content'] ?? '',
+                    'timestamp':
+                        (item['created_at'] as String?) ?? DateTime.now().toIso8601String(),
+                    'isRead': item['is_read'] as bool? ?? false,
+                    'type': item['type'] as String? ?? 'text',
+                  },
                 )
                 .toList();
 
             notifyListeners();
 
-            final lastMessageId = messages.isNotEmpty ? messages.last.id : null;
+            final lastMessageId = messages.isNotEmpty ? messages.last['id'] : null;
             if (lastMessageId != null) {
               await _chatRepository.markAsRead(conversationId: convId, messageId: lastMessageId);
             }
@@ -84,7 +88,7 @@ class ChatViewModel extends BaseViewModel {
   }
 
   /// Sends a new message
-  Future<bool> sendMessage(String content) async {
+  Future<bool> sendMessage(String content, {String type = 'text'}) async {
     if (content.trim().isEmpty) return false;
     if (_conversationId == null) {
       final convId = await _chatRepository.getOrCreateConversationId(_partnerId);
@@ -93,21 +97,30 @@ class ChatViewModel extends BaseViewModel {
 
     return await runBusyFuture(() async {
           try {
-            final message = await _chatRepository.sendMessage(
+            await _chatRepository.sendMessage(
               conversationId: _conversationId!,
               content: content,
+              type: type,
             );
-
-            // _messages.add({
-            //   'id': message.id,
-            //   'senderId': message.senderId,
-            //   'content': message.content,
-            //   'timestamp': message.createdAt.toIso8601String(),
-            //   'isRead': true,
-            // });
-
             notifyListeners();
             return true;
+          } catch (e) {
+            setError(e.toString());
+            return false;
+          }
+        }) ??
+        false;
+  }
+
+  Future<bool> sendAttachment(String filePath, String type) async {
+    if (_conversationId == null) {
+      final convId = await _chatRepository.getOrCreateConversationId(_partnerId);
+      setConversationId(convId);
+    }
+    return await runBusyFuture(() async {
+          try {
+            final url = await _chatRepository.uploadAttachment(filePath: filePath, type: type);
+            return await sendMessage(url, type: type);
           } catch (e) {
             setError(e.toString());
             return false;

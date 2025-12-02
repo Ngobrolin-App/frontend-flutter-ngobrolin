@@ -4,6 +4,7 @@ import '../models/chat.dart';
 import '../models/message.dart';
 import '../services/api/api_exception.dart';
 import '../services/api/api_service.dart';
+import 'package:dio/dio.dart';
 
 /// Repository for chat related operations
 class ChatRepository {
@@ -205,28 +206,29 @@ class ChatRepository {
     }
   }
 
-  // Ambil pesan berdasarkan conversationId sesuai backend
-  Future<List<Message>> getMessagesByConversation({required String conversationId}) async {
+  // Ambil pesan berdasarkan conversationId sesuai backend (raw untuk akses type)
+  Future<List<Map<String, dynamic>>> getMessagesByConversationRaw({required String conversationId}) async {
     try {
       final response = await _apiService.post<Map<String, dynamic>>(
         '/messages/get',
         data: {'conversationId': conversationId},
       );
+      return (response['messages'] as List<dynamic>).map((e) => e as Map<String, dynamic>).toList();
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(message: e.toString());
+    }
+  }
 
-      final items = (response['messages'] as List<dynamic>)
-          .map((e) => e as Map<String, dynamic>)
-          .toList();
-
-      // Map snake_case dari backend ke model frontend (camelCase)
+  Future<List<Message>> getMessagesByConversation({required String conversationId}) async {
+    try {
+      final items = await getMessagesByConversationRaw(conversationId: conversationId);
       return items.map((item) {
-        final senderId =
-            (item['sender_id']?.toString()) ?? (item['sender']?['id']?.toString() ?? '');
+        final senderId = (item['sender_id']?.toString()) ?? (item['sender']?['id']?.toString() ?? '');
         final createdAtStr = (item['created_at'] as String?) ?? DateTime.now().toIso8601String();
-
         return Message(
           id: item['id'] as String,
           senderId: senderId,
-          // Frontend model membutuhkan receiverId; untuk percakapan gunakan conversationId
           receiverId: conversationId,
           content: (item['content'] as String?) ?? '',
           isRead: (item['is_read'] as bool?) ?? false,
@@ -251,11 +253,9 @@ class ChatRepository {
         '/messages/send',
         data: {'conversationId': conversationId, 'content': content, 'type': type},
       );
-
       final data = response['data'] as Map<String, dynamic>;
       final senderId = (data['sender_id']?.toString()) ?? (data['sender']?['id']?.toString() ?? '');
       final createdAtStr = (data['created_at'] as String?) ?? DateTime.now().toIso8601String();
-
       return Message(
         id: data['id'] as String,
         senderId: senderId,
@@ -265,6 +265,20 @@ class ChatRepository {
         createdAt: DateTime.parse(createdAtStr),
         readAt: null,
       );
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(message: e.toString());
+    }
+  }
+
+  Future<String> uploadAttachment({required String filePath, required String type}) async {
+    try {
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(filePath),
+        'type': type,
+      });
+      final response = await _apiService.post<Map<String, dynamic>>('/messages/upload', data: formData);
+      return (response['url'] as String? ?? '').toString();
     } catch (e) {
       if (e is ApiException) rethrow;
       throw ApiException(message: e.toString());

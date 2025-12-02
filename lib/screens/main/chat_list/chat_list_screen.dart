@@ -47,6 +47,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
             final senderId = lastMessage['sender_id']?.toString();
             final currentUserId = authViewModel.user?.id;
             final lastMessageId = lastMessage['id']?.toString();
+            final type = lastMessage['type'] as String?;
 
             chatListViewModel.updateWithNewMessage(
               conversationId,
@@ -55,6 +56,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
               senderId: senderId,
               currentUserId: currentUserId,
               lastMessageId: lastMessageId,
+              type: type,
             );
           }
         } catch (_) {}
@@ -118,10 +120,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   lastMessage: chat['lastMessage'],
                   timestamp: DateTime.parse(chat['timestamp']),
                   unreadCount: chat['unreadCount'],
+                  lastMessageType: chat['lastMessageType'] ?? 'text',
                   onTap: () {
-                    // Mark chat as read when opened
                     chatListViewModel.markChatAsRead(chat['id']);
-
                     Navigator.of(context).pushNamed(
                       AppRoutes.chat,
                       arguments: {
