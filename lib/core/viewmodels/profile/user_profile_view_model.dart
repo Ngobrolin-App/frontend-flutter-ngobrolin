@@ -7,26 +7,15 @@ class UserProfileViewModel extends BaseViewModel {
   final UserRepository _userRepository;
   final SettingsRepository _settingsRepository;
 
-  // User profile data
-  Map<String, dynamic> _userData = {
-    'id': '',
-    'name': '',
-    'username': '',
-    'bio': '',
-    'avatarUrl': null,
-    'isPrivate': false,
-  };
-
-  Map<String, dynamic> get userData => _userData;
+  User? _user;
+  User? get user => _user;
 
   bool _isBlocked = false;
   bool get isBlocked => _isBlocked;
 
-  UserProfileViewModel({
-    UserRepository? userRepository,
-    SettingsRepository? settingsRepository,
-  }) : _userRepository = userRepository ?? UserRepository(),
-       _settingsRepository = settingsRepository ?? SettingsRepository();
+  UserProfileViewModel({UserRepository? userRepository, SettingsRepository? settingsRepository})
+    : _userRepository = userRepository ?? UserRepository(),
+      _settingsRepository = settingsRepository ?? SettingsRepository();
 
   /// Initializes the user profile with provided data
   void initWithUserData({
@@ -36,14 +25,17 @@ class UserProfileViewModel extends BaseViewModel {
     String? avatarUrl,
     String? bio,
   }) {
-    _userData = {
-      'id': userId,
-      'name': name,
-      'username': username,
-      'bio': bio ?? 'Hello, I am using Ngobrolin!',
-      'avatarUrl': avatarUrl,
-      'isPrivate': false, // default sebelum fetch
-    };
+    // Buat instance sementara dengan tanggal saat ini karena belum fetch detail
+    _user = User(
+      id: userId,
+      name: name,
+      username: username,
+      bio: bio ?? 'Hello, I am using Ngobrolin!',
+      avatarUrl: avatarUrl,
+      isPrivate: false,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
     _checkIfUserBlocked();
     notifyListeners();
   }
@@ -51,31 +43,23 @@ class UserProfileViewModel extends BaseViewModel {
   /// Fetches user profile data from the API
   Future<bool> fetchUserProfile(String userId) async {
     return await runBusyFuture(() async {
-      try {
-        final user = await _userRepository.getUserById(userId);
-
-        _userData = {
-          'id': user.id,
-          'name': user.name,
-          'username': user.username,
-          'bio': user.bio ?? 'Hello, I am using Ngobrolin!',
-          'avatarUrl': user.avatarUrl,
-          'isPrivate': user.isPrivate,
-        };
-
-        await _checkIfUserBlocked();
-        return true;
-      } catch (e) {
-        setError(e.toString());
-        return false;
-      }
-    }) ?? false;
+          try {
+            _user = await _userRepository.getUserById(userId);
+            await _checkIfUserBlocked();
+            return true;
+          } catch (e) {
+            setError(e.toString());
+            return false;
+          }
+        }) ??
+        false;
   }
 
   /// Checks if the current user is blocked
   Future<void> _checkIfUserBlocked() async {
+    if (_user == null) return;
     try {
-      _isBlocked = await _settingsRepository.isUserBlocked(_userData['id']);
+      _isBlocked = await _settingsRepository.isUserBlocked(_user!.id);
       notifyListeners();
     } catch (e) {
       // Handle error silently for now
@@ -84,34 +68,38 @@ class UserProfileViewModel extends BaseViewModel {
 
   /// Blocks the current user
   Future<bool> blockUser() async {
+    if (_user == null) return false;
     return await runBusyFuture(() async {
-      try {
-        final success = await _settingsRepository.blockUser(_userData['id']);
-        if (success) {
-          _isBlocked = true;
-        }
-        return success;
-      } catch (e) {
-        setError(e.toString());
-        return false;
-      }
-    }) ?? false;
+          try {
+            final success = await _settingsRepository.blockUser(_user!.id);
+            if (success) {
+              _isBlocked = true;
+            }
+            return success;
+          } catch (e) {
+            setError(e.toString());
+            return false;
+          }
+        }) ??
+        false;
   }
 
   /// Unblocks the current user
   Future<bool> unblockUser() async {
+    if (_user == null) return false;
     return await runBusyFuture(() async {
-      try {
-        final success = await _settingsRepository.unblockUser(_userData['id']);
-        if (success) {
-          _isBlocked = false;
-        }
-        return success;
-      } catch (e) {
-        setError(e.toString());
-        return false;
-      }
-    }) ?? false;
+          try {
+            final success = await _settingsRepository.unblockUser(_user!.id);
+            if (success) {
+              _isBlocked = false;
+            }
+            return success;
+          } catch (e) {
+            setError(e.toString());
+            return false;
+          }
+        }) ??
+        false;
   }
 
   /// Toggles block status of the user

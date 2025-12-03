@@ -1,9 +1,12 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// A singleton class that provides a configured Dio instance for API requests.
 class DioClient {
+  static const Duration _kTimeout = Duration(seconds: 30);
+  static const Map<String, String> _kDefaultHeaders = {'Accept': 'application/json'};
   static final DioClient _instance = DioClient._internal();
   late final Dio _dio;
 
@@ -27,25 +30,25 @@ class DioClient {
 
     _dio.options = BaseOptions(
       baseUrl: baseUrl,
-      connectTimeout: const Duration(seconds: 30),
-      receiveTimeout: const Duration(seconds: 30),
-      sendTimeout: const Duration(seconds: 30),
-      headers: {
-        'Accept': 'application/json',
-      },
+      connectTimeout: _kTimeout,
+      receiveTimeout: _kTimeout,
+      sendTimeout: _kTimeout,
+      headers: _kDefaultHeaders,
     );
 
-    // Add logging interceptor
-    _dio.interceptors.add(
-      LogInterceptor(
-        request: true,
-        requestHeader: true,
-        requestBody: true,
-        responseHeader: true,
-        responseBody: true,
-        error: true,
-      ),
-    );
+    // Add logging interceptor only in debug mode
+    if (kDebugMode) {
+      _dio.interceptors.add(
+        LogInterceptor(
+          request: true,
+          requestHeader: true,
+          requestBody: true,
+          responseHeader: true,
+          responseBody: true,
+          error: true,
+        ),
+      );
+    }
 
     // Add auth interceptor
     _dio.interceptors.add(
@@ -66,13 +69,5 @@ class DioClient {
         },
       ),
     );
-  }
-
-  void updateToken(String token) {
-    _dio.options.headers['Authorization'] = 'Bearer $token';
-  }
-
-  void clearToken() {
-    _dio.options.headers.remove('Authorization');
   }
 }

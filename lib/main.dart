@@ -26,7 +26,10 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'routes/app_routes.dart';
 import 'theme/app_theme.dart';
 import 'core/repositories/user_repository.dart';
+
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+const String kNotificationChannelId = 'ngobrolin_default_channel';
+const String kNotificationChannelName = 'Ngobrolin Notifications';
 
 // main() function in main.dart
 @pragma('vm:entry-point')
@@ -54,32 +57,28 @@ Future<void> main() async {
     onDidReceiveNotificationResponse: (NotificationResponse response) {
       final payload = response.payload;
       if (payload != null && payload.isNotEmpty) {
-        navigatorKey.currentState?.pushNamed(
-          AppRoutes.chat,
-          arguments: {'userId': payload},
-        );
+        navigatorKey.currentState?.pushNamed(AppRoutes.chat, arguments: {'userId': payload});
       }
     },
   );
 
   FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
     final notification = message.notification;
-    if (notification != null) {
-      const androidDetails = AndroidNotificationDetails(
-        'ngobrolin_default_channel',
-        'Ngobrolin Notifications',
-        importance: Importance.max,
-        priority: Priority.high,
-      );
-      const details = NotificationDetails(android: androidDetails);
-      await flutterLocalNotificationsPlugin.show(
-        notification.hashCode,
-        notification.title,
-        notification.body,
-        details,
-        payload: message.data['userId'] ?? '',
-      );
-    }
+    if (notification == null) return;
+    const androidDetails = AndroidNotificationDetails(
+      kNotificationChannelId,
+      kNotificationChannelName,
+      importance: Importance.max,
+      priority: Priority.high,
+    );
+    const details = NotificationDetails(android: androidDetails);
+    await flutterLocalNotificationsPlugin.show(
+      notification.hashCode,
+      notification.title,
+      notification.body,
+      details,
+      payload: message.data['userId'] ?? '',
+    );
   });
 
   FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
@@ -137,13 +136,12 @@ class _MyAppState extends State<MyApp> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final socketProvider = Provider.of<SocketProvider>(context, listen: false);
       final chatListViewModel = Provider.of<ChatListViewModel>(context, listen: false);
-      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
 
       // Join semua room percakapan milik user agar listener new_message di main aktif
       final fetched = await chatListViewModel.fetchChatList();
       if (fetched) {
         for (final chat in chatListViewModel.chatList) {
-          final convId = chat['id'] as String?;
+          final convId = chat.id as String?;
           if (convId != null) {
             socketProvider.joinConversation(convId);
           }

@@ -91,6 +91,8 @@ const Map<String, String> enUS = {
   'choose_file': 'Choose File',
   'file': 'File',
   'image': 'Image',
+  'typing': 'Typing',
+  'online': 'Online',
 
   // Errors
   'error_occurred': 'An error occurred',

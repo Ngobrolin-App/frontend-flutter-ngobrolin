@@ -9,6 +9,7 @@ class Message extends Equatable {
   final String senderId;
   final String receiverId;
   final String content;
+  final String type;
   final bool isRead;
   final DateTime createdAt;
   final DateTime? readAt;
@@ -18,6 +19,7 @@ class Message extends Equatable {
     required this.senderId,
     required this.receiverId,
     required this.content,
+    this.type = 'text',
     this.isRead = false,
     required this.createdAt,
     this.readAt,
@@ -35,6 +37,7 @@ class Message extends Equatable {
     String? senderId,
     String? receiverId,
     String? content,
+    String? type,
     bool? isRead,
     DateTime? createdAt,
     DateTime? readAt,
@@ -44,6 +47,7 @@ class Message extends Equatable {
       senderId: senderId ?? this.senderId,
       receiverId: receiverId ?? this.receiverId,
       content: content ?? this.content,
+      type: type ?? this.type,
       isRead: isRead ?? this.isRead,
       createdAt: createdAt ?? this.createdAt,
       readAt: readAt ?? this.readAt,
@@ -54,5 +58,5 @@ class Message extends Equatable {
   bool isSentByMe(String currentUserId) => senderId == currentUserId;
 
   @override
-  List<Object?> get props => [id, senderId, receiverId, content, isRead, createdAt, readAt];
+  List<Object?> get props => [id, senderId, receiverId, content, type, isRead, createdAt, readAt];
 }

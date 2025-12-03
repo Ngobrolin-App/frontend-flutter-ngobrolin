@@ -65,11 +65,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final profileViewModel = Provider.of<ProfileViewModel>(context);
-    final userData = profileViewModel.userData;
+    final user = profileViewModel.user;
 
     // Amankan akses data untuk avatar/name/username
-    final displayName = ((userData['name'] ?? '') as String).trim();
-    final avatarUrl = (userData['avatarUrl'] as String?);
+    final displayName = user?.name.trim() ?? '';
+    final avatarUrl = user?.avatarUrl;
     final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
 
     return Scaffold(
@@ -86,6 +86,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       body: profileViewModel.isLoading
           ? const Center(child: CircularProgressIndicator())
+          : user == null
+          ? Center(child: Text(context.tr('failed_to_load_profile')))
           : SingleChildScrollView(
               child: Column(
                 children: [
@@ -129,7 +131,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                         // Username
                         Text(
-                          '@${((userData['username'] ?? '') as String).trim()}',
+                          '@${user.username}',
                           style: const TextStyle(fontSize: 16, color: Colors.white70),
                         ),
                       ],
@@ -137,7 +139,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
 
                   // Bio
-                  if (userData['bio'] != null && userData['bio'].isNotEmpty)
+                  if (user.bio != null && user.bio!.isNotEmpty)
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
@@ -151,7 +153,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                               ),
                               const SizedBox(height: 8),
-                              Text(userData['bio'], style: const TextStyle(fontSize: 16)),
+                              Text(user.bio!, style: const TextStyle(fontSize: 16)),
                             ],
                           ),
                         ),
@@ -167,9 +169,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       text: context.tr('edit_profile'),
                       onPressed: () async {
                         await Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => EditProfileScreen(userData: userData),
-                          ),
+                          MaterialPageRoute(builder: (context) => EditProfileScreen(user: user)),
                         );
                         if (mounted) {
                           profileViewModel.fetchCurrentProfile();

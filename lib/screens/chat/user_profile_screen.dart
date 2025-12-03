@@ -47,22 +47,22 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
   void _startChat() {
     final userProfileViewModel = Provider.of<UserProfileViewModel>(context, listen: false);
-    final userData = userProfileViewModel.userData;
+    final user = userProfileViewModel.user;
+
+    if (user == null) return;
 
     Navigator.of(context).pushReplacementNamed(
       AppRoutes.chat,
-      arguments: {
-        'userId': userData['id'],
-        'name': userData['name'],
-        'avatarUrl': userData['avatarUrl'],
-      },
+      arguments: {'userId': user.id, 'name': user.name, 'avatarUrl': user.avatarUrl},
     );
   }
 
   void _toggleBlockUser() async {
     final userProfileViewModel = Provider.of<UserProfileViewModel>(context, listen: false);
-    final userData = userProfileViewModel.userData;
+    final user = userProfileViewModel.user;
     final isBlocked = userProfileViewModel.isBlocked;
+
+    if (user == null) return;
 
     if (isBlocked) {
       // Unblock user
@@ -70,14 +70,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("${userData['name']} ${context.tr('has_been_unblocked')}"),
+            content: Text("${user.name} ${context.tr('has_been_unblocked')}"),
             backgroundColor: Colors.green,
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("${context.tr('failed_to_unblock')} ${userData['name']}"),
+            content: Text("${context.tr('failed_to_unblock')} ${user.name}"),
             backgroundColor: Colors.red,
           ),
         );
@@ -100,14 +100,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 if (success) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text("${userData['name']} ${context.tr('has_been_blocked')}"),
+                      content: Text("${user.name} ${context.tr('has_been_blocked')}"),
                       backgroundColor: Colors.green,
                     ),
                   );
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text("${context.tr('failed_to_block')} ${userData['name']}"),
+                      content: Text("${context.tr('failed_to_block')} ${user.name}"),
                       backgroundColor: Colors.red,
                     ),
                   );
@@ -125,19 +125,19 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   Widget build(BuildContext context) {
     return Consumer<UserProfileViewModel>(
       builder: (context, userProfileViewModel, child) {
-        final userData = userProfileViewModel.userData;
+        final user = userProfileViewModel.user;
         final isBlocked = userProfileViewModel.isBlocked;
         final isLoading = userProfileViewModel.isLoading;
 
-        if (isLoading) {
+        if (isLoading || user == null) {
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
         }
 
         // Tentukan self vs target dan status privat
         final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
         final currentUserId = authViewModel.user?.id;
-        final isSelf = currentUserId == userData['id'];
-        final isPrivate = (userData['isPrivate'] == true);
+        final isSelf = currentUserId == user.id;
+        final isPrivate = user.isPrivate;
         final canStartChat = !isBlocked && (!isPrivate || isSelf);
 
         return Scaffold(
@@ -154,13 +154,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       CircleAvatar(
                         radius: 50,
                         backgroundColor: Colors.white,
-                        backgroundImage: userData['avatarUrl'] != null
-                            ? NetworkImage(userData['avatarUrl'])
+                        backgroundImage: user.avatarUrl != null
+                            ? NetworkImage(user.avatarUrl!)
                             : null,
-                        child: userData['avatarUrl'] == null
+                        child: user.avatarUrl == null
                             ? Text(
-                                (((userData['name'] ?? '') as String).trim().isNotEmpty)
-                                    ? ((userData['name'] as String).trim()[0].toUpperCase())
+                                (user.name.trim().isNotEmpty)
+                                    ? (user.name.trim()[0].toUpperCase())
                                     : '?',
                                 style: const TextStyle(
                                   fontSize: 40,
@@ -172,7 +172,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        userData['name'],
+                        user.name,
                         style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -181,7 +181,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '@${userData['username']}',
+                        '@${user.username}',
                         style: const TextStyle(fontSize: 16, color: Colors.white70),
                       ),
                     ],
@@ -189,7 +189,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 ),
 
                 // Bio
-                if (userData['bio'] != null && userData['bio'].isNotEmpty)
+                if (user.bio != null && user.bio!.isNotEmpty)
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -203,7 +203,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 8),
-                            Text(userData['bio'], style: const TextStyle(fontSize: 16)),
+                            Text(user.bio!, style: const TextStyle(fontSize: 16)),
                           ],
                         ),
                       ),

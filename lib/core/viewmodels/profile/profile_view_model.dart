@@ -5,23 +5,15 @@ import '../base_view_model.dart';
 class ProfileViewModel extends BaseViewModel {
   final UserRepository _userRepository;
 
-  // User profile data
-  Map<String, dynamic> _userData = {
-    'id': '',
-    'name': '',
-    'username': '',
-    'bio': '',
-    'avatarUrl': null,
-  };
-
-  Map<String, dynamic> get userData => _userData;
+  User? _user;
+  User? get user => _user;
 
   ProfileViewModel({UserRepository? userRepository})
     : _userRepository = userRepository ?? UserRepository();
 
   /// Initializes the profile view model with user data
-  void initWithUserData(Map<String, dynamic> userData) {
-    _userData = userData;
+  void setUser(User user) {
+    _user = user;
     notifyListeners();
   }
 
@@ -29,17 +21,7 @@ class ProfileViewModel extends BaseViewModel {
   Future<bool> fetchCurrentProfile() async {
     return await runBusyFuture(() async {
           try {
-            final user = await _userRepository.getCurrentProfile();
-
-            _userData = {
-              'id': user.id,
-              'name': user.name,
-              'username': user.username,
-              'bio': user.bio ?? '',
-              'avatarUrl': user.avatarUrl,
-              'isPrivate': user.isPrivate,
-            };
-
+            _user = await _userRepository.getCurrentProfile();
             return true;
           } catch (e) {
             setError(e.toString());
@@ -56,39 +38,41 @@ class ProfileViewModel extends BaseViewModel {
     String? newPassword,
     String? currentPassword,
   }) async {
+    if (_user == null) return false;
+
     return await runBusyFuture(() async {
           try {
             // Update profile information
             if (name != null || bio != null) {
-              final user = await _userRepository.updateProfile(
-                userId: _userData['id'],
+              final updatedUser = await _userRepository.updateProfile(
+                userId: _user!.id,
                 name: name,
                 bio: bio,
               );
 
-              // Update local data
-              _userData['name'] = user.name;
-              _userData['bio'] = user.bio ?? '';
+              _user = updatedUser;
             }
 
             // Update password if provided
             if (newPassword != null && currentPassword != null) {
               await _userRepository.updatePassword(
-                userId: _userData['id'],
+                userId: _user!.id,
                 currentPassword: currentPassword,
                 newPassword: newPassword,
               );
             }
 
-            // Update profile picture if provided
+            // Update profile picture if provided (via updateProfile param which seems redundant with updateProfilePicture method, keeping for backward compat)
             if (avatarUrl != null) {
-              final newAvatarUrl = await _userRepository.uploadProfilePicture(
-                _userData['id'],
-                avatarUrl,
-              );
-              _userData['avatarUrl'] = newAvatarUrl;
+              // Assuming avatarUrl passed here is a path to upload, or a URL?
+              // If it's a URL, we just update user?
+              // The original code called uploadProfilePicture with this.
+              // Let's assume it's a file path for upload.
+              final newAvatarUrl = await _userRepository.uploadProfilePicture(_user!.id, avatarUrl);
+              _user = _user!.copyWith(avatarUrl: newAvatarUrl);
             }
 
+            notifyListeners();
             return true;
           } catch (e) {
             setError(e.toString());
@@ -100,16 +84,14 @@ class ProfileViewModel extends BaseViewModel {
 
   /// Updates user profile picture
   Future<bool> updateProfilePicture(String imagePath) async {
+    if (_user == null) return false;
+
     return await runBusyFuture(() async {
           try {
-            final avatarUrl = await _userRepository.uploadProfilePicture(
-              _userData['id'],
-              imagePath,
-            );
+            final avatarUrl = await _userRepository.uploadProfilePicture(_user!.id, imagePath);
 
-            // Update local data
-            _userData['avatarUrl'] = avatarUrl;
-
+            _user = _user!.copyWith(avatarUrl: avatarUrl);
+            notifyListeners();
             return true;
           } catch (e) {
             setError(e.toString());

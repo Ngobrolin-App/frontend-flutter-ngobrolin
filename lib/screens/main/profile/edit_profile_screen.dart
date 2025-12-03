@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/material_symbols.dart';
 import 'package:ngobrolin_app/core/viewmodels/profile/profile_view_model.dart';
+import 'package:ngobrolin_app/core/models/user.dart';
 import 'package:provider/provider.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/widgets/buttons/primary_button.dart';
@@ -12,9 +13,9 @@ import '../../../core/widgets/inputs/password_field.dart';
 import '../../../theme/app_colors.dart';
 
 class EditProfileScreen extends StatefulWidget {
-  final Map<String, dynamic> userData;
+  final User user;
 
-  const EditProfileScreen({Key? key, required this.userData}) : super(key: key);
+  const EditProfileScreen({Key? key, required this.user}) : super(key: key);
 
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();
@@ -35,8 +36,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.userData['name']);
-    _bioController = TextEditingController(text: widget.userData['bio']);
+    _nameController = TextEditingController(text: widget.user.name);
+    _bioController = TextEditingController(text: widget.user.bio ?? '');
     _passwordController = TextEditingController();
     _confirmPasswordController = TextEditingController();
     _currentPasswordController = TextEditingController();
@@ -123,12 +124,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         backgroundColor: Colors.grey[300],
                         backgroundImage: _imageFile != null
                             ? FileImage(_imageFile!)
-                            : (widget.userData['avatarUrl'] != null
-                                  ? NetworkImage(widget.userData['avatarUrl'])
+                            : (widget.user.avatarUrl != null
+                                  ? NetworkImage(widget.user.avatarUrl!)
                                   : null),
-                        child: (_imageFile == null && widget.userData['avatarUrl'] == null)
+                        child: (_imageFile == null && widget.user.avatarUrl == null)
                             ? Text(
-                                widget.userData['name'][0].toUpperCase(),
+                                widget.user.name.isNotEmpty ? widget.user.name[0].toUpperCase() : '?',
                                 style: const TextStyle(
                                   fontSize: 50,
                                   fontWeight: FontWeight.bold,

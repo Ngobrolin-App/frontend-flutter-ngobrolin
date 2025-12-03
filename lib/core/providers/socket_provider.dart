@@ -72,14 +72,19 @@ class SocketProvider extends ChangeNotifier {
     _socket.leaveConversation(conversationId);
   }
 
-  // Emit via socket if you want to send realtime messages (optional)
-  void sendMessage({required String conversationId, required String content, String type = 'text'}) {
-    _socket.emit('send_message', {
-      'conversationId': conversationId,
-      'content': content,
-      'type': type,
-      'timestamp': DateTime.now().toIso8601String(),
-    });
+  // Emit typing start event
+  void sendTypingStart(String conversationId) {
+    _socket.emit('typing_start', {'conversationId': conversationId});
+  }
+
+  // Emit typing stop event
+  void sendTypingStop(String conversationId) {
+    _socket.emit('typing_stop', {'conversationId': conversationId});
+  }
+
+  // Emit user status update
+  void updateStatus(String status) {
+    _socket.emit('update_status', {'status': status});
   }
 
   void disposeSocket() {

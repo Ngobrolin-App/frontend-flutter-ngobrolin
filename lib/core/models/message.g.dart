@@ -11,11 +11,10 @@ Message _$MessageFromJson(Map<String, dynamic> json) => Message(
   senderId: json['senderId'] as String,
   receiverId: json['receiverId'] as String,
   content: json['content'] as String,
+  type: json['type'] as String? ?? 'text',
   isRead: json['isRead'] as bool? ?? false,
   createdAt: DateTime.parse(json['createdAt'] as String),
-  readAt: json['readAt'] == null
-      ? null
-      : DateTime.parse(json['readAt'] as String),
+  readAt: json['readAt'] == null ? null : DateTime.parse(json['readAt'] as String),
 );
 
 Map<String, dynamic> _$MessageToJson(Message instance) => <String, dynamic>{
@@ -23,6 +22,7 @@ Map<String, dynamic> _$MessageToJson(Message instance) => <String, dynamic>{
   'senderId': instance.senderId,
   'receiverId': instance.receiverId,
   'content': instance.content,
+  'type': instance.type,
   'isRead': instance.isRead,
   'createdAt': instance.createdAt.toIso8601String(),
   'readAt': instance.readAt?.toIso8601String(),

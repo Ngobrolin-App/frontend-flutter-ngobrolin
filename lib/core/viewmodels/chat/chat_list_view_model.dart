@@ -5,17 +5,23 @@ import '../base_view_model.dart';
 class ChatListViewModel extends BaseViewModel {
   final ChatRepository _chatRepository;
 
-  List<Map<String, dynamic>> _chatList = [];
-  List<Map<String, dynamic>> get chatList => _chatList;
+  // Gunakan List<Chat> alih-alih List<Map<String, dynamic>> untuk tipe data yang kuat
+  List<Chat> _chatList = [];
+  List<Chat> get chatList => _chatList;
+
+  // Simpan metadata tambahan yang tidak ada di model Chat jika perlu
+  final Map<String, String?> _lastMessageIdByConversation = {};
+  final Map<String, String> _lastMessageTypeByConversation = {};
+
+  // Getter untuk akses metadata dari UI (jika masih diperlukan)
+  String? getLastMessageId(String chatId) => _lastMessageIdByConversation[chatId];
+  String getLastMessageType(String chatId) => _lastMessageTypeByConversation[chatId] ?? 'text';
 
   // Pagination state
   int _page = 1;
   final int _limit = 20;
   bool _hasMore = true;
   bool get hasMore => _hasMore;
-
-  // Cache lastMessageId per conversation for mark-as-read
-  final Map<String, String?> _lastMessageIdByConversation = {};
 
   ChatListViewModel({ChatRepository? chatRepository})
     : _chatRepository = chatRepository ?? ChatRepository();
@@ -26,6 +32,7 @@ class ChatListViewModel extends BaseViewModel {
     _hasMore = true;
     _chatList = [];
     _lastMessageIdByConversation.clear();
+    _lastMessageTypeByConversation.clear();
 
     return await runBusyFuture(() async {
           try {
@@ -36,31 +43,19 @@ class ChatListViewModel extends BaseViewModel {
                 .toList();
             final pagination = (result['pagination'] as Map<String, dynamic>);
 
-            final Map<String, String> _lastMessageTypeByConversation = {};
+            // Proses metadata
             for (final conv in rawConversations) {
               final convId = conv['id'] as String;
               final lastMessage = conv['lastMessage'] as Map<String, dynamic>?;
-              _lastMessageIdByConversation[convId] = lastMessage != null ? lastMessage['id'] as String? : null;
-              _lastMessageTypeByConversation[convId] = lastMessage != null ? (lastMessage['type'] as String? ?? 'text') : 'text';
+              _lastMessageIdByConversation[convId] = lastMessage != null
+                  ? lastMessage['id'] as String?
+                  : null;
+              _lastMessageTypeByConversation[convId] = lastMessage != null
+                  ? (lastMessage['type'] as String? ?? 'text')
+                  : 'text';
             }
 
-            _chatList = chats
-                .map(
-                  (chat) => {
-                    'id': chat.id,
-                    'userId': chat.userId,
-                    'name': chat.name,
-                    'username': chat.username,
-                    'avatarUrl': chat.avatarUrl,
-                    'lastMessage': chat.lastMessage,
-                    'timestamp': chat.timestamp.toIso8601String(),
-                    'unreadCount': chat.unreadCount,
-                    'lastMessageId': _lastMessageIdByConversation[chat.id],
-                    'lastMessageType': _lastMessageTypeByConversation[chat.id] ?? 'text',
-                  },
-                )
-                .toList();
-
+            _chatList = chats;
             _hasMore = (pagination['page'] as int) < (pagination['totalPages'] as int);
 
             return true;
@@ -76,7 +71,6 @@ class ChatListViewModel extends BaseViewModel {
   Future<bool> fetchChatListDummy() async {
     return await runBusyFuture(() async {
           try {
-            // Create dummy chat data
             final dummyChats = [
               Chat(
                 id: '1',
@@ -130,26 +124,9 @@ class ChatListViewModel extends BaseViewModel {
               ),
             ];
 
-            // Convert to map format for compatibility with existing UI
-            _chatList = dummyChats
-                .map(
-                  (chat) => {
-                    'id': chat.id,
-                    'userId': chat.userId,
-                    'name': chat.name,
-                    'username': chat.username,
-                    'avatarUrl': chat.avatarUrl,
-                    'lastMessage': chat.lastMessage,
-                    'timestamp': chat.timestamp.toIso8601String(),
-                    'unreadCount': chat.unreadCount,
-                  },
-                )
-                .toList();
-
+            _chatList = dummyChats;
             // Sort chats by timestamp (newest first)
-            _chatList.sort(
-              (a, b) => DateTime.parse(b['timestamp']).compareTo(DateTime.parse(a['timestamp'])),
-            );
+            _chatList.sort((a, b) => b.timestamp.compareTo(a.timestamp));
 
             return true;
           } catch (e) {
@@ -179,33 +156,36 @@ class ChatListViewModel extends BaseViewModel {
       _lastMessageIdByConversation[chatId] = lastMessageId;
     }
 
-    final index = _chatList.indexWhere((chat) => chat['id'] == chatId);
+    final index = _chatList.indexWhere((chat) => chat.id == chatId);
     if (index != -1) {
-      _chatList[index]['lastMessage'] = message;
-      _chatList[index]['timestamp'] = timestamp;
-      _chatList[index]['lastMessageId'] = lastMessageId;
-      if (type != null) {
-        _chatList[index]['lastMessageType'] = type;
-      }
+      // Update existing chat
+      final oldChat = _chatList[index];
 
       // Increment unread only if message is not from current user
       final shouldIncrementUnread =
           senderId == null || currentUserId == null || senderId != currentUserId;
-      if (shouldIncrementUnread) {
-        _chatList[index]['unreadCount'] = (_chatList[index]['unreadCount'] as int) + 1;
+
+      final newUnreadCount = shouldIncrementUnread ? oldChat.unreadCount + 1 : oldChat.unreadCount;
+
+      _chatList[index] = oldChat.copyWith(
+        lastMessage: message,
+        timestamp: DateTime.parse(timestamp),
+        unreadCount: newUnreadCount,
+      );
+
+      if (type != null) {
+        _lastMessageTypeByConversation[chatId] = type;
       }
 
       // Sort chats by timestamp (newest first)
-      _chatList.sort(
-        (a, b) => DateTime.parse(b['timestamp']).compareTo(DateTime.parse(a['timestamp'])),
-      );
+      _chatList.sort((a, b) => b.timestamp.compareTo(a.timestamp));
 
       notifyListeners();
       return;
     }
 
     // Jika percakapan belum ada di list (chat baru atau bukan di halaman saat ini),
-    // reload halaman pertama untuk memunculkan update (termasuk lastMessage dan unread).
+    // reload halaman pertama untuk memunculkan update.
     await fetchChatList();
   }
 
@@ -230,25 +210,12 @@ class ChatListViewModel extends BaseViewModel {
               _lastMessageIdByConversation[convId] = lastMessage != null
                   ? lastMessage['id'] as String?
                   : null;
+              _lastMessageTypeByConversation[convId] = lastMessage != null
+                  ? (lastMessage['type'] as String? ?? 'text')
+                  : 'text';
             }
 
-            final additional = chats
-                .map(
-                  (chat) => {
-                    'id': chat.id,
-                    'userId': chat.userId,
-                    'name': chat.name,
-                    'username': chat.username,
-                    'avatarUrl': chat.avatarUrl,
-                    'lastMessage': chat.lastMessage,
-                    'timestamp': chat.timestamp.toIso8601String(),
-                    'unreadCount': chat.unreadCount,
-                    'lastMessageId': _lastMessageIdByConversation[chat.id],
-                  },
-                )
-                .toList();
-
-            _chatList.addAll(additional);
+            _chatList.addAll(chats);
             _hasMore = (pagination['page'] as int) < (pagination['totalPages'] as int);
 
             return true;
@@ -267,9 +234,9 @@ class ChatListViewModel extends BaseViewModel {
       final lastMessageId = _lastMessageIdByConversation[conversationId];
       if (lastMessageId == null) {
         // Tidak ada lastMessage, tidak perlu call API
-        final index = _chatList.indexWhere((chat) => chat['id'] == conversationId);
+        final index = _chatList.indexWhere((chat) => chat.id == conversationId);
         if (index != -1) {
-          _chatList[index]['unreadCount'] = 0;
+          _chatList[index] = _chatList[index].copyWith(unreadCount: 0);
           notifyListeners();
         }
         return;
@@ -277,13 +244,50 @@ class ChatListViewModel extends BaseViewModel {
 
       await _chatRepository.markAsRead(conversationId: conversationId, messageId: lastMessageId);
 
-      final index = _chatList.indexWhere((chat) => chat['id'] == conversationId);
+      final index = _chatList.indexWhere((chat) => chat.id == conversationId);
       if (index != -1) {
-        _chatList[index]['unreadCount'] = 0;
+        _chatList[index] = _chatList[index].copyWith(unreadCount: 0);
         notifyListeners();
       }
     } catch (e) {
       setError(e.toString());
+    }
+  }
+
+  /// Handles socket event 'conversation_updated'
+  void handleSocketConversationUpdate(dynamic data, String? currentUserId) {
+    try {
+      final conversationId = data['conversationId'] as String?;
+      final lastMessage = data['lastMessage'] as Map<String, dynamic>?;
+
+      if (conversationId != null && lastMessage != null) {
+        final content = lastMessage['content'] as String? ?? '';
+        final createdAt = lastMessage['created_at'] as String? ?? DateTime.now().toIso8601String();
+        final senderId = lastMessage['sender_id']?.toString();
+        final lastMessageId = lastMessage['id']?.toString();
+        final type = lastMessage['type'] as String?;
+
+        updateWithNewMessage(
+          conversationId,
+          content,
+          createdAt,
+          senderId: senderId,
+          currentUserId: currentUserId,
+          lastMessageId: lastMessageId,
+          type: type,
+        );
+      }
+    } catch (e) {
+      print('Error handling conversation update: $e');
+    }
+  }
+
+  /// Handles socket event 'conversation_read_by_me'
+  void handleConversationReadByMe(String conversationId) {
+    final index = _chatList.indexWhere((chat) => chat.id == conversationId);
+    if (index != -1) {
+      _chatList[index] = _chatList[index].copyWith(unreadCount: 0);
+      notifyListeners();
     }
   }
 
@@ -294,7 +298,9 @@ class ChatListViewModel extends BaseViewModel {
             final success = await _chatRepository.deleteChat(chatId);
 
             if (success) {
-              _chatList.removeWhere((chat) => chat['id'] == chatId);
+              _chatList.removeWhere((chat) => chat.id == chatId);
+              _lastMessageIdByConversation.remove(chatId);
+              _lastMessageTypeByConversation.remove(chatId);
             }
 
             return success;

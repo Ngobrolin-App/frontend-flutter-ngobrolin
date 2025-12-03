@@ -16,24 +16,15 @@ class ApiService {
     CancelToken? cancelToken,
     T Function(dynamic data)? parser,
   }) async {
-    try {
-      final response = await _dio.get(
+    return _request<T>(
+      () => _dio.get(
         path,
         queryParameters: queryParameters,
         options: options,
         cancelToken: cancelToken,
-      );
-
-      if (parser != null) {
-        return parser(response.data);
-      }
-
-      return response.data as T;
-    } on DioException catch (e) {
-      throw ApiException.fromDioException(e);
-    } catch (e) {
-      throw ApiException(message: e.toString());
-    }
+      ),
+      parser,
+    );
   }
 
   /// Perform a POST request
@@ -45,25 +36,16 @@ class ApiService {
     CancelToken? cancelToken,
     T Function(dynamic data)? parser,
   }) async {
-    try {
-      final response = await _dio.post(
+    return _request<T>(
+      () => _dio.post(
         path,
         data: data,
         queryParameters: queryParameters,
         options: options,
         cancelToken: cancelToken,
-      );
-
-      if (parser != null) {
-        return parser(response.data);
-      }
-
-      return response.data as T;
-    } on DioException catch (e) {
-      throw ApiException.fromDioException(e);
-    } catch (e) {
-      throw ApiException(message: e.toString());
-    }
+      ),
+      parser,
+    );
   }
 
   /// Perform a PUT request
@@ -75,25 +57,16 @@ class ApiService {
     CancelToken? cancelToken,
     T Function(dynamic data)? parser,
   }) async {
-    try {
-      final response = await _dio.put(
+    return _request<T>(
+      () => _dio.put(
         path,
         data: data,
         queryParameters: queryParameters,
         options: options,
         cancelToken: cancelToken,
-      );
-
-      if (parser != null) {
-        return parser(response.data);
-      }
-
-      return response.data as T;
-    } on DioException catch (e) {
-      throw ApiException.fromDioException(e);
-    } catch (e) {
-      throw ApiException(message: e.toString());
-    }
+      ),
+      parser,
+    );
   }
 
   /// Perform a DELETE request
@@ -105,25 +78,16 @@ class ApiService {
     CancelToken? cancelToken,
     T Function(dynamic data)? parser,
   }) async {
-    try {
-      final response = await _dio.delete(
+    return _request<T>(
+      () => _dio.delete(
         path,
         data: data,
         queryParameters: queryParameters,
         options: options,
         cancelToken: cancelToken,
-      );
-
-      if (parser != null) {
-        return parser(response.data);
-      }
-
-      return response.data as T;
-    } on DioException catch (e) {
-      throw ApiException.fromDioException(e);
-    } catch (e) {
-      throw ApiException(message: e.toString());
-    }
+      ),
+      parser,
+    );
   }
 
   /// Perform a PATCH request
@@ -135,14 +99,24 @@ class ApiService {
     CancelToken? cancelToken,
     T Function(dynamic data)? parser,
   }) async {
-    try {
-      final response = await _dio.patch(
+    return _request<T>(
+      () => _dio.patch(
         path,
         data: data,
         queryParameters: queryParameters,
         options: options,
         cancelToken: cancelToken,
-      );
+      ),
+      parser,
+    );
+  }
+
+  Future<T> _request<T>(
+    Future<Response> Function() request,
+    T Function(dynamic data)? parser,
+  ) async {
+    try {
+      final response = await request();
 
       if (parser != null) {
         return parser(response.data);

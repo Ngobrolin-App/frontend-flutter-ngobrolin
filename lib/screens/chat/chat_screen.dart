@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:ngobrolin_app/core/models/message.dart';
 import 'package:ngobrolin_app/core/viewmodels/auth/auth_view_model.dart';
 import 'package:provider/provider.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
@@ -32,10 +34,12 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _joinedRoom = false;
   VoidCallback? _vmListener;
   int _lastMessageCount = 0;
+  Timer? _typingTimer;
 
   @override
   void initState() {
     super.initState();
+    _messageController.addListener(_onTextChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final chatViewModel = Provider.of<ChatViewModel>(context, listen: false);
       final settingsViewModel = Provider.of<SettingsViewModel>(context, listen: false);
@@ -96,15 +100,24 @@ class _ChatScreenState extends State<ChatScreen> {
           final senderId = msg['sender_id'] as String?;
 
           if (convId != null && convId == chatViewModel.conversationId) {
-            chatViewModel.handleIncomingMessage({
-              'id': msg['id'] ?? '',
-              'senderId': senderId ?? '',
-              'content': msg['content'] ?? '',
-              'timestamp': msg['created_at'] ?? DateTime.now().toIso8601String(),
-              'isRead': msg['is_read'] as bool? ?? false,
-              'type': (msg['type'] as String?) ?? 'text',
-            });
+            final newMessage = Message(
+              id: msg['id']?.toString() ?? '',
+              senderId: senderId ?? '',
+              receiverId: convId,
+              content: msg['content']?.toString() ?? '',
+              type: (msg['type'] as String?) ?? 'text',
+              isRead: msg['is_read'] as bool? ?? false,
+              createdAt: DateTime.parse(
+                (msg['created_at'] as String?) ?? DateTime.now().toIso8601String(),
+              ),
+            );
+            chatViewModel.handleIncomingMessage(newMessage);
             _scrollToBottom();
+
+            // Jika pesan dari partner, tandai sebagai terbaca karena user sedang membuka chat ini
+            if (senderId != authViewModel.user?.id) {
+              chatViewModel.markMessageAsRead(newMessage.id);
+            }
           }
         } catch (_) {}
       });
@@ -149,12 +162,46 @@ class _ChatScreenState extends State<ChatScreen> {
         } catch (_) {}
       });
 
+      // Listen typing status
+      socketProvider.on('user_typing', (data) {
+        try {
+          final convId = data['conversationId'] as String?;
+          final userId = data['userId'] as String?;
+          if (convId == chatViewModel.conversationId && userId == widget.userId) {
+            chatViewModel.setPartnerTyping(true);
+          }
+        } catch (_) {}
+      });
+
+      socketProvider.on('user_stopped_typing', (data) {
+        try {
+          final convId = data['conversationId'] as String?;
+          final userId = data['userId'] as String?;
+          if (convId == chatViewModel.conversationId && userId == widget.userId) {
+            chatViewModel.setPartnerTyping(false);
+          }
+        } catch (_) {}
+      });
+
+      // Listen user status (online/offline)
+      socketProvider.on('user_status_changed', (data) {
+        try {
+          final userId = data['userId'] as String?;
+          final status = data['status'] as String?;
+          if (userId == widget.userId && status != null) {
+            chatViewModel.setPartnerStatus(status);
+          }
+        } catch (_) {}
+      });
+
       _scrollToBottom();
     });
   }
 
   @override
   void dispose() {
+    _typingTimer?.cancel();
+    _messageController.removeListener(_onTextChanged);
     _messageController.dispose();
     _scrollController.dispose();
 
@@ -167,6 +214,9 @@ class _ChatScreenState extends State<ChatScreen> {
     socketProvider.off('new_message');
     socketProvider.off('messages_read_status_updated');
     socketProvider.off('conversation_created');
+    socketProvider.off('user_typing');
+    socketProvider.off('user_stopped_typing');
+    socketProvider.off('user_status_changed');
 
     // Lepas listener ViewModel agar tidak bocor
     if (_vmListener != null) {
@@ -175,6 +225,24 @@ class _ChatScreenState extends State<ChatScreen> {
     }
 
     super.dispose();
+  }
+
+  void _onTextChanged() {
+    final chatViewModel = Provider.of<ChatViewModel>(context, listen: false);
+    final socketProvider = Provider.of<SocketProvider>(context, listen: false);
+
+    if (chatViewModel.conversationId == null) return;
+
+    // Reset timer jika masih mengetik
+    if (_typingTimer?.isActive ?? false) _typingTimer!.cancel();
+
+    // Emit typing start
+    socketProvider.sendTypingStart(chatViewModel.conversationId!);
+
+    // Set timer untuk emit stop typing setelah 2 detik diam
+    _typingTimer = Timer(const Duration(seconds: 2), () {
+      socketProvider.sendTypingStop(chatViewModel.conversationId!);
+    });
   }
 
   void _scrollToBottom() {
@@ -261,7 +329,22 @@ class _ChatScreenState extends State<ChatScreen> {
                     : null,
               ),
               const SizedBox(width: 8),
-              Text(widget.name),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(widget.name),
+                  if (chatViewModel.isPartnerTyping)
+                    Text(
+                      '${context.tr('typing')}...',
+                      style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                    )
+                  else if (chatViewModel.partnerStatus == 'online')
+                    Text(
+                      context.tr('online'),
+                      style: const TextStyle(fontSize: 12, color: Colors.greenAccent),
+                    ),
+                ],
+              ),
             ],
           ),
         ),
@@ -303,14 +386,14 @@ class _ChatScreenState extends State<ChatScreen> {
                     itemBuilder: (context, index) {
                       final message = messages[index];
                       // Posisi kanan bila pengirim adalah user saat ini
-                      final isMe = myId != null && message['senderId'] == myId;
+                      final isMe = myId != null && message.senderId == myId;
 
                       return ChatBubble(
-                        message: message['content'],
-                        timestamp: DateTime.parse(message['timestamp']),
+                        message: message.content,
+                        timestamp: message.createdAt,
                         isMe: isMe,
-                        isRead: message['isRead'] ?? false,
-                        type: message['type'] ?? 'text',
+                        isRead: message.isRead,
+                        type: message.type,
                       );
                     },
                   ),

@@ -37,35 +37,24 @@ class _ChatListScreenState extends State<ChatListScreen> {
       // Realtime: update last message pada chat list
       socketProvider.on('conversation_updated', (data) {
         debugPrint('-------- conversation_updated on chat list screen: $data');
-        try {
-          final conversationId = data['conversationId'] as String?;
-          final lastMessage = data['lastMessage'] as Map<String, dynamic>?;
-          if (conversationId != null && lastMessage != null) {
-            final content = lastMessage['content'] as String? ?? '';
-            final createdAt =
-                lastMessage['created_at'] as String? ?? DateTime.now().toIso8601String();
-            final senderId = lastMessage['sender_id']?.toString();
-            final currentUserId = authViewModel.user?.id;
-            final lastMessageId = lastMessage['id']?.toString();
-            final type = lastMessage['type'] as String?;
-
-            chatListViewModel.updateWithNewMessage(
-              conversationId,
-              content,
-              createdAt,
-              senderId: senderId,
-              currentUserId: currentUserId,
-              lastMessageId: lastMessageId,
-              type: type,
-            );
-          }
-        } catch (_) {}
+        final currentUserId = authViewModel.user?.id;
+        chatListViewModel.handleSocketConversationUpdate(data, currentUserId);
       });
 
       // Realtime: percakapan baru → refresh list agar muncul
       socketProvider.on('conversation_created', (data) {
         debugPrint('-------- conversation_created on chat list screen: $data');
         chatListViewModel.fetchChatList();
+      });
+
+      // Realtime: update unread count jadi 0 saat dibaca
+      socketProvider.on('conversation_read_by_me', (data) {
+        try {
+          final convId = data['conversationId'] as String?;
+          if (convId != null) {
+            chatListViewModel.handleConversationReadByMe(convId);
+          }
+        } catch (_) {}
       });
     });
 
@@ -83,6 +72,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
     final socketProvider = Provider.of<SocketProvider>(context, listen: false);
     socketProvider.off('conversation_updated');
     socketProvider.off('conversation_created');
+    socketProvider.off('conversation_read_by_me');
     super.dispose();
   }
 
@@ -114,21 +104,21 @@ class _ChatListScreenState extends State<ChatListScreen> {
               itemBuilder: (context, index) {
                 final chat = chatList[index];
                 return ChatListItem(
-                  id: chat['id'],
-                  name: chat['name'],
-                  avatarUrl: chat['avatarUrl'],
-                  lastMessage: chat['lastMessage'],
-                  timestamp: DateTime.parse(chat['timestamp']),
-                  unreadCount: chat['unreadCount'],
-                  lastMessageType: chat['lastMessageType'] ?? 'text',
+                  id: chat.id,
+                  name: chat.name,
+                  avatarUrl: chat.avatarUrl,
+                  lastMessage: chat.lastMessage,
+                  timestamp: chat.timestamp,
+                  unreadCount: chat.unreadCount,
+                  lastMessageType: chatListViewModel.getLastMessageType(chat.id),
                   onTap: () {
-                    chatListViewModel.markChatAsRead(chat['id']);
+                    chatListViewModel.markChatAsRead(chat.id);
                     Navigator.of(context).pushNamed(
                       AppRoutes.chat,
                       arguments: {
-                        'userId': chat['userId'],
-                        'name': chat['name'],
-                        'avatarUrl': chat['avatarUrl'],
+                        'userId': chat.userId,
+                        'name': chat.name,
+                        'avatarUrl': chat.avatarUrl,
                       },
                     );
                   },

@@ -91,6 +91,8 @@ const Map<String, String> idID = {
   'choose_file': 'Pilih File',
   'file': 'File',
   'image': 'Gambar',
+  'typing': 'Sedang mengetik',
+  'online': 'Online',
 
   // Errors
   'error_occurred': 'Terjadi kesalahan',

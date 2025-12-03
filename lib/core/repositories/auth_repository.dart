@@ -16,27 +16,17 @@ class AuthRepository {
 
   /// Sign in with username and password
   Future<AuthResponse> signIn(String username, String password) async {
-    try {
-      final response = await _apiService.post<Map<String, dynamic>>(
-        '/auth/login',
-        data: {'username': username, 'password': password},
-      );
+    final response = await _apiService.post<Map<String, dynamic>>(
+      '/auth/login',
+      data: {'username': username, 'password': password},
+    );
 
-      final authResponse = AuthResponse.fromJson(response);
+    final authResponse = AuthResponse.fromJson(response);
 
-      // Save token and user data
-      await _saveAuthData(authResponse);
+    // Save token and user data
+    await _saveAuthData(authResponse);
 
-      // Update Dio client with token
-      DioClient().updateToken(authResponse.token);
-
-      return authResponse;
-    } catch (e) {
-      if (e is ApiException) {
-        rethrow;
-      }
-      throw ApiException(message: e.toString());
-    }
+    return authResponse;
   }
 
   /// Register a new user
@@ -45,55 +35,31 @@ class AuthRepository {
     required String name,
     required String password,
   }) async {
-    try {
-      final response = await _apiService.post<Map<String, dynamic>>(
-        '/auth/register',
-        data: {'username': username, 'name': name, 'password': password},
-      );
+    final response = await _apiService.post<Map<String, dynamic>>(
+      '/auth/register',
+      data: {'username': username, 'name': name, 'password': password},
+    );
 
-      final authResponse = AuthResponse.fromJson(response);
+    final authResponse = AuthResponse.fromJson(response);
 
-      // Save token and user data
-      await _saveAuthData(authResponse);
+    // Save token and user data
+    await _saveAuthData(authResponse);
 
-      // Update Dio client with token
-      DioClient().updateToken(authResponse.token);
-
-      return authResponse;
-    } catch (e) {
-      if (e is ApiException) {
-        rethrow;
-      }
-      throw ApiException(message: e.toString());
-    }
+    return authResponse;
   }
 
   /// Request password reset
   Future<bool> forgotPassword(String email) async {
-    try {
-      await _apiService.post<Map<String, dynamic>>('/auth/forgot-password', data: {'email': email});
-      return true;
-    } catch (e) {
-      if (e is ApiException) {
-        rethrow;
-      }
-      throw ApiException(message: e.toString());
-    }
+    await _apiService.post<Map<String, dynamic>>('/auth/forgot-password', data: {'email': email});
+    return true;
   }
 
   /// Sign out the current user
   Future<void> signOut() async {
-    try {
-      // Clear token from API client
-      DioClient().clearToken();
-
-      // Clear stored token and user data
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(_tokenKey);
-      await prefs.remove(_userKey);
-    } catch (e) {
-      throw ApiException(message: e.toString());
-    }
+    // Clear stored token and user data
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_tokenKey);
+    await prefs.remove(_userKey);
   }
 
   /// Get the current authentication token

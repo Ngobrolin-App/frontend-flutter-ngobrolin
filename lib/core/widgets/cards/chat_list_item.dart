@@ -84,14 +84,18 @@ class ChatListItem extends StatelessWidget {
                             if (lastMessageType == 'image') ...[
                               Iconify(MaterialSymbols.image, size: 18, color: AppColors.timestamp),
                               const SizedBox(width: 6),
-                              Text(
-                                context.tr('image'),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: unreadCount > 0 ? AppColors.text : AppColors.timestamp,
-                                  fontWeight: unreadCount > 0 ? FontWeight.w500 : FontWeight.normal,
+                              Flexible(
+                                child: Text(
+                                  context.tr('image'),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: unreadCount > 0 ? AppColors.text : AppColors.timestamp,
+                                    fontWeight: unreadCount > 0
+                                        ? FontWeight.w500
+                                        : FontWeight.normal,
+                                  ),
                                 ),
                               ),
                             ] else if (lastMessageType == 'file') ...[
@@ -101,25 +105,33 @@ class ChatListItem extends StatelessWidget {
                                 color: AppColors.timestamp,
                               ),
                               const SizedBox(width: 6),
-                              Text(
-                                context.tr('file'),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: unreadCount > 0 ? AppColors.text : AppColors.timestamp,
-                                  fontWeight: unreadCount > 0 ? FontWeight.w500 : FontWeight.normal,
+                              Flexible(
+                                child: Text(
+                                  context.tr('file'),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: unreadCount > 0 ? AppColors.text : AppColors.timestamp,
+                                    fontWeight: unreadCount > 0
+                                        ? FontWeight.w500
+                                        : FontWeight.normal,
+                                  ),
                                 ),
                               ),
                             ] else ...[
-                              Text(
-                                lastMessage,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: unreadCount > 0 ? AppColors.text : AppColors.timestamp,
-                                  fontWeight: unreadCount > 0 ? FontWeight.w500 : FontWeight.normal,
+                              Flexible(
+                                child: Text(
+                                  lastMessage,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: unreadCount > 0 ? AppColors.text : AppColors.timestamp,
+                                    fontWeight: unreadCount > 0
+                                        ? FontWeight.w500
+                                        : FontWeight.normal,
+                                  ),
                                 ),
                               ),
                             ],
