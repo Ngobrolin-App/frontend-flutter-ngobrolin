@@ -87,37 +87,28 @@ class _ChatScreenState extends State<ChatScreen> {
       _scrollToBottom();
 
       // Join conversation room for realtime updates
-      if (chatViewModel.conversationId != null) {
-        socketProvider.joinConversation(chatViewModel.conversationId!);
-      }
+      // (Note: duplicate join removed)
 
       // Listen to new_message events tanpa memfilter pesan dari diri sendiri
       socketProvider.on('new_message', (data) {
         debugPrint('-------- new_message on chat screen: $data');
         try {
-          final msg = (data['message'] as Map<String, dynamic>);
-          final convId = msg['conversation_id'] as String?;
-          final senderId = msg['sender_id'] as String?;
+          final msgMap = data['message'] as Map<String, dynamic>;
+          final convId = msgMap['conversation_id'] as String?;
 
           if (convId != null && convId == chatViewModel.conversationId) {
-            final newMessage = Message(
-              id: msg['id']?.toString() ?? '',
-              senderId: senderId ?? '',
-              receiverId: convId,
-              content: msg['content']?.toString() ?? '',
-              type: (msg['type'] as String?) ?? 'text',
-              isRead: msg['is_read'] as bool? ?? false,
-              createdAt: DateTime.parse(
-                (msg['created_at'] as String?) ?? DateTime.now().toIso8601String(),
-              ),
-            );
-            chatViewModel.handleIncomingMessage(newMessage);
-            _scrollToBottom();
+            // Use ViewModel to handle parsing and state update
+            chatViewModel.handleIncomingMessage(msgMap);
+
+            // Note: Scrolling is handled by _vmListener when messages list updates
 
             // Jika pesan dari partner, tandai sebagai terbaca karena user sedang membuka chat ini
-            if (senderId != authViewModel.user?.id) {
-              chatViewModel.markMessageAsRead(newMessage.id);
-            }
+            // final senderId = msgMap['sender_id']?.toString();
+            // final msgId = msgMap['id']?.toString();
+
+            // if (senderId != authViewModel.user?.id && msgId != null) {
+            //   chatViewModel.markMessageAsRead(msgId);
+            // }
           }
         } catch (_) {}
       });
@@ -388,13 +379,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       // Posisi kanan bila pengirim adalah user saat ini
                       final isMe = myId != null && message.senderId == myId;
 
-                      return ChatBubble(
-                        message: message.content,
-                        timestamp: message.createdAt,
-                        isMe: isMe,
-                        isRead: message.isRead,
-                        type: message.type,
-                      );
+                      return ChatBubble(message: message, isMe: isMe);
                     },
                   ),
           ),

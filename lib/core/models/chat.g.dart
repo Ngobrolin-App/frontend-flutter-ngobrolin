@@ -13,6 +13,8 @@ Chat _$ChatFromJson(Map<String, dynamic> json) => Chat(
   username: json['username'] as String,
   avatarUrl: json['avatarUrl'] as String?,
   lastMessage: json['lastMessage'] as String,
+  lastMessageId: json['lastMessageId'] as String?,
+  lastMessageType: json['lastMessageType'] as String? ?? 'text',
   timestamp: DateTime.parse(json['timestamp'] as String),
   unreadCount: (json['unreadCount'] as num?)?.toInt() ?? 0,
 );
@@ -24,6 +26,8 @@ Map<String, dynamic> _$ChatToJson(Chat instance) => <String, dynamic>{
   'username': instance.username,
   'avatarUrl': instance.avatarUrl,
   'lastMessage': instance.lastMessage,
+  'lastMessageId': instance.lastMessageId,
+  'lastMessageType': instance.lastMessageType,
   'timestamp': instance.timestamp.toIso8601String(),
   'unreadCount': instance.unreadCount,
 };

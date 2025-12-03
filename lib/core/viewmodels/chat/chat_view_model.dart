@@ -109,8 +109,13 @@ class ChatViewModel extends BaseViewModel {
               type: type,
             );
 
-            _messages.add(newMessage);
-            notifyListeners();
+            final exists = _messages.any((m) => m.id == newMessage.id);
+            if (!exists) {
+              _messages.add(newMessage);
+              notifyListeners();
+            }
+            // _messages.add(newMessage);
+            // notifyListeners();
             return true;
           } catch (e) {
             setError(e.toString());
@@ -168,6 +173,11 @@ class ChatViewModel extends BaseViewModel {
           message = Message.fromJson(messageData);
         }
       } else {
+        return;
+      }
+
+      // Ensure message belongs to current conversation
+      if (message.receiverId != _conversationId) {
         return;
       }
 

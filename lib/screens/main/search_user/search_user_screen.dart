@@ -6,6 +6,7 @@ import 'package:iconify_flutter/icons/material_symbols.dart';
 import 'package:iconify_flutter/icons/ri.dart';
 import 'package:iconify_flutter/icons/mdi.dart';
 import 'package:provider/provider.dart';
+import '../../../core/models/user.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/viewmodels/search/search_user_view_model.dart';
 import '../../../core/widgets/cards/user_list_item.dart';
@@ -129,28 +130,18 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
                         );
                       }
 
-                      final user = users[index];
-                      // Amankan nilai yang mungkin null/kosong
-                      final rawName = (user['name'] as String? ?? '').trim();
-                      final rawUsername = (user['username'] as String? ?? '').trim();
-                      final displayName = rawName.isNotEmpty ? rawName : rawUsername;
-                      final avatarUrl = user['avatarUrl'] as String?;
-                      final isPrivate = user['isPrivate'] as bool? ?? false;
+                      final user = User.fromMinimalJson(users[index]);
 
                       return UserListItem(
-                        id: user['id'] as String,
-                        name: displayName,
-                        username: rawUsername,
-                        avatarUrl: avatarUrl,
-                        isPrivate: isPrivate,
+                        user: user,
                         onTap: () {
                           Navigator.of(context).pushNamed(
                             AppRoutes.userProfile,
                             arguments: {
-                              'userId': user['id'],
-                              'name': displayName,
-                              'username': rawUsername,
-                              'avatarUrl': avatarUrl,
+                              'userId': user.id,
+                              'name': user.name,
+                              'username': user.username,
+                              'avatarUrl': user.avatarUrl,
                             },
                           );
                         },
@@ -158,9 +149,9 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
                           Navigator.of(context).pushNamed(
                             AppRoutes.chat,
                             arguments: {
-                              'userId': user['id'],
-                              'name': displayName,
-                              'avatarUrl': avatarUrl,
+                              'userId': user.id,
+                              'name': user.name,
+                              'avatarUrl': user.avatarUrl,
                             },
                           );
                         },

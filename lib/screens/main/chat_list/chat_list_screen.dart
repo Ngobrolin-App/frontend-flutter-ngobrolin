@@ -104,13 +104,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
               itemBuilder: (context, index) {
                 final chat = chatList[index];
                 return ChatListItem(
-                  id: chat.id,
-                  name: chat.name,
-                  avatarUrl: chat.avatarUrl,
-                  lastMessage: chat.lastMessage,
-                  timestamp: chat.timestamp,
-                  unreadCount: chat.unreadCount,
-                  lastMessageType: chatListViewModel.getLastMessageType(chat.id),
+                  chat: chat,
                   onTap: () {
                     chatListViewModel.markChatAsRead(chat.id);
                     Navigator.of(context).pushNamed(

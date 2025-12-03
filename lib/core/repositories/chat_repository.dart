@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import '../models/chat.dart';
 import '../models/message.dart';
+import '../models/paginated_result.dart';
 import '../services/api/api_service.dart';
 import 'package:dio/dio.dart';
 
@@ -22,8 +23,8 @@ class ChatRepository {
   }
 
   /// Get conversation list from backend with pagination
-  Future<Map<String, dynamic>> getConversationList({int page = 1, int limit = 20}) async {
-    return _apiService.post<Map<String, dynamic>>(
+  Future<PaginatedResult<Chat>> getConversationList({int page = 1, int limit = 20}) async {
+    return _apiService.post<PaginatedResult<Chat>>(
       '/conversations/list',
       // Backend membaca dari req.query, jadi kirim sebagai queryParameters
       queryParameters: {'page': page, 'limit': limit},
@@ -31,7 +32,7 @@ class ChatRepository {
     );
   }
 
-  Map<String, dynamic> _parseConversationList(dynamic response) {
+  PaginatedResult<Chat> _parseConversationList(dynamic response) {
     final conversations = (response['conversations'] as List<dynamic>);
     final pagination = (response['pagination'] as Map<String, dynamic>);
 
@@ -46,6 +47,11 @@ class ChatRepository {
 
       final lastMessage = conv['lastMessage'] as Map<String, dynamic>?;
       final lastContent = lastMessage != null ? (lastMessage['content'] as String? ?? '') : '';
+      final lastMessageId = lastMessage != null ? (lastMessage['id'] as String?) : null;
+      final lastMessageType = lastMessage != null
+          ? (lastMessage['type'] as String? ?? 'text')
+          : 'text';
+
       final lastCreatedAtStr = lastMessage != null
           ? (lastMessage['created_at'] as String?)
           : (conv['joined_at'] as String?);
@@ -80,6 +86,8 @@ class ChatRepository {
         username: username,
         avatarUrl: avatarUrl,
         lastMessage: lastContent,
+        lastMessageId: lastMessageId,
+        lastMessageType: lastMessageType,
         timestamp: timestamp,
         unreadCount: unreadCount,
       );
@@ -87,11 +95,13 @@ class ChatRepository {
 
     log('-------- chats: $chats');
 
-    return {
-      'chats': chats,
-      'pagination': pagination,
-      'rawConversations': conversations, // untuk akses lastMessageId saat mark as read
-    };
+    return PaginatedResult<Chat>(
+      items: chats,
+      page: pagination['page'] as int,
+      limit: pagination['limit'] as int,
+      total: pagination['total'] as int,
+      totalPages: pagination['totalPages'] as int,
+    );
   }
 
   /// Get messages for a specific chat

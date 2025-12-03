@@ -11,6 +11,8 @@ class Chat extends Equatable {
   final String username;
   final String? avatarUrl;
   final String lastMessage;
+  final String? lastMessageId;
+  final String lastMessageType;
   final DateTime timestamp;
   final int unreadCount;
 
@@ -21,6 +23,8 @@ class Chat extends Equatable {
     required this.username,
     this.avatarUrl,
     required this.lastMessage,
+    this.lastMessageId,
+    this.lastMessageType = 'text',
     required this.timestamp,
     this.unreadCount = 0,
   });
@@ -39,6 +43,8 @@ class Chat extends Equatable {
     String? username,
     String? avatarUrl,
     String? lastMessage,
+    String? lastMessageId,
+    String? lastMessageType,
     DateTime? timestamp,
     int? unreadCount,
   }) {
@@ -49,6 +55,8 @@ class Chat extends Equatable {
       username: username ?? this.username,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       lastMessage: lastMessage ?? this.lastMessage,
+      lastMessageId: lastMessageId ?? this.lastMessageId,
+      lastMessageType: lastMessageType ?? this.lastMessageType,
       timestamp: timestamp ?? this.timestamp,
       unreadCount: unreadCount ?? this.unreadCount,
     );
@@ -72,6 +80,8 @@ class Chat extends Equatable {
     username,
     avatarUrl,
     lastMessage,
+    lastMessageId,
+    lastMessageType,
     timestamp,
     unreadCount,
   ];

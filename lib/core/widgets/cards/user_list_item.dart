@@ -1,31 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../theme/app_colors.dart';
+import '../../models/user.dart';
 
 class UserListItem extends StatelessWidget {
-  final String id;
-  final String name;
-  final String username;
-  final String? avatarUrl;
+  final User user;
   final VoidCallback onTap;
   final VoidCallback? onActionTap;
   final IconData? actionIcon;
   final Widget? actionWidget;
   final String? actionText;
-  final bool isPrivate;
 
   const UserListItem({
     Key? key,
-    required this.id,
-    required this.name,
-    required this.username,
-    this.avatarUrl,
+    required this.user,
     required this.onTap,
     this.onActionTap,
     this.actionIcon,
     this.actionWidget,
     this.actionText,
-    this.isPrivate = false,
   }) : super(key: key);
 
   @override
@@ -40,10 +33,12 @@ class UserListItem extends StatelessWidget {
             CircleAvatar(
               radius: 24,
               backgroundColor: AppColors.lightGrey,
-              backgroundImage: avatarUrl != null ? CachedNetworkImageProvider(avatarUrl!) : null,
-              child: avatarUrl == null
+              backgroundImage: user.avatarUrl != null
+                  ? CachedNetworkImageProvider(user.avatarUrl!)
+                  : null,
+              child: user.avatarUrl == null
                   ? Text(
-                      name.isNotEmpty ? name[0].toUpperCase() : '?',
+                      user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -59,7 +54,7 @@ class UserListItem extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    name,
+                    user.name,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -68,7 +63,7 @@ class UserListItem extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '@$username',
+                    '@${user.username}',
                     style: const TextStyle(fontSize: 14, color: AppColors.timestamp),
                   ),
                 ],
@@ -77,7 +72,7 @@ class UserListItem extends StatelessWidget {
             // Action button
             if (onActionTap != null &&
                 (actionIcon != null || actionWidget != null || actionText != null) &&
-                !isPrivate)
+                !user.isPrivate)
               InkWell(
                 onTap: onActionTap,
                 borderRadius: BorderRadius.circular(20),

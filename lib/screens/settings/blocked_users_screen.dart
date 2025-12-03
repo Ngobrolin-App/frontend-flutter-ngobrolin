@@ -6,6 +6,8 @@ import 'package:iconify_flutter/icons/material_symbols.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/viewmodels/settings/blocked_users_view_model.dart';
 import '../../theme/app_colors.dart';
+import '../../core/widgets/cards/user_list_item.dart';
+import '../../core/models/user.dart';
 
 class BlockedUsersScreen extends StatefulWidget {
   const BlockedUsersScreen({Key? key}) : super(key: key);
@@ -37,50 +39,24 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
           body: isLoading
               ? const Center(child: CircularProgressIndicator())
               : blockedUsers.isEmpty
-                  ? _buildEmptyState(context)
-                  : ListView.separated(
-                      itemCount: blockedUsers.length,
-                      separatorBuilder: (context, index) => const Divider(height: 1),
-                      itemBuilder: (context, index) {
-                        final user = blockedUsers[index];
+              ? _buildEmptyState(context)
+              : ListView.separated(
+                  itemCount: blockedUsers.length,
+                  separatorBuilder: (context, index) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final user = User.fromMinimalJson(blockedUsers[index]);
 
-                        // Amankan nilai yang mungkin null/kosong
-                        final rawName = (user['name'] as String? ?? '').trim();
-                        final rawUsername = (user['username'] as String? ?? '').trim();
-                        final displayName = rawName.isNotEmpty ? rawName : rawUsername;
-                        final avatarUrl = (user['avatarUrl'] as String?)?.trim();
-
-                        return ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: AppColors.lightGrey,
-                            backgroundImage: (avatarUrl != null && avatarUrl.isNotEmpty)
-                                ? NetworkImage(avatarUrl)
-                                : null,
-                            child: (avatarUrl == null || avatarUrl.isEmpty)
-                                ? Text(
-                                    displayName.isNotEmpty
-                                        ? displayName[0].toUpperCase()
-                                        : '?',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.primary,
-                                    ),
-                                  )
-                                : null,
-                          ),
-                          title: Text(displayName.isNotEmpty ? displayName : rawUsername),
-                          subtitle: Text(rawUsername.isNotEmpty ? '@$rawUsername' : ''),
-                          trailing: TextButton(
-                            onPressed: () =>
-                                _unblockUser(context, user['id'] as String, blockedUsersViewModel),
-                            child: Text(
-                              context.tr('unblock'),
-                              style: const TextStyle(color: AppColors.primary),
-                            ),
-                          ),
-                        );
+                    return UserListItem(
+                      user: user,
+                      onTap: () {
+                        // No action on tap for blocked users
                       },
-                    ),
+                      onActionTap: () => _unblockUser(context, user.id, blockedUsersViewModel),
+                      actionText: context.tr('unblock'),
+                      actionWidget: const Icon(Icons.lock_open, color: Colors.white, size: 16),
+                    );
+                  },
+                ),
         );
       },
     );

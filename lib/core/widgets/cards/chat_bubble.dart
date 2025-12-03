@@ -8,21 +8,16 @@ import 'package:path_provider/path_provider.dart';
 import 'package:dio/dio.dart';
 import '../../../theme/app_colors.dart';
 import '../../localization/app_localizations.dart';
+import '../../models/message.dart';
 
 class ChatBubble extends StatelessWidget {
-  final String message;
-  final String type;
-  final DateTime timestamp;
+  final Message message;
   final bool isMe;
-  final bool isRead;
 
   const ChatBubble({
     Key? key,
     required this.message,
-    required this.timestamp,
     required this.isMe,
-    this.isRead = false,
-    required this.type,
   }) : super(key: key);
 
   Future<void> _downloadAndOpen(BuildContext context, String url) async {
@@ -63,7 +58,7 @@ class ChatBubble extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (type == 'image') ...[
+                  if (message.type == 'image') ...[
                     Container(
                       padding: EdgeInsets.symmetric(vertical: 2),
                       child: GestureDetector(
@@ -73,7 +68,7 @@ class ChatBubble extends StatelessWidget {
                             builder: (_) => Dialog(
                               insetPadding: const EdgeInsets.all(16),
                               child: PhotoView(
-                                imageProvider: NetworkImage(message),
+                                imageProvider: NetworkImage(message.content),
                                 backgroundDecoration: const BoxDecoration(
                                   color: Colors.transparent,
                                 ),
@@ -82,22 +77,22 @@ class ChatBubble extends StatelessWidget {
                             ),
                           );
                         },
-                        onLongPress: () => _downloadAndOpen(context, message),
+                        onLongPress: () => _downloadAndOpen(context, message.content),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(12),
                           child: CachedNetworkImage(
-                            imageUrl: message,
+                            imageUrl: message.content,
                             width: MediaQuery.of(context).size.width * 0.6,
                             fit: BoxFit.cover,
                           ),
                         ),
                       ),
                     ),
-                  ] else if (type == 'file') ...[
+                  ] else if (message.type == 'file') ...[
                     Container(
                       padding: EdgeInsets.symmetric(vertical: 2),
                       child: InkWell(
-                        onTap: () => _downloadAndOpen(context, message),
+                        onTap: () => _downloadAndOpen(context, message.content),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -109,8 +104,8 @@ class ChatBubble extends StatelessWidget {
                             const SizedBox(width: 8),
                             Flexible(
                               child: Text(
-                                Uri.parse(message).pathSegments.isNotEmpty
-                                    ? Uri.parse(message).pathSegments.last
+                                Uri.parse(message.content).pathSegments.isNotEmpty
+                                    ? Uri.parse(message.content).pathSegments.last
                                     : context.tr('file'),
                                 style: const TextStyle(fontSize: 16, color: AppColors.text),
                                 maxLines: 1,
@@ -122,7 +117,7 @@ class ChatBubble extends StatelessWidget {
                       ),
                     ),
                   ] else ...[
-                    Text(message, style: const TextStyle(fontSize: 16, color: AppColors.text)),
+                    Text(message.content, style: const TextStyle(fontSize: 16, color: AppColors.text)),
                   ],
                   const SizedBox(height: 4),
                   Row(
@@ -130,15 +125,15 @@ class ChatBubble extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       Text(
-                        context.loc.formatTime(timestamp),
+                        context.loc.formatTime(message.createdAt),
                         style: const TextStyle(fontSize: 12, color: AppColors.timestamp),
                       ),
                       if (isMe) ...[
                         const SizedBox(width: 4),
                         Iconify(
-                          isRead ? MaterialSymbols.done_all_rounded : MaterialSymbols.done_rounded,
+                          message.isRead ? MaterialSymbols.done_all_rounded : MaterialSymbols.done_rounded,
                           size: 14,
-                          color: isRead ? Colors.blue : AppColors.timestamp,
+                          color: message.isRead ? Colors.blue : AppColors.timestamp,
                         ),
                       ],
                     ],
@@ -146,7 +141,7 @@ class ChatBubble extends StatelessWidget {
                 ],
               ),
             ),
-            if (type == 'file') ...[
+            if (message.type == 'file') ...[
               const SizedBox(width: 8),
               Iconify(MaterialSymbols.open_in_new, size: 24, color: AppColors.accent),
             ],
