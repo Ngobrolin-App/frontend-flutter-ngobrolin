@@ -8,6 +8,7 @@ class AppColors {
   static const Color chatBubbleUser = Color(0xFFDCF8C6);
   static const Color chatBubbleOther = Color(0xFFFFFFFF);
   static const Color text = Color(0xFF303030);
+  static const Color buttonText = Color.fromARGB(255, 0, 21, 88);
   static const Color timestamp = Color(0xFF999999);
   static const Color deactiveButton = Color(0xFFA8A8A8);
   static const Color warning = Color(0xFFA80000);

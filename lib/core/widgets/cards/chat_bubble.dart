@@ -3,6 +3,9 @@ import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/material_symbols.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:photo_view/photo_view.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:dio/dio.dart';
 import '../../../theme/app_colors.dart';
 import '../../localization/app_localizations.dart';
 
@@ -21,6 +24,15 @@ class ChatBubble extends StatelessWidget {
     this.isRead = false,
     required this.type,
   }) : super(key: key);
+
+  Future<void> _downloadAndOpen(BuildContext context, String url) async {
+    final dir = await getTemporaryDirectory();
+    final segs = Uri.parse(url).pathSegments;
+    final name = segs.isNotEmpty ? segs.last : 'file_${DateTime.now().millisecondsSinceEpoch}';
+    final path = '${dir.path}/$name';
+    await Dio().download(url, path);
+    await OpenFile.open(path);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,78 +56,100 @@ class ChatBubble extends StatelessWidget {
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            if (type == 'image') ...[
-              Container(
-                padding: EdgeInsets.symmetric(vertical: 2),
-                child: GestureDetector(
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (_) => Dialog(
-                        insetPadding: const EdgeInsets.all(16),
-                        child: PhotoView(
-                          imageProvider: NetworkImage(message),
-                          backgroundDecoration: const BoxDecoration(color: Colors.transparent),
-                          initialScale: PhotoViewComputedScale.contained,
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (type == 'image') ...[
+                    Container(
+                      padding: EdgeInsets.symmetric(vertical: 2),
+                      child: GestureDetector(
+                        onTap: () {
+                          showDialog(
+                            context: context,
+                            builder: (_) => Dialog(
+                              insetPadding: const EdgeInsets.all(16),
+                              child: PhotoView(
+                                imageProvider: NetworkImage(message),
+                                backgroundDecoration: const BoxDecoration(
+                                  color: Colors.transparent,
+                                ),
+                                initialScale: PhotoViewComputedScale.contained,
+                              ),
+                            ),
+                          );
+                        },
+                        onLongPress: () => _downloadAndOpen(context, message),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: CachedNetworkImage(
+                            imageUrl: message,
+                            width: MediaQuery.of(context).size.width * 0.6,
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
-                    );
-                  },
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: CachedNetworkImage(
-                      imageUrl: message,
-                      width: MediaQuery.of(context).size.width * 0.6,
-                      fit: BoxFit.cover,
                     ),
-                  ),
-                ),
-              ),
-            ] else if (type == 'file') ...[
-              Container(
-                padding: EdgeInsets.symmetric(vertical: 2),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.insert_drive_file, color: AppColors.text),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        Uri.parse(message).pathSegments.isNotEmpty
-                            ? Uri.parse(message).pathSegments.last
-                            : context.tr('file'),
-                        style: const TextStyle(fontSize: 16, color: AppColors.text),
-                        overflow: TextOverflow.ellipsis,
+                  ] else if (type == 'file') ...[
+                    Container(
+                      padding: EdgeInsets.symmetric(vertical: 2),
+                      child: InkWell(
+                        onTap: () => _downloadAndOpen(context, message),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Iconify(
+                              MaterialSymbols.file_copy_rounded,
+                              size: 18,
+                              color: AppColors.text,
+                            ),
+                            const SizedBox(width: 8),
+                            Flexible(
+                              child: Text(
+                                Uri.parse(message).pathSegments.isNotEmpty
+                                    ? Uri.parse(message).pathSegments.last
+                                    : context.tr('file'),
+                                style: const TextStyle(fontSize: 16, color: AppColors.text),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
+                  ] else ...[
+                    Text(message, style: const TextStyle(fontSize: 16, color: AppColors.text)),
                   ],
-                ),
-              ),
-            ] else ...[
-              Text(message, style: const TextStyle(fontSize: 16, color: AppColors.text)),
-            ],
-            const SizedBox(height: 4),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Text(
-                  context.loc.formatTime(timestamp),
-                  style: const TextStyle(fontSize: 12, color: AppColors.timestamp),
-                ),
-                if (isMe) ...[
-                  const SizedBox(width: 4),
-                  Iconify(
-                    isRead ? MaterialSymbols.done_all_rounded : MaterialSymbols.done_rounded,
-                    size: 14,
-                    color: isRead ? Colors.blue : AppColors.timestamp,
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text(
+                        context.loc.formatTime(timestamp),
+                        style: const TextStyle(fontSize: 12, color: AppColors.timestamp),
+                      ),
+                      if (isMe) ...[
+                        const SizedBox(width: 4),
+                        Iconify(
+                          isRead ? MaterialSymbols.done_all_rounded : MaterialSymbols.done_rounded,
+                          size: 14,
+                          color: isRead ? Colors.blue : AppColors.timestamp,
+                        ),
+                      ],
+                    ],
                   ),
                 ],
-              ],
+              ),
             ),
+            if (type == 'file') ...[
+              const SizedBox(width: 8),
+              Iconify(MaterialSymbols.open_in_new, size: 24, color: AppColors.accent),
+            ],
           ],
         ),
       ),

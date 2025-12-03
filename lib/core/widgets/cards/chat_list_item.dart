@@ -96,7 +96,7 @@ class ChatListItem extends StatelessWidget {
                               ),
                             ] else if (lastMessageType == 'file') ...[
                               Iconify(
-                                MaterialSymbols.file_copy,
+                                MaterialSymbols.file_copy_rounded,
                                 size: 18,
                                 color: AppColors.timestamp,
                               ),
