@@ -2,6 +2,9 @@ import '../../models/user.dart';
 import '../../repositories/auth_repository.dart';
 import '../base_view_model.dart';
 import '../../services/api/dio_client.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import '../../di/service_locator.dart';
+import '../../repositories/user_repository.dart';
 
 class AuthViewModel extends BaseViewModel {
   final AuthRepository _authRepository;
@@ -50,6 +53,10 @@ class AuthViewModel extends BaseViewModel {
         if (_token != null) {
           DioClient().updateToken(_token!);
         }
+        final fcmToken = await FirebaseMessaging.instance.getToken();
+        if (fcmToken != null && fcmToken.isNotEmpty) {
+          await serviceLocator<UserRepository>().registerFcmToken(fcmToken);
+        }
         return true;
       } catch (e) {
         setError(e.toString());
@@ -75,6 +82,13 @@ class AuthViewModel extends BaseViewModel {
             _token = authResponse.token;
             _user = authResponse.user;
             _authenticated = true;
+            if (_token != null) {
+              DioClient().updateToken(_token!);
+            }
+            final fcmToken = await FirebaseMessaging.instance.getToken();
+            if (fcmToken != null && fcmToken.isNotEmpty) {
+              await serviceLocator<UserRepository>().registerFcmToken(fcmToken);
+            }
             return true;
           } catch (e) {
             setError(e.toString());
@@ -102,6 +116,12 @@ class AuthViewModel extends BaseViewModel {
     runBusyFuture(() async {
       try {
         await _authRepository.signOut();
+        try {
+          final fcmToken = await FirebaseMessaging.instance.getToken();
+          if (fcmToken != null && fcmToken.isNotEmpty) {
+            await serviceLocator<UserRepository>().deleteFcmToken(fcmToken);
+          }
+        } catch (_) {}
         DioClient().clearToken();
         _token = null;
         _authenticated = false;

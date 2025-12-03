@@ -125,4 +125,22 @@ class UserRepository {
       throw ApiException(message: e.toString());
     }
   }
+
+  Future<void> registerFcmToken(String token) async {
+    try {
+      await _apiService.post<Map<String, dynamic>>('/notifications/token/register', data: {'token': token});
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(message: e.toString());
+    }
+  }
+
+  Future<void> deleteFcmToken(String token) async {
+    try {
+      await _apiService.post<Map<String, dynamic>>('/notifications/token/delete', data: {'token': token});
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(message: e.toString());
+    }
+  }
 }

@@ -25,6 +25,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'routes/app_routes.dart';
 import 'theme/app_theme.dart';
+import 'core/repositories/user_repository.dart';
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 // main() function in main.dart
 @pragma('vm:entry-point')
@@ -35,7 +37,8 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await FirebaseMessaging.instance.requestPermission();
 
   // Setup service locator
   setupServiceLocator();
@@ -46,7 +49,18 @@ Future<void> main() async {
   const initSettings = InitializationSettings(
     android: AndroidInitializationSettings('@mipmap/ic_launcher'),
   );
-  await flutterLocalNotificationsPlugin.initialize(initSettings);
+  await flutterLocalNotificationsPlugin.initialize(
+    initSettings,
+    onDidReceiveNotificationResponse: (NotificationResponse response) {
+      final payload = response.payload;
+      if (payload != null && payload.isNotEmpty) {
+        navigatorKey.currentState?.pushNamed(
+          AppRoutes.chat,
+          arguments: {'userId': payload},
+        );
+      }
+    },
+  );
 
   FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
     final notification = message.notification;
@@ -63,6 +77,18 @@ Future<void> main() async {
         notification.title,
         notification.body,
         details,
+        payload: message.data['userId'] ?? '',
+      );
+    }
+  });
+
+  FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+    final data = message.data;
+    final userId = data['userId'];
+    if (userId != null && userId.isNotEmpty) {
+      navigatorKey.currentState?.pushNamed(
+        AppRoutes.chat,
+        arguments: {'userId': userId, 'name': data['name'], 'avatarUrl': data['avatarUrl']},
       );
     }
   });
@@ -102,6 +128,12 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    FirebaseMessaging.instance.onTokenRefresh.listen((token) async {
+      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+      if (authViewModel.authenticated) {
+        await serviceLocator<UserRepository>().registerFcmToken(token);
+      }
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final socketProvider = Provider.of<SocketProvider>(context, listen: false);
       final chatListViewModel = Provider.of<ChatListViewModel>(context, listen: false);
@@ -128,6 +160,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'Ngobrolin',
       debugShowCheckedModeBanner: false,
       supportedLocales: const [Locale('en'), Locale('id')],
