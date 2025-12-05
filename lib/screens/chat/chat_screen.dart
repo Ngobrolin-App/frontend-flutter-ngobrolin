@@ -36,6 +36,14 @@ class _ChatScreenState extends State<ChatScreen> {
   int _lastMessageCount = 0;
   Timer? _typingTimer;
 
+  // Socket Handlers
+  late Function(dynamic) _newMessageHandler;
+  late Function(dynamic) _readStatusHandler;
+  late Function(dynamic) _conversationCreatedHandler;
+  late Function(dynamic) _typingHandler;
+  late Function(dynamic) _stopTypingHandler;
+  late Function(dynamic) _statusHandler;
+
   @override
   void initState() {
     super.initState();
@@ -89,8 +97,8 @@ class _ChatScreenState extends State<ChatScreen> {
       // Join conversation room for realtime updates
       // (Note: duplicate join removed)
 
-      // Listen to new_message events tanpa memfilter pesan dari diri sendiri
-      socketProvider.on('new_message', (data) {
+      // Define Handlers
+      _newMessageHandler = (data) {
         debugPrint('-------- new_message on chat screen: $data');
         try {
           final msgMap = data['message'] as Map<String, dynamic>;
@@ -111,10 +119,9 @@ class _ChatScreenState extends State<ChatScreen> {
             // }
           }
         } catch (_) {}
-      });
+      };
 
-      // Listen perubahan status read massal dari backend
-      socketProvider.on('messages_read_status_updated', (data) {
+      _readStatusHandler = (data) {
         debugPrint('-------- messages_read_status_updated on chat screen: $data');
         try {
           final convId = data['conversationId'] as String?;
@@ -125,10 +132,9 @@ class _ChatScreenState extends State<ChatScreen> {
             chatViewModel.updateMessagesReadStatus(ids);
           }
         } catch (_) {}
-      });
+      };
 
-      // Listen percakapan baru: jika melibatkan saya dan partner saat ini, set conversationId & join
-      socketProvider.on('conversation_created', (data) {
+      _conversationCreatedHandler = (data) {
         debugPrint('-------- conversation_created on chat screen: $data');
         try {
           final conv = data['conversation'] as Map<String, dynamic>?;
@@ -151,10 +157,9 @@ class _ChatScreenState extends State<ChatScreen> {
             }
           }
         } catch (_) {}
-      });
+      };
 
-      // Listen typing status
-      socketProvider.on('user_typing', (data) {
+      _typingHandler = (data) {
         try {
           final convId = data['conversationId'] as String?;
           final userId = data['userId'] as String?;
@@ -162,9 +167,9 @@ class _ChatScreenState extends State<ChatScreen> {
             chatViewModel.setPartnerTyping(true);
           }
         } catch (_) {}
-      });
+      };
 
-      socketProvider.on('user_stopped_typing', (data) {
+      _stopTypingHandler = (data) {
         try {
           final convId = data['conversationId'] as String?;
           final userId = data['userId'] as String?;
@@ -172,10 +177,9 @@ class _ChatScreenState extends State<ChatScreen> {
             chatViewModel.setPartnerTyping(false);
           }
         } catch (_) {}
-      });
+      };
 
-      // Listen user status (online/offline)
-      socketProvider.on('user_status_changed', (data) {
+      _statusHandler = (data) {
         try {
           final userId = data['userId'] as String?;
           final status = data['status'] as String?;
@@ -183,7 +187,15 @@ class _ChatScreenState extends State<ChatScreen> {
             chatViewModel.setPartnerStatus(status);
           }
         } catch (_) {}
-      });
+      };
+
+      // Register Handlers
+      socketProvider.on('new_message', _newMessageHandler);
+      socketProvider.on('messages_read_status_updated', _readStatusHandler);
+      socketProvider.on('conversation_created', _conversationCreatedHandler);
+      socketProvider.on('user_typing', _typingHandler);
+      socketProvider.on('user_stopped_typing', _stopTypingHandler);
+      socketProvider.on('user_status_changed', _statusHandler);
 
       _scrollToBottom();
     });
@@ -191,6 +203,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
+    debugPrint('-------- ChatScreen dispose called');
     _typingTimer?.cancel();
     _messageController.removeListener(_onTextChanged);
     _messageController.dispose();
@@ -202,12 +215,18 @@ class _ChatScreenState extends State<ChatScreen> {
     if (chatViewModel.conversationId != null) {
       socketProvider.leaveConversation(chatViewModel.conversationId!);
     }
-    socketProvider.off('new_message');
-    socketProvider.off('messages_read_status_updated');
-    socketProvider.off('conversation_created');
-    socketProvider.off('user_typing');
-    socketProvider.off('user_stopped_typing');
-    socketProvider.off('user_status_changed');
+
+    // Remove specific handlers
+    try {
+      socketProvider.off('new_message', _newMessageHandler);
+      socketProvider.off('messages_read_status_updated', _readStatusHandler);
+      socketProvider.off('conversation_created', _conversationCreatedHandler);
+      socketProvider.off('user_typing', _typingHandler);
+      socketProvider.off('user_stopped_typing', _stopTypingHandler);
+      socketProvider.off('user_status_changed', _statusHandler);
+    } catch (e) {
+      debugPrint('Error removing socket listeners: $e');
+    }
 
     // Lepas listener ViewModel agar tidak bocor
     if (_vmListener != null) {

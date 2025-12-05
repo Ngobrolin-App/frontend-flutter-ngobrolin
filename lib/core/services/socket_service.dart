@@ -36,8 +36,8 @@ class SocketService {
   }
 
   // Lepas listener event tertentu
-  void off(String event) {
-    _socket?.off(event);
+  void off(String event, [dynamic handler]) {
+    _socket?.off(event, handler);
   }
 
   // Join/leave conversation rooms

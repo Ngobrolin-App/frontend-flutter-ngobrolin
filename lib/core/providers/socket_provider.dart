@@ -58,8 +58,8 @@ class SocketProvider extends ChangeNotifier {
   }
 
   // Tambah off untuk melepas listener dari luar
-  void off(String event) {
-    _socket.off(event);
+  void off(String event, [dynamic handler]) {
+    _socket.off(event, handler);
   }
 
   // Join conversation room passthrough

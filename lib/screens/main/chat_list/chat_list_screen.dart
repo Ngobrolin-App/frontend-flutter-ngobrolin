@@ -23,6 +23,11 @@ class ChatListScreen extends StatefulWidget {
 class _ChatListScreenState extends State<ChatListScreen> {
   late final ScrollController _scrollController;
 
+  // Socket Handlers
+  late Function(dynamic) _conversationUpdatedHandler;
+  late Function(dynamic) _conversationCreatedHandler;
+  late Function(dynamic) _conversationReadHandler;
+
   @override
   void initState() {
     super.initState();
@@ -34,28 +39,31 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
       chatListViewModel.fetchChatList();
 
-      // Realtime: update last message pada chat list
-      socketProvider.on('conversation_updated', (data) {
+      // Define Handlers
+      _conversationUpdatedHandler = (data) {
         debugPrint('-------- conversation_updated on chat list screen: $data');
         final currentUserId = authViewModel.user?.id;
         chatListViewModel.handleSocketConversationUpdate(data, currentUserId);
-      });
+      };
 
-      // Realtime: percakapan baru → refresh list agar muncul
-      socketProvider.on('conversation_created', (data) {
+      _conversationCreatedHandler = (data) {
         debugPrint('-------- conversation_created on chat list screen: $data');
         chatListViewModel.fetchChatList();
-      });
+      };
 
-      // Realtime: update unread count jadi 0 saat dibaca
-      socketProvider.on('conversation_read_by_me', (data) {
+      _conversationReadHandler = (data) {
         try {
           final convId = data['conversationId'] as String?;
           if (convId != null) {
             chatListViewModel.handleConversationReadByMe(convId);
           }
         } catch (_) {}
-      });
+      };
+
+      // Register Handlers
+      socketProvider.on('conversation_updated', _conversationUpdatedHandler);
+      socketProvider.on('conversation_created', _conversationCreatedHandler);
+      socketProvider.on('conversation_read_by_me', _conversationReadHandler);
     });
 
     _scrollController.addListener(() {
@@ -70,9 +78,16 @@ class _ChatListScreenState extends State<ChatListScreen> {
   void dispose() {
     _scrollController.dispose();
     final socketProvider = Provider.of<SocketProvider>(context, listen: false);
-    socketProvider.off('conversation_updated');
-    socketProvider.off('conversation_created');
-    socketProvider.off('conversation_read_by_me');
+
+    // Remove specific handlers
+    try {
+      socketProvider.off('conversation_updated', _conversationUpdatedHandler);
+      socketProvider.off('conversation_created', _conversationCreatedHandler);
+      socketProvider.off('conversation_read_by_me', _conversationReadHandler);
+    } catch (e) {
+      debugPrint('Error removing socket listeners in chat list: $e');
+    }
+
     super.dispose();
   }
 
