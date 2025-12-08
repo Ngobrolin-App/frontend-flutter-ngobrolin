@@ -43,3 +43,24 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Environment Variables
+.env*
+
+# Firebase Configuration
+google-services.json
+GoogleService-Info.plist
+firebase_options.dart
+
+# IDE & Editor Config
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# FVM
+.fvm/flutter_sdk
+
+# Mac OS
+.DS_Store
