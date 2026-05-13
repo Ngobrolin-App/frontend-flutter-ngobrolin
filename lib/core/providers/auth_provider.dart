@@ -23,7 +23,6 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> signIn(String email, String password) async {
-    // TODO: call API via Dio, receive token
     _token = 'mock-token';
     _authenticated = true;
     notifyListeners();
