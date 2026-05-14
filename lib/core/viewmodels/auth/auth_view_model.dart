@@ -95,6 +95,19 @@ class AuthViewModel extends BaseViewModel {
         false;
   }
 
+  /// Resets password using token
+  Future<bool> resetPassword(String token, String newPassword) async {
+    return await runBusyFuture(() async {
+          try {
+            return await _authRepository.resetPassword(token, newPassword);
+          } catch (e) {
+            setError(e.toString());
+            return false;
+          }
+        }) ??
+        false;
+  }
+
   /// Signs out the current user
   void signOut() {
     runBusyFuture(() async {

@@ -5,6 +5,8 @@ import '../screens/splash/splash_screen.dart';
 import '../screens/onboarding/onboarding_screen.dart';
 import '../screens/auth/login/login_screen.dart';
 import '../screens/auth/register/register_screen.dart';
+import '../screens/auth/forgot_password/forgot_password_screen.dart';
+import '../screens/auth/forgot_password/reset_password_screen.dart';
 import '../screens/main/main_screen.dart';
 import '../screens/chat/chat_screen.dart';
 import '../screens/chat/user_profile_screen.dart';
@@ -16,6 +18,8 @@ class AppRoutes {
   static const String onboarding = '/onboarding';
   static const String login = '/login';
   static const String register = '/register';
+  static const String forgotPassword = '/forgot-password';
+  static const String resetPassword = '/reset-password';
   static const String main = '/main';
   static const String chat = '/chat';
   static const String settingsRoute = '/settings';
@@ -32,6 +36,13 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => const LoginScreen());
       case register:
         return MaterialPageRoute(builder: (_) => const RegisterScreen());
+      case forgotPassword:
+        return MaterialPageRoute(builder: (_) => const ForgotPasswordScreen());
+      case resetPassword:
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => ResetPasswordScreen(token: args?['token'] as String?),
+        );
       case main:
         return MaterialPageRoute(builder: (_) => const MainScreen(), settings: settings);
       case chat:

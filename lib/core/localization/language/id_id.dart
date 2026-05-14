@@ -35,6 +35,25 @@ const Map<String, String> idID = {
   'please_confirm_your_password': 'Silakan konfirmasi password Anda',
   'passwords_do_not_match': 'Password tidak cocok',
 
+  // Forgot Password
+  'forgot_password_desc': 'Masukkan alamat email Anda dan kami akan mengirimkan tautan untuk mereset password Anda.',
+  'enter_email': 'Masukkan email Anda',
+  'email': 'Email',
+  'please_enter_email': 'Mohon masukkan email Anda',
+  'invalid_email': 'Mohon masukkan email yang valid',
+  'send_reset_link': 'Kirim Tautan Reset',
+  'email_sent': 'Email Terkirim!',
+  'reset_email_sent_desc': 'Kami telah mengirimkan tautan reset password ke email Anda. Silakan periksa kotak masuk dan folder spam Anda.',
+  'back_to_login': 'Kembali ke Login',
+  'forgot_password_failed': 'Gagal mengirim tautan reset',
+  'reset_password': 'Reset Password',
+  'reset_password_desc': 'Silakan masukkan password baru Anda di bawah ini.',
+  'enter_new_password': 'Masukkan password baru',
+  'invalid_token': 'Token reset tidak valid atau tidak ditemukan',
+  'reset_password_failed': 'Gagal mereset password',
+  'password_reset_success': 'Reset Password Berhasil!',
+  'password_reset_success_desc': 'Password Anda telah berhasil direset. Anda sekarang dapat login dengan password baru Anda.',
+
   // Main Navigation
   'chats': 'Obrolan',
   'users': 'Pengguna',

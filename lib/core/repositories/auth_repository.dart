@@ -54,6 +54,15 @@ class AuthRepository {
     return true;
   }
 
+  /// Reset password
+  Future<bool> resetPassword(String token, String newPassword) async {
+    await _apiService.post<Map<String, dynamic>>(
+      '/auth/reset-password',
+      data: {'token': token, 'newPassword': newPassword},
+    );
+    return true;
+  }
+
   /// Sign out the current user
   Future<void> signOut() async {
     // Clear stored token and user data

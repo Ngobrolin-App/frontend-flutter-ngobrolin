@@ -35,6 +35,25 @@ const Map<String, String> enUS = {
   'please_confirm_your_password': 'Please confirm your password',
   'passwords_do_not_match': 'Passwords do not match',
 
+  // Forgot Password
+  'forgot_password_desc': 'Enter your email address and we will send you a link to reset your password.',
+  'enter_email': 'Enter your email',
+  'email': 'Email',
+  'please_enter_email': 'Please enter your email',
+  'invalid_email': 'Please enter a valid email',
+  'send_reset_link': 'Send Reset Link',
+  'email_sent': 'Email Sent!',
+  'reset_email_sent_desc': 'We have sent a password reset link to your email. Please check your inbox and spam folder.',
+  'back_to_login': 'Back to Login',
+  'forgot_password_failed': 'Failed to send reset link',
+  'reset_password': 'Reset Password',
+  'reset_password_desc': 'Please enter your new password below.',
+  'enter_new_password': 'Enter new password',
+  'invalid_token': 'Invalid or missing reset token',
+  'reset_password_failed': 'Failed to reset password',
+  'password_reset_success': 'Password Reset Successful!',
+  'password_reset_success_desc': 'Your password has been reset successfully. You can now login with your new password.',
+
   // Main Navigation
   'chats': 'Chats',
   'users': 'Users',
