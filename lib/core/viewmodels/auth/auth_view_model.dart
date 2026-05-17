@@ -59,6 +59,7 @@ class AuthViewModel extends BaseViewModel {
   /// Registers a new user
   Future<bool> signUp({
     required String username,
+    required String email,
     required String name,
     required String password,
   }) async {
@@ -66,6 +67,7 @@ class AuthViewModel extends BaseViewModel {
           try {
             final authResponse = await _authRepository.signUp(
               username: username,
+              email: email,
               name: name,
               password: password,
             );

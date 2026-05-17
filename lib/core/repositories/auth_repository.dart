@@ -32,12 +32,13 @@ class AuthRepository {
   /// Register a new user
   Future<AuthResponse> signUp({
     required String username,
+    required String email,
     required String name,
     required String password,
   }) async {
     final response = await _apiService.post<Map<String, dynamic>>(
       '/auth/register',
-      data: {'username': username, 'name': name, 'password': password},
+      data: {'username': username, 'email': email, 'name': name, 'password': password},
     );
 
     final authResponse = AuthResponse.fromJson(response);

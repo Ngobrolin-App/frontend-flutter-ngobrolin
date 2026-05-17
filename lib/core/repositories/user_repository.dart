@@ -28,11 +28,13 @@ class UserRepository {
   Future<User> updateProfile({
     required String userId,
     String? name,
+    String? email,
     String? bio,
     bool? isPrivate,
   }) async {
     final data = <String, dynamic>{};
     if (name != null) data['name'] = name;
+    if (email != null) data['email'] = email;
     if (bio != null) data['bio'] = bio;
     if (isPrivate != null) data['isPrivate'] = isPrivate;
 

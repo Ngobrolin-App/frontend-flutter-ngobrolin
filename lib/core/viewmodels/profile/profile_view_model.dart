@@ -33,6 +33,7 @@ class ProfileViewModel extends BaseViewModel {
 
   Future<bool> updateProfile({
     String? name,
+    String? email,
     String? bio,
     String? avatarUrl,
     String? newPassword,
@@ -43,10 +44,11 @@ class ProfileViewModel extends BaseViewModel {
     return await runBusyFuture(() async {
           try {
             // Update profile information
-            if (name != null || bio != null) {
+            if (name != null || bio != null || email != null) {
               final updatedUser = await _userRepository.updateProfile(
                 userId: _user!.id,
                 name: name,
+                email: email,
                 bio: bio,
               );
 

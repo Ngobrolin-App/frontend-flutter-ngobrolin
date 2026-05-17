@@ -19,6 +19,7 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -26,6 +27,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _emailController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -44,6 +46,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         // Use the new ViewModel for registration
         final success = await authViewModel.signUp(
           username: _usernameController.text,
+          email: _emailController.text,
           name: _nameController.text,
           password: _passwordController.text,
         );
@@ -62,7 +65,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
           );
 
-          Navigator.of(context).pushReplacementNamed(AppRoutes.login);
+          Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
         } else {
           // Show error message if registration failed
           ScaffoldMessenger.of(context).showSnackBar(
@@ -129,6 +132,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your name';
+                      }
+                      return null;
+                    },
+                    textInputAction: TextInputAction.next,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Email field
+                  CustomTextField(
+                    controller: _emailController,
+                    hintText: context.tr('enter_email') ?? 'Enter your email',
+                    labelText: context.tr('email') ?? 'Email',
+                    prefixIcon: const Icon(Icons.email_outlined),
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return context.tr('please_enter_email') ?? 'Please enter your email';
+                      }
+                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                        return context.tr('invalid_email') ?? 'Please enter a valid email';
                       }
                       return null;
                     },

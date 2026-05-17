@@ -134,6 +134,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           '@${user.username}',
                           style: const TextStyle(fontSize: 16, color: Colors.white70),
                         ),
+                        const SizedBox(height: 4),
+
+                        // Email
+                        if (user.email != null && user.email!.isNotEmpty)
+                          Text(
+                            user.email!,
+                            style: const TextStyle(fontSize: 14, color: Colors.white70),
+                          ),
                       ],
                     ),
                   ),

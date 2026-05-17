@@ -33,17 +33,17 @@ class _SplashScreenState extends State<SplashScreen> {
     // Check if user is authenticated
     if (authProvider.authenticated) {
       // Navigate to main screen if authenticated
-      if (mounted) Navigator.of(context).pushReplacementNamed(AppRoutes.main);
+      if (mounted) Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.main, (route) => false);
     } else {
       // Check if first time user
       final isFirstTime = await _isFirstTimeUser();
 
       if (isFirstTime) {
         // Navigate to onboarding for first time users
-        if (mounted) Navigator.of(context).pushReplacementNamed(AppRoutes.onboarding);
+        if (mounted) Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.onboarding, (route) => false);
       } else {
         // Navigate to login for returning users
-        if (mounted) Navigator.of(context).pushReplacementNamed(AppRoutes.login);
+        if (mounted) Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
       }
     }
   }

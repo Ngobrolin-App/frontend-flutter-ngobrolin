@@ -24,6 +24,7 @@ class EditProfileScreen extends StatefulWidget {
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
+  late TextEditingController _emailController;
   late TextEditingController _bioController;
   late TextEditingController _passwordController;
   late TextEditingController _confirmPasswordController;
@@ -37,6 +38,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.user.name);
+    _emailController = TextEditingController(text: widget.user.email ?? '');
     _bioController = TextEditingController(text: widget.user.bio ?? '');
     _passwordController = TextEditingController();
     _confirmPasswordController = TextEditingController();
@@ -46,6 +48,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _emailController.dispose();
     _bioController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -75,6 +78,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
         final updated = await profileVM.updateProfile(
           name: _nameController.text.trim(),
+          email: _emailController.text.trim(),
           bio: _bioController.text.trim(),
           avatarUrl: _imageFile?.path,
           newPassword: _changePassword ? _passwordController.text.trim() : null,
@@ -129,7 +133,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                   : null),
                         child: (_imageFile == null && widget.user.avatarUrl == null)
                             ? Text(
-                                widget.user.name.isNotEmpty ? widget.user.name[0].toUpperCase() : '?',
+                                widget.user.name.isNotEmpty
+                                    ? widget.user.name[0].toUpperCase()
+                                    : '?',
                                 style: const TextStyle(
                                   fontSize: 50,
                                   fontWeight: FontWeight.bold,
@@ -169,6 +175,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your name';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                // Email field
+                CustomTextField(
+                  controller: _emailController,
+                  labelText: context.tr('email') ?? 'Email',
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return context.tr('please_enter_email') ?? 'Please enter your email';
+                    }
+                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                      return context.tr('invalid_email') ?? 'Please enter a valid email';
                     }
                     return null;
                   },

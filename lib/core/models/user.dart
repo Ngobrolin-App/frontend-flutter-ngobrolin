@@ -7,6 +7,7 @@ part 'user.g.dart';
 class User extends Equatable {
   final String id;
   final String username;
+  final String? email;
   final String name;
   final String? bio;
   final String? avatarUrl;
@@ -17,6 +18,7 @@ class User extends Equatable {
   const User({
     required this.id,
     required this.username,
+    this.email,
     required this.name,
     this.bio,
     this.avatarUrl,
@@ -35,6 +37,7 @@ class User extends Equatable {
   User copyWith({
     String? id,
     String? username,
+    String? email,
     String? name,
     String? bio,
     String? avatarUrl,
@@ -45,6 +48,7 @@ class User extends Equatable {
     return User(
       id: id ?? this.id,
       username: username ?? this.username,
+      email: email ?? this.email,
       name: name ?? this.name,
       bio: bio ?? this.bio,
       avatarUrl: avatarUrl ?? this.avatarUrl,
@@ -61,6 +65,7 @@ class User extends Equatable {
     return User(
       id: json['id'] as String,
       username: json['username'] as String,
+      email: json['email'] as String?,
       name: json['name'] as String,
       bio: json['bio'] as String?,
       avatarUrl: json['avatarUrl'] as String?,
@@ -71,5 +76,15 @@ class User extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, username, name, bio, avatarUrl, isPrivate, createdAt, updatedAt];
+  List<Object?> get props => [
+    id,
+    username,
+    email,
+    name,
+    bio,
+    avatarUrl,
+    isPrivate,
+    createdAt,
+    updatedAt,
+  ];
 }

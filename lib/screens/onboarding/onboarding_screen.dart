@@ -49,7 +49,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     if (!mounted) return;
 
     // Navigate to login screen
-    Navigator.of(context).pushReplacementNamed(AppRoutes.login);
+    Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
   }
 
   @override

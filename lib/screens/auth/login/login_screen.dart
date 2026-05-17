@@ -49,7 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
           final socketProvider = Provider.of<SocketProvider>(context, listen: false);
           await socketProvider.init(token: authViewModel.token);
 
-          Navigator.of(context).pushReplacementNamed(AppRoutes.main);
+          Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.main, (route) => false);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
