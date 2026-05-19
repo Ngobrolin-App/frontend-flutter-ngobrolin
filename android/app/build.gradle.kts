@@ -38,6 +38,28 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+
+    // =========================
+    // FLAVORS
+    // =========================
+    flavorDimensions += "environment"
+
+    productFlavors {
+        create("dev") {
+            dimension = "environment"
+
+            applicationIdSuffix = ".dev"
+            versionNameSuffix = "-dev"
+
+            resValue("string", "app_name", "Ngobrolin Dev")
+        }
+
+        create("prod") {
+            dimension = "environment"
+
+            resValue("string", "app_name", "Ngobrolin")
+        }
+    }
 }
 
 flutter {
@@ -46,4 +68,6 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    implementation(platform("com.google.firebase:firebase-bom:34.13.0"))
+    implementation("com.google.firebase:firebase-analytics")
 }

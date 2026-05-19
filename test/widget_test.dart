@@ -8,7 +8,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:ngobrolin_app/main.dart';
+// import 'package:ngobrolin_app/main.dart';
+import 'package:ngobrolin_app/bootstrap.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
