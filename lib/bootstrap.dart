@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:ngobrolin_app/core/services/deeplink/deeplink_service.dart';
 import 'package:provider/provider.dart';
 
 import 'package:firebase_core/firebase_core.dart';
@@ -76,6 +77,8 @@ Future<void> bootstrap() async {
   // DI (HARUS SYNC ONLY)
   // =======================
   setupServiceLocator();
+
+  await serviceLocator<DeeplinkService>().init();
 
   // =======================
   // FCM Background

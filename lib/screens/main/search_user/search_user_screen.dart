@@ -135,15 +135,9 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
                       return UserListItem(
                         user: user,
                         onTap: () {
-                          Navigator.of(context).pushNamed(
-                            AppRoutes.userProfile,
-                            arguments: {
-                              'userId': user.id,
-                              'name': user.name,
-                              'username': user.username,
-                              'avatarUrl': user.avatarUrl,
-                            },
-                          );
+                          Navigator.of(
+                            context,
+                          ).pushNamed(AppRoutes.userProfile, arguments: {'userId': user.id});
                         },
                         onActionTap: () {
                           Navigator.of(context).pushNamed(

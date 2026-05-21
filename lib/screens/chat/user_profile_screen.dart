@@ -11,17 +11,8 @@ import '../../theme/app_colors.dart';
 
 class UserProfileScreen extends StatefulWidget {
   final String userId;
-  final String name;
-  final String username;
-  final String? avatarUrl;
 
-  const UserProfileScreen({
-    Key? key,
-    required this.userId,
-    required this.name,
-    required this.username,
-    this.avatarUrl,
-  }) : super(key: key);
+  const UserProfileScreen({Key? key, required this.userId}) : super(key: key);
 
   @override
   State<UserProfileScreen> createState() => _UserProfileScreenState();
@@ -34,12 +25,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final userProfileViewModel = Provider.of<UserProfileViewModel>(context, listen: false);
-      userProfileViewModel.initWithUserData(
-        userId: widget.userId,
-        name: widget.name,
-        username: widget.username,
-        avatarUrl: widget.avatarUrl,
-      );
       // Ambil data terbaru dari backend
       userProfileViewModel.fetchUserProfile(widget.userId);
     });

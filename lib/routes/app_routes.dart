@@ -61,12 +61,7 @@ class AppRoutes {
       case userProfile:
         final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
-          builder: (_) => UserProfileScreen(
-            userId: args?['userId'] as String? ?? '',
-            name: args?['name'] as String? ?? '',
-            username: args?['username'] as String? ?? '',
-            avatarUrl: args?['avatarUrl'] as String?,
-          ),
+          builder: (_) => UserProfileScreen(userId: args?['userId'] as String? ?? ''),
         );
       default:
         return MaterialPageRoute(

@@ -1,4 +1,5 @@
 import 'package:get_it/get_it.dart';
+import 'package:ngobrolin_app/core/services/deeplink/deeplink_service.dart';
 
 import '../repositories/auth_repository.dart';
 import '../repositories/chat_repository.dart';
@@ -23,6 +24,7 @@ void setupServiceLocator() {
   // Register services
   serviceLocator.registerLazySingleton(() => DioClient());
   serviceLocator.registerLazySingleton(() => ApiService());
+  serviceLocator.registerLazySingleton(() => DeeplinkService());
 
   // Register repositories
   serviceLocator.registerLazySingleton(

@@ -17,29 +17,6 @@ class UserProfileViewModel extends BaseViewModel {
     : _userRepository = userRepository ?? UserRepository(),
       _settingsRepository = settingsRepository ?? SettingsRepository();
 
-  /// Initializes the user profile with provided data
-  void initWithUserData({
-    required String userId,
-    required String name,
-    required String username,
-    String? avatarUrl,
-    String? bio,
-  }) {
-    // Buat instance sementara dengan tanggal saat ini karena belum fetch detail
-    _user = User(
-      id: userId,
-      name: name,
-      username: username,
-      bio: bio ?? 'Hello, I am using Ngobrolin!',
-      avatarUrl: avatarUrl,
-      isPrivate: false,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
-    _checkIfUserBlocked();
-    notifyListeners();
-  }
-
   /// Fetches user profile data from the API
   Future<bool> fetchUserProfile(String userId) async {
     return await runBusyFuture(() async {

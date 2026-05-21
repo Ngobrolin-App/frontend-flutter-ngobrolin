@@ -312,14 +312,9 @@ class _ChatScreenState extends State<ChatScreen> {
       appBar: AppBar(
         title: GestureDetector(
           onTap: () {
-            Navigator.of(context).pushNamed(
-              AppRoutes.userProfile,
-              arguments: {
-                'userId': widget.userId,
-                'name': widget.name,
-                'avatarUrl': widget.avatarUrl,
-              },
-            );
+            Navigator.of(
+              context,
+            ).pushNamed(AppRoutes.userProfile, arguments: {'userId': widget.userId});
           },
           child: Row(
             children: [
