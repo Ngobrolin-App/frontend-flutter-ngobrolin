@@ -11,7 +11,7 @@ import '../../../routes/app_routes.dart';
 import '../../../theme/app_colors.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  const LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -19,12 +19,12 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _usernameController = TextEditingController();
+  final _usernameOrEmailController = TextEditingController();
   final _passwordController = TextEditingController();
 
   @override
   void dispose() {
-    _usernameController.dispose();
+    _usernameOrEmailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -36,12 +36,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
       try {
         final success = await authViewModel.signIn(
-          _usernameController.text,
+          _usernameOrEmailController.text,
           _passwordController.text,
         );
 
         // Sinkronisasi state ke provider lama agar tetap konsisten
-        await authProvider.signIn(_usernameController.text, _passwordController.text);
+        await authProvider.signIn(_usernameOrEmailController.text, _passwordController.text);
 
         if (!mounted) return;
 
@@ -49,7 +49,9 @@ class _LoginScreenState extends State<LoginScreen> {
           final socketProvider = Provider.of<SocketProvider>(context, listen: false);
           await socketProvider.init(token: authViewModel.token);
 
-          Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.main, (route) => false);
+          if (mounted) {
+            Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.main, (route) => false);
+          }
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -106,13 +108,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   // Username field
                   CustomTextField(
-                    controller: _usernameController,
-                    hintText: context.tr('enter_username'),
-                    labelText: context.tr('username'),
+                    controller: _usernameOrEmailController,
+                    hintText: context.tr('enter_username_or_email'),
+                    labelText: context.tr('username_or_email'),
                     prefixIcon: const Icon(Icons.person_outline),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return context.tr('please_enter_username');
+                        return context.tr('please_enter_username_or_email');
                       }
                       return null;
                     },

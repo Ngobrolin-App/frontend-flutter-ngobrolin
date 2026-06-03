@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
-import 'package:iconify_flutter/icons/bx.dart';
 import 'package:iconify_flutter/icons/mdi.dart';
 import 'package:iconify_flutter/icons/material_symbols.dart';
 import 'package:ngobrolin_app/core/providers/socket_provider.dart';
@@ -14,7 +13,7 @@ import '../../../routes/app_routes.dart';
 import '../../../theme/app_colors.dart';
 
 class ChatListScreen extends StatefulWidget {
-  const ChatListScreen({Key? key}) : super(key: key);
+  const ChatListScreen({super.key});
 
   @override
   State<ChatListScreen> createState() => _ChatListScreenState();
@@ -69,7 +68,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
     _scrollController.addListener(() {
       final vm = Provider.of<ChatListViewModel>(context, listen: false);
       if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
-        vm.loadMore();
+        vm.loadMoreChatList();
       }
     });
   }
@@ -121,6 +120,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
                 return ChatListItem(
                   chat: chat,
                   onTap: () {
+                    print('Tapped on Chat Props: ${chat.props}');
+                    print('Tapped on chat ID: ${chat.id}');
+                    print('Tapped on chat: ${chat.name}');
                     chatListViewModel.markChatAsRead(chat.id);
                     Navigator.of(context).pushNamed(
                       AppRoutes.chat,
@@ -128,6 +130,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                         'userId': chat.userId,
                         'name': chat.name,
                         'avatarUrl': chat.avatarUrl,
+                        'chatId': chat.id,
                       },
                     );
                   },

@@ -24,6 +24,12 @@ class DeeplinkService {
     });
   }
 
+  void handleDeepLink(String link) {
+    final uri = Uri.parse(link);
+
+    _handleUri(uri);
+  }
+
   void _handleUri(Uri uri) {
     final deeplink = DeeplinkHandler.parse(uri);
 

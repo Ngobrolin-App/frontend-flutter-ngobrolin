@@ -4,11 +4,10 @@ import '../../../core/localization/app_localizations.dart';
 import '../../../core/viewmodels/auth/auth_view_model.dart';
 import '../../../core/widgets/buttons/primary_button.dart';
 import '../../../core/widgets/inputs/custom_text_field.dart';
-import '../../../routes/app_routes.dart';
 import '../../../theme/app_colors.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
-  const ForgotPasswordScreen({Key? key}) : super(key: key);
+  const ForgotPasswordScreen({super.key});
 
   @override
   State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
@@ -41,11 +40,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
-                authViewModel.errorMessage ??
-                    context.tr('forgot_password_failed') ??
-                    'Failed to send reset link',
-              ),
+              content: Text(authViewModel.errorMessage ?? context.tr('forgot_password_failed')),
               backgroundColor: AppColors.warning,
             ),
           );
@@ -99,7 +94,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           const SizedBox(height: 16),
 
           Text(
-            context.tr('forgot_password') ?? 'Forgot Password',
+            context.tr('forgot_password'),
             style: const TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
@@ -109,8 +104,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           const SizedBox(height: 16),
 
           Text(
-            context.tr('forgot_password_desc') ??
-                'Enter your email address and we will send you a link to reset your password.',
+            context.tr('forgot_password_desc'),
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 16, color: AppColors.text),
           ),
@@ -118,16 +112,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
           CustomTextField(
             controller: _emailController,
-            hintText: context.tr('enter_email') ?? 'Enter your email',
-            labelText: context.tr('email') ?? 'Email',
+            hintText: context.tr('enter_email'),
+            labelText: context.tr('email'),
             prefixIcon: const Icon(Icons.email_outlined),
             keyboardType: TextInputType.emailAddress,
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return context.tr('please_enter_email') ?? 'Please enter your email';
+                return context.tr('please_enter_email');
               }
               if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                return context.tr('invalid_email') ?? 'Please enter a valid email';
+                return context.tr('invalid_email');
               }
               return null;
             },
@@ -137,7 +131,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           const SizedBox(height: 32),
 
           PrimaryButton(
-            text: context.tr('send_reset_link') ?? 'Send Reset Link',
+            text: context.tr('send_reset_link'),
             onPressed: authViewModel.isLoading ? null : _submit,
             isLoading: authViewModel.isLoading,
           ),
@@ -154,7 +148,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         const Icon(Icons.mark_email_read_outlined, size: 100, color: AppColors.primary),
         const SizedBox(height: 24),
         Text(
-          context.tr('email_sent') ?? 'Email Sent!',
+          context.tr('email_sent'),
           style: const TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.bold,
@@ -163,14 +157,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         ),
         const SizedBox(height: 16),
         Text(
-          context.tr('reset_email_sent_desc') ??
-              'We have sent a password reset link to your email. Please check your inbox and spam folder.',
+          context.tr('reset_email_sent_desc'),
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 16, color: AppColors.text),
         ),
         const SizedBox(height: 48),
         PrimaryButton(
-          text: context.tr('back_to_login') ?? 'Back to Login',
+          text: context.tr('back_to_login'),
           onPressed: () {
             Navigator.of(context).pop();
           },

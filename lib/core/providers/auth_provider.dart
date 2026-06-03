@@ -22,16 +22,15 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> signIn(String email, String password) async {
+  Future<void> signIn(String usernameOrEmail, String password) async {
     _token = 'mock-token';
     _authenticated = true;
     notifyListeners();
   }
 
   Future<void> signUp(String username, String password) async {
-    final repo = AuthRepository();
     try {
-      final token = await repo.getToken();
+      final token = await _repo.getToken();
       if (token != null && token.isNotEmpty) {
         _token = token;
         _authenticated = true;

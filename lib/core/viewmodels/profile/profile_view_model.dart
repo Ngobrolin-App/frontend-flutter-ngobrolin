@@ -1,18 +1,18 @@
-import '../../models/user.dart';
+import '../../models/user_model.dart';
 import '../../repositories/user_repository.dart';
 import '../base_view_model.dart';
 
 class ProfileViewModel extends BaseViewModel {
   final UserRepository _userRepository;
 
-  User? _user;
-  User? get user => _user;
+  UserModel? _user;
+  UserModel? get user => _user;
 
   ProfileViewModel({UserRepository? userRepository})
     : _userRepository = userRepository ?? UserRepository();
 
   /// Initializes the profile view model with user data
-  void setUser(User user) {
+  void setUser(UserModel user) {
     _user = user;
     notifyListeners();
   }

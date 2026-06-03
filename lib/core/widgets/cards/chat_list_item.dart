@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/material_symbols.dart';
-import 'package:ngobrolin_app/core/models/chat.dart';
+import 'package:ngobrolin_app/core/models/chat_list_item_model.dart';
 import '../../../theme/app_colors.dart';
 import '../../localization/app_localizations.dart';
 
 class ChatListItem extends StatelessWidget {
-  final Chat chat;
+  final ChatListItemModel chat;
   final VoidCallback onTap;
 
   const ChatListItem({Key? key, required this.chat, required this.onTap}) : super(key: key);

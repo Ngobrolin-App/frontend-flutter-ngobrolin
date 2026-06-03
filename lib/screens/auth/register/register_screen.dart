@@ -10,7 +10,7 @@ import '../../../routes/app_routes.dart';
 import '../../../theme/app_colors.dart';
 
 class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({Key? key}) : super(key: key);
+  const RegisterScreen({super.key});
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
@@ -142,16 +142,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   // Email field
                   CustomTextField(
                     controller: _emailController,
-                    hintText: context.tr('enter_email') ?? 'Enter your email',
-                    labelText: context.tr('email') ?? 'Email',
+                    hintText: context.tr('enter_email'),
+                    labelText: context.tr('email'),
                     prefixIcon: const Icon(Icons.email_outlined),
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return context.tr('please_enter_email') ?? 'Please enter your email';
+                        return context.tr('please_enter_email');
                       }
                       if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                        return context.tr('invalid_email') ?? 'Please enter a valid email';
+                        return context.tr('invalid_email');
                       }
                       return null;
                     },

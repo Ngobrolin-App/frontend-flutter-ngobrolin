@@ -51,7 +51,8 @@ class AppRoutes {
           builder: (_) => ChatScreen(
             userId: args?['userId'] as String? ?? '',
             name: args?['name'] as String? ?? '',
-            avatarUrl: args?['avatarUrl'] as String?,
+            avatarUrl: args?['avatarUrl'] as String? ?? '',
+            chatId: args?['chatId'] as String? ?? '',
           ),
         );
       case settingsRoute:

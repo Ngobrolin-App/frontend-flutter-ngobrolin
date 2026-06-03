@@ -8,17 +8,13 @@ import 'package:path_provider/path_provider.dart';
 import 'package:dio/dio.dart';
 import '../../../theme/app_colors.dart';
 import '../../localization/app_localizations.dart';
-import '../../models/message.dart';
+import '../../models/message_model.dart';
 
 class ChatBubble extends StatelessWidget {
-  final Message message;
+  final MessageModel message;
   final bool isMe;
 
-  const ChatBubble({
-    Key? key,
-    required this.message,
-    required this.isMe,
-  }) : super(key: key);
+  const ChatBubble({Key? key, required this.message, required this.isMe}) : super(key: key);
 
   Future<void> _downloadAndOpen(BuildContext context, String url) async {
     final dir = await getTemporaryDirectory();
@@ -117,7 +113,10 @@ class ChatBubble extends StatelessWidget {
                       ),
                     ),
                   ] else ...[
-                    Text(message.content, style: const TextStyle(fontSize: 16, color: AppColors.text)),
+                    Text(
+                      message.content,
+                      style: const TextStyle(fontSize: 16, color: AppColors.text),
+                    ),
                   ],
                   const SizedBox(height: 4),
                   Row(
@@ -131,7 +130,9 @@ class ChatBubble extends StatelessWidget {
                       if (isMe) ...[
                         const SizedBox(width: 4),
                         Iconify(
-                          message.isRead ? MaterialSymbols.done_all_rounded : MaterialSymbols.done_rounded,
+                          message.isRead
+                              ? MaterialSymbols.done_all_rounded
+                              : MaterialSymbols.done_rounded,
                           size: 14,
                           color: message.isRead ? Colors.blue : AppColors.timestamp,
                         ),

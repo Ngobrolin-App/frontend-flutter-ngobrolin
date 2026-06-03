@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../models/user.dart';
+import '../../models/user_model.dart';
 import '../../repositories/settings_repository.dart';
 import '../base_view_model.dart';
 

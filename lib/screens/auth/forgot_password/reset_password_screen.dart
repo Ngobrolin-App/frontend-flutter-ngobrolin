@@ -10,7 +10,7 @@ import '../../../theme/app_colors.dart';
 class ResetPasswordScreen extends StatefulWidget {
   final String? token;
 
-  const ResetPasswordScreen({Key? key, this.token}) : super(key: key);
+  const ResetPasswordScreen({super.key, this.token});
 
   @override
   State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
@@ -33,10 +33,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     if (_formKey.currentState?.validate() ?? false) {
       if (widget.token == null || widget.token!.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.tr('invalid_token') ?? 'Invalid or missing reset token'),
-            backgroundColor: AppColors.warning,
-          ),
+          SnackBar(content: Text(context.tr('invalid_token')), backgroundColor: AppColors.warning),
         );
         return;
       }
@@ -55,11 +52,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
-                authViewModel.errorMessage ??
-                    context.tr('reset_password_failed') ??
-                    'Failed to reset password',
-              ),
+              content: Text(authViewModel.errorMessage ?? context.tr('reset_password_failed')),
               backgroundColor: AppColors.warning,
             ),
           );
@@ -113,7 +106,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           const SizedBox(height: 16),
 
           Text(
-            context.tr('reset_password') ?? 'Reset Password',
+            context.tr('reset_password'),
             style: const TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
@@ -123,7 +116,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           const SizedBox(height: 16),
 
           Text(
-            context.tr('reset_password_desc') ?? 'Please enter your new password below.',
+            context.tr('reset_password_desc'),
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 16, color: AppColors.text),
           ),
@@ -131,15 +124,14 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
           PasswordField(
             controller: _passwordController,
-            hintText: context.tr('enter_new_password') ?? 'Enter new password',
-            labelText: context.tr('new_password') ?? 'New Password',
+            hintText: context.tr('enter_new_password'),
+            labelText: context.tr('new_password'),
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return context.tr('please_enter_password') ?? 'Please enter password';
+                return context.tr('please_enter_password');
               }
               if (value.length < 6) {
-                return context.tr('password_must_be_at_least_6_characters') ??
-                    'Password must be at least 6 characters';
+                return context.tr('password_must_be_at_least_6_characters');
               }
               return null;
             },
@@ -149,14 +141,14 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
           PasswordField(
             controller: _confirmPasswordController,
-            hintText: context.tr('confirm_new_password') ?? 'Confirm new password',
-            labelText: context.tr('confirm_password') ?? 'Confirm Password',
+            hintText: context.tr('confirm_new_password'),
+            labelText: context.tr('confirm_password'),
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return context.tr('please_confirm_your_password') ?? 'Please confirm your password';
+                return context.tr('please_confirm_your_password');
               }
               if (value != _passwordController.text) {
-                return context.tr('passwords_do_not_match') ?? 'Passwords do not match';
+                return context.tr('passwords_do_not_match');
               }
               return null;
             },
@@ -166,7 +158,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           const SizedBox(height: 32),
 
           PrimaryButton(
-            text: context.tr('reset_password') ?? 'Reset Password',
+            text: context.tr('reset_password'),
             onPressed: authViewModel.isLoading ? null : _submit,
             isLoading: authViewModel.isLoading,
           ),
@@ -183,7 +175,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         const Icon(Icons.check_circle_outline, size: 100, color: Colors.green),
         const SizedBox(height: 24),
         Text(
-          context.tr('password_reset_success') ?? 'Password Reset Successful!',
+          context.tr('password_reset_success'),
           textAlign: TextAlign.center,
           style: const TextStyle(
             fontSize: 24,
@@ -193,14 +185,13 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         ),
         const SizedBox(height: 16),
         Text(
-          context.tr('password_reset_success_desc') ??
-              'Your password has been reset successfully. You can now login with your new password.',
+          context.tr('password_reset_success_desc'),
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 16, color: AppColors.text),
         ),
         const SizedBox(height: 48),
         PrimaryButton(
-          text: context.tr('back_to_login') ?? 'Back to Login',
+          text: context.tr('back_to_login'),
           onPressed: () {
             Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
           },

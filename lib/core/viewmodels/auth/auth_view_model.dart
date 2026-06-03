@@ -1,4 +1,4 @@
-import '../../models/user.dart';
+import '../../models/user_model.dart';
 import '../../repositories/auth_repository.dart';
 import '../base_view_model.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -14,8 +14,8 @@ class AuthViewModel extends BaseViewModel {
   bool _authenticated = false;
   bool get authenticated => _authenticated;
 
-  User? _user;
-  User? get user => _user;
+  UserModel? _user;
+  UserModel? get user => _user;
 
   AuthViewModel({AuthRepository? authRepository})
     : _authRepository = authRepository ?? AuthRepository() {
@@ -38,11 +38,11 @@ class AuthViewModel extends BaseViewModel {
     }
   }
 
-  /// Signs in a user with username and password
-  Future<bool> signIn(String username, String password) async {
+  /// Signs in a user with username or email and password
+  Future<bool> signIn(String usernameOrEmail, String password) async {
     return await runBusyFuture(() async {
           try {
-            final authResponse = await _authRepository.signIn(username, password);
+            final authResponse = await _authRepository.signIn(usernameOrEmail, password);
             _token = authResponse.token;
             _user = authResponse.user;
             _authenticated = true;

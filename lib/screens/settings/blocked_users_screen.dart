@@ -2,15 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/ic.dart';
-import 'package:iconify_flutter/icons/material_symbols.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/viewmodels/settings/blocked_users_view_model.dart';
 import '../../theme/app_colors.dart';
 import '../../core/widgets/cards/user_list_item.dart';
-import '../../core/models/user.dart';
+import '../../core/models/user_model.dart';
 
 class BlockedUsersScreen extends StatefulWidget {
-  const BlockedUsersScreen({Key? key}) : super(key: key);
+  const BlockedUsersScreen({super.key});
 
   @override
   State<BlockedUsersScreen> createState() => _BlockedUsersScreenState();
@@ -44,7 +43,7 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
                   itemCount: blockedUsers.length,
                   separatorBuilder: (context, index) => const Divider(height: 1),
                   itemBuilder: (context, index) {
-                    final user = User.fromMinimalJson(blockedUsers[index]);
+                    final user = UserModel.fromMinimalJson(blockedUsers[index]);
 
                     return UserListItem(
                       user: user,

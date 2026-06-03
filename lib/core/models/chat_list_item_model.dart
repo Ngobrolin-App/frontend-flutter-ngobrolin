@@ -1,11 +1,12 @@
 import 'package:equatable/equatable.dart';
 import 'package:json_annotation/json_annotation.dart';
 
-part 'chat.g.dart';
+part 'chat_list_item_model.g.dart';
 
 @JsonSerializable()
-class Chat extends Equatable {
+class ChatListItemModel extends Equatable {
   final String id;
+  final String type;
   final String userId;
   final String name;
   final String username;
@@ -16,8 +17,9 @@ class Chat extends Equatable {
   final DateTime timestamp;
   final int unreadCount;
 
-  const Chat({
+  const ChatListItemModel({
     required this.id,
+    required this.type,
     required this.userId,
     required this.name,
     required this.username,
@@ -29,15 +31,17 @@ class Chat extends Equatable {
     this.unreadCount = 0,
   });
 
-  /// Creates a Chat from JSON data
-  factory Chat.fromJson(Map<String, dynamic> json) => _$ChatFromJson(json);
+  /// Creates a ChatListItemModel from JSON data
+  factory ChatListItemModel.fromJson(Map<String, dynamic> json) =>
+      _$ChatListItemModelFromJson(json);
 
-  /// Converts Chat to JSON
-  Map<String, dynamic> toJson() => _$ChatToJson(this);
+  /// Converts ChatListItemModel to JSON
+  Map<String, dynamic> toJson() => _$ChatListItemModelToJson(this);
 
-  /// Creates a copy of Chat with specified fields replaced
-  Chat copyWith({
+  /// Creates a copy of ChatListItemModel with specified fields replaced
+  ChatListItemModel copyWith({
     String? id,
+    String? type,
     String? userId,
     String? name,
     String? username,
@@ -48,8 +52,9 @@ class Chat extends Equatable {
     DateTime? timestamp,
     int? unreadCount,
   }) {
-    return Chat(
+    return ChatListItemModel(
       id: id ?? this.id,
+      type: type ?? this.type,
       userId: userId ?? this.userId,
       name: name ?? this.name,
       username: username ?? this.username,
@@ -62,19 +67,10 @@ class Chat extends Equatable {
     );
   }
 
-  /// Creates a Chat with updated unread count
-  Chat markAsRead() {
-    return copyWith(unreadCount: 0);
-  }
-
-  /// Creates a Chat with updated last message
-  Chat updateLastMessage(String message, DateTime time) {
-    return copyWith(lastMessage: message, timestamp: time, unreadCount: unreadCount + 1);
-  }
-
   @override
   List<Object?> get props => [
     id,
+    type,
     userId,
     name,
     username,

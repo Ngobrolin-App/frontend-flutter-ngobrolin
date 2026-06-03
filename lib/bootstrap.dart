@@ -98,9 +98,12 @@ Future<void> bootstrap() async {
     initSettings,
     onDidReceiveNotificationResponse: (NotificationResponse response) {
       final payload = response.payload;
-      if (payload != null && payload.isNotEmpty) {
-        navigatorKey.currentState?.pushNamed(AppRoutes.chat, arguments: {'userId': payload});
+
+      if (payload == null || payload.isEmpty) {
+        return;
       }
+
+      serviceLocator<DeeplinkService>().handleDeepLink(payload);
     },
   );
 
@@ -135,21 +138,19 @@ Future<void> bootstrap() async {
       notification.title,
       notification.body,
       details,
-      payload: message.data['userId'] ?? '',
+      payload: message.data['deeplink'] ?? '',
     );
   });
 
   // Notification tap
   FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-    final data = message.data;
-    final userId = data['userId'];
+    final deepLink = message.data['deepLink'];
 
-    if (userId != null && userId.isNotEmpty) {
-      navigatorKey.currentState?.pushNamed(
-        AppRoutes.chat,
-        arguments: {'userId': userId, 'name': data['name'], 'avatarUrl': data['avatarUrl']},
-      );
+    if (deepLink == null || deepLink.isEmpty) {
+      return;
     }
+
+    serviceLocator<DeeplinkService>().handleDeepLink(deepLink);
   });
 
   // =======================
@@ -195,9 +196,11 @@ class _MyAppState extends State<MyApp> {
 
     // FCM token refresh
     FirebaseMessaging.instance.onTokenRefresh.listen((token) async {
-      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-      if (authViewModel.authenticated) {
-        await serviceLocator<UserRepository>().registerFcmToken(token);
+      if (mounted) {
+        final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+        if (authViewModel.authenticated) {
+          await serviceLocator<UserRepository>().registerFcmToken(token);
+        }
       }
     });
 

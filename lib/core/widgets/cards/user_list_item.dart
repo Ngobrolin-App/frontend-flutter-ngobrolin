@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../theme/app_colors.dart';
-import '../../models/user.dart';
+import '../../models/user_model.dart';
 
 class UserListItem extends StatelessWidget {
-  final User user;
+  final UserModel user;
   final VoidCallback onTap;
   final VoidCallback? onActionTap;
   final IconData? actionIcon;
@@ -12,14 +12,14 @@ class UserListItem extends StatelessWidget {
   final String? actionText;
 
   const UserListItem({
-    Key? key,
+    super.key,
     required this.user,
     required this.onTap,
     this.onActionTap,
     this.actionIcon,
     this.actionWidget,
     this.actionText,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

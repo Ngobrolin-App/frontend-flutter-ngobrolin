@@ -1,62 +1,58 @@
 import 'package:equatable/equatable.dart';
 import 'package:json_annotation/json_annotation.dart';
 
-part 'message.g.dart';
+part 'message_model.g.dart';
 
 @JsonSerializable()
-class Message extends Equatable {
+class MessageModel extends Equatable {
   final String id;
+  final String conversationId;
   final String senderId;
-  final String receiverId;
   final String content;
   final String type;
   final bool isRead;
   final DateTime createdAt;
-  final DateTime? readAt;
 
-  const Message({
+  const MessageModel({
     required this.id,
+    required this.conversationId,
     required this.senderId,
-    required this.receiverId,
     required this.content,
     this.type = 'text',
     this.isRead = false,
     required this.createdAt,
-    this.readAt,
   });
 
-  /// Creates a Message from JSON data
-  factory Message.fromJson(Map<String, dynamic> json) => _$MessageFromJson(json);
+  /// Creates a MessageModel from JSON data
+  factory MessageModel.fromJson(Map<String, dynamic> json) => _$MessageModelFromJson(json);
 
-  /// Converts Message to JSON
-  Map<String, dynamic> toJson() => _$MessageToJson(this);
+  /// Converts MessageModel to JSON
+  Map<String, dynamic> toJson() => _$MessageModelToJson(this);
 
-  /// Creates a copy of Message with specified fields replaced
-  Message copyWith({
+  /// Creates a copy of MessageModel with specified fields replaced
+  MessageModel copyWith({
     String? id,
+    String? conversationId,
     String? senderId,
-    String? receiverId,
     String? content,
     String? type,
     bool? isRead,
     DateTime? createdAt,
-    DateTime? readAt,
   }) {
-    return Message(
+    return MessageModel(
       id: id ?? this.id,
+      conversationId: conversationId ?? this.conversationId,
       senderId: senderId ?? this.senderId,
-      receiverId: receiverId ?? this.receiverId,
       content: content ?? this.content,
       type: type ?? this.type,
       isRead: isRead ?? this.isRead,
       createdAt: createdAt ?? this.createdAt,
-      readAt: readAt ?? this.readAt,
     );
   }
 
-  /// Checks if the message is sent by the current user
+  /// Checks if the MessageModel is sent by the current user
   bool isSentByMe(String currentUserId) => senderId == currentUserId;
 
   @override
-  List<Object?> get props => [id, senderId, receiverId, content, type, isRead, createdAt, readAt];
+  List<Object?> get props => [id, conversationId, senderId, content, type, isRead, createdAt];
 }

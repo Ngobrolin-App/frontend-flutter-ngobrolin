@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/material_symbols.dart';
 import 'package:ngobrolin_app/core/viewmodels/profile/profile_view_model.dart';
-import 'package:ngobrolin_app/core/models/user.dart';
+import 'package:ngobrolin_app/core/models/user_model.dart';
 import 'package:provider/provider.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/widgets/buttons/primary_button.dart';
@@ -13,9 +13,9 @@ import '../../../core/widgets/inputs/password_field.dart';
 import '../../../theme/app_colors.dart';
 
 class EditProfileScreen extends StatefulWidget {
-  final User user;
+  final UserModel user;
 
-  const EditProfileScreen({Key? key, required this.user}) : super(key: key);
+  const EditProfileScreen({super.key, required this.user});
 
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();
@@ -184,14 +184,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 // Email field
                 CustomTextField(
                   controller: _emailController,
-                  labelText: context.tr('email') ?? 'Email',
+                  labelText: context.tr('email'),
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return context.tr('please_enter_email') ?? 'Please enter your email';
+                      return context.tr('please_enter_email');
                     }
                     if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                      return context.tr('invalid_email') ?? 'Please enter a valid email';
+                      return context.tr('invalid_email');
                     }
                     return null;
                   },

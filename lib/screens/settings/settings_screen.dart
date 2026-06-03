@@ -12,7 +12,7 @@ import '../../routes/app_routes.dart';
 import '../../theme/app_colors.dart';
 
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({Key? key}) : super(key: key);
+  const SettingsScreen({super.key});
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -109,56 +109,81 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(context.tr('app_language')),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // English option
-            ListTile(
-              title: const Text('English'),
-              leading: Radio<String>(
-                value: 'en',
-                groupValue: settingsViewModel.locale.languageCode,
-                onChanged: (value) {
-                  if (value != null) {
-                    // Update both old and new providers
-                    settingsViewModel.setLocale(const Locale('en'));
-                    settingsProvider.setLocale(const Locale('en'));
-                    Navigator.of(context).pop();
-                  }
-                },
+        content: RadioGroup<String>(
+          groupValue: settingsViewModel.locale.languageCode,
+          onChanged: (value) {
+            if (value != null) {
+              // Update both old and new providers
+              settingsViewModel.setLocale(Locale(value));
+              settingsProvider.setLocale(Locale(value));
+              Navigator.of(context).pop();
+            }
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: Text(context.tr('English')),
+                leading: Radio<String>(value: 'en'),
               ),
-              onTap: () {
-                // Update both old and new providers
-                settingsViewModel.setLocale(const Locale('en'));
-                settingsProvider.setLocale(const Locale('en'));
-                Navigator.of(context).pop();
-              },
-            ),
-
-            // Indonesian option
-            ListTile(
-              title: const Text('Indonesia'),
-              leading: Radio<String>(
-                value: 'id',
-                groupValue: settingsViewModel.locale.languageCode,
-                onChanged: (value) {
-                  if (value != null) {
-                    // Update both old and new providers
-                    settingsViewModel.setLocale(const Locale('id'));
-                    settingsProvider.setLocale(const Locale('id'));
-                    Navigator.of(context).pop();
-                  }
-                },
+              ListTile(
+                title: Text(context.tr('Indonesia')),
+                leading: Radio<String>(value: 'id'),
               ),
-              onTap: () {
-                // Update both old and new providers
-                settingsViewModel.setLocale(const Locale('id'));
-                settingsProvider.setLocale(const Locale('id'));
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
+            ],
+          ),
         ),
+        // Column(
+        //   mainAxisSize: MainAxisSize.min,
+        //   children: [
+        //     // English option
+        //     ListTile(
+        //       title: const Text('English'),
+        //       leading: Radio<String>(
+        //         value: 'en',
+        //         groupValue: settingsViewModel.locale.languageCode,
+        //         onChanged: (value) {
+        //           if (value != null) {
+        //             // Update both old and new providers
+        //             settingsViewModel.setLocale(const Locale('en'));
+        //             settingsProvider.setLocale(const Locale('en'));
+        //             Navigator.of(context).pop();
+        //           }
+        //         },
+        //       ),
+        //       onTap: () {
+        //         // Update both old and new providers
+        //         settingsViewModel.setLocale(const Locale('en'));
+        //         settingsProvider.setLocale(const Locale('en'));
+        //         Navigator.of(context).pop();
+        //       },
+        //     ),
+
+        //     // Indonesian option
+        //     ListTile(
+        //       title: const Text('Indonesia'),
+        //       leading: Radio<String>(
+        //         value: 'id',
+        //         groupValue: settingsViewModel.locale.languageCode,
+        //         onChanged: (value) {
+        //           if (value != null) {
+        //             // Update both old and new providers
+        //             settingsViewModel.setLocale(const Locale('id'));
+        //             settingsProvider.setLocale(const Locale('id'));
+        //             Navigator.of(context).pop();
+        //           }
+        //         },
+        //       ),
+        //       onTap: () {
+        //         // Update both old and new providers
+        //         settingsViewModel.setLocale(const Locale('id'));
+        //         settingsProvider.setLocale(const Locale('id'));
+        //         Navigator.of(context).pop();
+        //       },
+        //     ),
+        //   ],
+        // ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),

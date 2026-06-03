@@ -1,4 +1,4 @@
-import '../../models/user.dart';
+import '../../models/user_model.dart';
 import '../../repositories/user_repository.dart';
 import '../../repositories/settings_repository.dart';
 import '../base_view_model.dart';
@@ -7,8 +7,8 @@ class UserProfileViewModel extends BaseViewModel {
   final UserRepository _userRepository;
   final SettingsRepository _settingsRepository;
 
-  User? _user;
-  User? get user => _user;
+  UserModel? _user;
+  UserModel? get user => _user;
 
   bool _isBlocked = false;
   bool get isBlocked => _isBlocked;

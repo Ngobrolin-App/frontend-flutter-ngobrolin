@@ -3,10 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/material_symbols.dart';
-import 'package:iconify_flutter/icons/ri.dart';
 import 'package:iconify_flutter/icons/mdi.dart';
 import 'package:provider/provider.dart';
-import '../../../core/models/user.dart';
+import '../../../core/models/user_model.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/viewmodels/search/search_user_view_model.dart';
 import '../../../core/widgets/cards/user_list_item.dart';
@@ -14,7 +13,7 @@ import '../../../routes/app_routes.dart';
 import '../../../theme/app_colors.dart';
 
 class SearchUserScreen extends StatefulWidget {
-  const SearchUserScreen({Key? key}) : super(key: key);
+  const SearchUserScreen({super.key});
 
   @override
   State<SearchUserScreen> createState() => _SearchUserScreenState();
@@ -42,7 +41,7 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
         if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200 &&
             vm.hasMore &&
             !vm.isLoadingMore) {
-          vm.loadMore();
+          vm.loadMoreSearchUser();
         }
       });
     });
@@ -130,7 +129,7 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
                         );
                       }
 
-                      final user = User.fromMinimalJson(users[index]);
+                      final user = UserModel.fromMinimalJson(users[index]);
 
                       return UserListItem(
                         user: user,

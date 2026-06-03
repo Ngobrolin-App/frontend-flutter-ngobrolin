@@ -1,13 +1,13 @@
-import '../../models/chat.dart';
+import '../../models/chat_list_item_model.dart';
 import '../../repositories/chat_repository.dart';
 import '../base_view_model.dart';
 
 class ChatListViewModel extends BaseViewModel {
   final ChatRepository _chatRepository;
 
-  // Gunakan List<Chat> alih-alih List<Map<String, dynamic>> untuk tipe data yang kuat
-  List<Chat> _chatList = [];
-  List<Chat> get chatList => _chatList;
+  // Gunakan List<ChatListItemModel> alih-alih List<Map<String, dynamic>> untuk tipe data yang kuat
+  List<ChatListItemModel> _chatList = [];
+  List<ChatListItemModel> get chatList => _chatList;
 
   // Pagination state
   int _page = 1;
@@ -87,7 +87,7 @@ class ChatListViewModel extends BaseViewModel {
   }
 
   /// Load more chats (pagination)
-  Future<bool> loadMore() async {
+  Future<bool> loadMoreChatList() async {
     if (!_hasMore || isLoading) return false;
 
     return await runBusyFuture(() async {
@@ -167,24 +167,5 @@ class ChatListViewModel extends BaseViewModel {
       _chatList[index] = _chatList[index].copyWith(unreadCount: 0);
       notifyListeners();
     }
-  }
-
-  /// Deletes a chat
-  Future<bool> deleteChat(String chatId) async {
-    return await runBusyFuture(() async {
-          try {
-            final success = await _chatRepository.deleteChat(chatId);
-
-            if (success) {
-              _chatList.removeWhere((chat) => chat.id == chatId);
-            }
-
-            return success;
-          } catch (e) {
-            setError(e.toString());
-            return false;
-          }
-        }) ??
-        false;
   }
 }

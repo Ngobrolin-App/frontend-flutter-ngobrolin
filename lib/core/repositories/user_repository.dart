@@ -1,4 +1,4 @@
-import '../models/user.dart';
+import '../models/user_model.dart';
 import '../services/api/api_service.dart';
 import 'package:dio/dio.dart';
 
@@ -9,23 +9,23 @@ class UserRepository {
   UserRepository({ApiService? apiService}) : _apiService = apiService ?? ApiService();
 
   /// Get user profile by ID (backend expects POST /users/get-user with body)
-  Future<User> getUserById(String userId) async {
-    return _apiService.post<User>(
+  Future<UserModel> getUserById(String userId) async {
+    return _apiService.post<UserModel>(
       '/users/get-user',
       data: {'userId': userId},
-      parser: (data) => User.fromMinimalJson(data['user'] as Map<String, dynamic>),
+      parser: (data) => UserModel.fromMinimalJson(data['user'] as Map<String, dynamic>),
     );
   }
 
   /// Update user profile details (name, bio, isPrivate)
-  Future<User> getCurrentProfile() async {
-    return _apiService.post<User>(
+  Future<UserModel> getCurrentProfile() async {
+    return _apiService.post<UserModel>(
       '/users/profile/get',
-      parser: (data) => User.fromJson(data['user'] as Map<String, dynamic>),
+      parser: (data) => UserModel.fromJson(data['user'] as Map<String, dynamic>),
     );
   }
 
-  Future<User> updateProfile({
+  Future<UserModel> updateProfile({
     required String userId,
     String? name,
     String? email,
@@ -38,10 +38,10 @@ class UserRepository {
     if (bio != null) data['bio'] = bio;
     if (isPrivate != null) data['isPrivate'] = isPrivate;
 
-    return _apiService.post<User>(
+    return _apiService.post<UserModel>(
       '/users/profile/update',
       data: data,
-      parser: (data) => User.fromJson(data['user'] as Map<String, dynamic>),
+      parser: (data) => UserModel.fromJson(data['user'] as Map<String, dynamic>),
     );
   }
 
@@ -66,30 +66,21 @@ class UserRepository {
       '/users/profile/update',
       data: formData,
     );
-    final user = User.fromJson(response['user'] as Map<String, dynamic>);
+    final user = UserModel.fromJson(response['user'] as Map<String, dynamic>);
     return user.avatarUrl ?? '';
   }
 
   /// Search users with pagination
-  Future<List<User>> searchUsers(String query, {int page = 1, int limit = 20}) async {
-    return _apiService.post<List<User>>(
+  Future<List<UserModel>> searchUsers(String query, {int page = 1, int limit = 20}) async {
+    return _apiService.post<List<UserModel>>(
       '/users/search',
       data: {'q': query, 'page': page, 'limit': limit},
       parser: (data) {
         final usersList = data['users'] as List<dynamic>;
-        return usersList.map((item) => User.fromMinimalJson(item as Map<String, dynamic>)).toList();
+        return usersList
+            .map((item) => UserModel.fromMinimalJson(item as Map<String, dynamic>))
+            .toList();
       },
-    );
-  }
-
-  /// Get random users (for discovery)
-  Future<List<User>> getRandomUsers({int limit = 10}) async {
-    return _apiService.get<List<User>>(
-      '/users/random',
-      queryParameters: {'limit': limit},
-      parser: (data) => (data as List<dynamic>)
-          .map((item) => User.fromJson(item as Map<String, dynamic>))
-          .toList(),
     );
   }
 

@@ -1,13 +1,13 @@
 import 'package:equatable/equatable.dart';
 import 'package:json_annotation/json_annotation.dart';
-import 'user.dart';
+import 'user_model.dart';
 
 part 'auth_response.g.dart';
 
 @JsonSerializable()
 class AuthResponse extends Equatable {
   final String token;
-  final User user;
+  final UserModel user;
 
   const AuthResponse({required this.token, required this.user});
 

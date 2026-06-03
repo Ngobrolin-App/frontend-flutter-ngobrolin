@@ -24,25 +24,27 @@ class ApiException implements Exception {
         if (statusCode != null) {
           switch (statusCode) {
             case 400:
-              message = data?['message'] ?? 'Bad request';
+              message = data?['error'] ?? 'Bad request';
               break;
             case 401:
-              message = 'Unauthorized. Please login again.';
+              message = data?['error'] ?? 'Unauthorized. Please login again.';
               break;
             case 403:
-              message = 'Forbidden. You don\'t have permission to access this resource.';
+              message =
+                  data?['error'] ??
+                  'Forbidden. You don\'t have permission to access this resource.';
               break;
             case 404:
-              message = 'Resource not found.';
+              message = data?['error'] ?? 'Resource not found.';
               break;
             case 500:
             case 501:
             case 502:
             case 503:
-              message = 'Server error. Please try again later.';
+              message = data?['error'] ?? 'Server error. Please try again later.';
               break;
             default:
-              message = data?['message'] ?? 'Server error with status code: $statusCode';
+              message = data?['error'] ?? 'Server error with status code: $statusCode';
           }
         }
         break;
@@ -66,5 +68,5 @@ class ApiException implements Exception {
   }
 
   @override
-  String toString() => 'ApiException: $message';
+  String toString() => 'Something went wrong: $message';
 }

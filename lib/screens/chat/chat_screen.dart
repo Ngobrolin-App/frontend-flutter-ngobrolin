@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:ngobrolin_app/core/models/message.dart';
 import 'package:ngobrolin_app/core/viewmodels/auth/auth_view_model.dart';
 import 'package:provider/provider.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
@@ -20,9 +19,15 @@ class ChatScreen extends StatefulWidget {
   final String userId;
   final String name;
   final String? avatarUrl;
+  final String? chatId;
 
-  const ChatScreen({Key? key, required this.userId, required this.name, this.avatarUrl})
-    : super(key: key);
+  const ChatScreen({
+    super.key,
+    required this.userId,
+    required this.name,
+    this.chatId,
+    this.avatarUrl,
+  });
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -68,7 +73,7 @@ class _ChatScreenState extends State<ChatScreen> {
         return;
       }
 
-      chatViewModel.initChat(widget.userId, widget.name, widget.avatarUrl);
+      chatViewModel.initChat(widget.userId, widget.name, widget.avatarUrl, widget.chatId);
 
       // Pasang listener: join room sekali dan auto-scroll saat jumlah pesan berubah
       _vmListener = () {
@@ -314,17 +319,19 @@ class _ChatScreenState extends State<ChatScreen> {
           onTap: () {
             Navigator.of(
               context,
-            ).pushNamed(AppRoutes.userProfile, arguments: {'userId': widget.userId});
+            ).pushNamed(AppRoutes.userProfile, arguments: {'userId': chatViewModel.partnerId});
           },
           child: Row(
             children: [
               CircleAvatar(
                 radius: 16,
                 backgroundColor: AppColors.lightGrey,
-                backgroundImage: widget.avatarUrl != null ? NetworkImage(widget.avatarUrl!) : null,
-                child: widget.avatarUrl == null
+                backgroundImage: chatViewModel.partnerAvatarUrl != null
+                    ? NetworkImage(chatViewModel.partnerAvatarUrl!)
+                    : null,
+                child: chatViewModel.partnerAvatarUrl == null
                     ? Text(
-                        widget.name.isNotEmpty ? widget.name[0].toUpperCase() : '?',
+                        chatViewModel.partnerName,
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
@@ -337,7 +344,7 @@ class _ChatScreenState extends State<ChatScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(widget.name),
+                  Text(chatViewModel.partnerName),
                   if (chatViewModel.isPartnerTyping)
                     Text(
                       '${context.tr('typing')}...',

@@ -1,10 +1,8 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../models/auth_response.dart';
-import '../models/user.dart';
-import '../services/api/api_exception.dart';
+import '../models/user_model.dart';
 import '../services/api/api_service.dart';
-import '../services/api/dio_client.dart';
 
 /// Repository for authentication related operations
 class AuthRepository {
@@ -14,11 +12,11 @@ class AuthRepository {
 
   AuthRepository({ApiService? apiService}) : _apiService = apiService ?? ApiService();
 
-  /// Sign in with username and password
-  Future<AuthResponse> signIn(String username, String password) async {
+  /// Sign in with username or email and password
+  Future<AuthResponse> signIn(String usernameOrEmail, String password) async {
     final response = await _apiService.post<Map<String, dynamic>>(
       '/auth/login',
-      data: {'username': username, 'password': password},
+      data: {'usernameOrEmail': usernameOrEmail, 'password': password},
     );
 
     final authResponse = AuthResponse.fromJson(response);
@@ -83,14 +81,14 @@ class AuthRepository {
   }
 
   /// Get the current user data
-  Future<User?> getCurrentUser() async {
+  Future<UserModel?> getCurrentUser() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final userJsonStr = prefs.getString(_userKey);
       if (userJsonStr == null) return null;
 
       final Map<String, dynamic> decoded = jsonDecode(userJsonStr) as Map<String, dynamic>;
-      return User.fromJson(decoded);
+      return UserModel.fromJson(decoded);
     } catch (_) {
       return null;
     }

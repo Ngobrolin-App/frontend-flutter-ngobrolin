@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/user.dart';
+import '../models/user_model.dart';
 import '../services/api/api_exception.dart';
 import '../services/api/api_service.dart';
 
@@ -58,13 +58,10 @@ class SettingsRepository {
   }
 
   /// Get blocked users (POST /users/blocked/list) with pagination
-  Future<List<User>> getBlockedUsers({int page = 1, int limit = 20}) async {
-    return _apiService.post<List<User>>(
+  Future<List<UserModel>> getBlockedUsers({int page = 1, int limit = 20}) async {
+    return _apiService.post<List<UserModel>>(
       '/users/blocked/list',
-      data: {
-        'page': page,
-        'limit': limit,
-      },
+      data: {'page': page, 'limit': limit},
       parser: (response) {
         // Tahan terhadap variasi payload: `blockedUsers`, `users`, atau `data`
         final dynamicRawList =
@@ -72,16 +69,14 @@ class SettingsRepository {
 
         final list = (dynamicRawList is List) ? dynamicRawList : <dynamic>[];
 
-        return list
-            .map((item) {
-              final map = (item is Map<String, dynamic>) ? item : <String, dynamic>{};
-              // Item mungkin langsung user, atau dibungkus dalam `blockedUser`
-              final userJson = map.containsKey('blockedUser')
-                  ? (map['blockedUser'] as Map<String, dynamic>? ?? <String, dynamic>{})
-                  : map;
-              return User.fromMinimalJson(userJson);
-            })
-            .toList();
+        return list.map((item) {
+          final map = (item is Map<String, dynamic>) ? item : <String, dynamic>{};
+          // Item mungkin langsung user, atau dibungkus dalam `blockedUser`
+          final userJson = map.containsKey('blockedUser')
+              ? (map['blockedUser'] as Map<String, dynamic>? ?? <String, dynamic>{})
+              : map;
+          return UserModel.fromMinimalJson(userJson);
+        }).toList();
       },
     );
   }
