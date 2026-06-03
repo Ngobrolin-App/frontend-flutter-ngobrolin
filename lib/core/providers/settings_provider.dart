@@ -8,9 +8,6 @@ class SettingsProvider extends ChangeNotifier {
   bool _privateAccount = false;
   bool get privateAccount => _privateAccount;
 
-  final Set<String> _blockedAccounts = {};
-  Set<String> get blockedAccounts => _blockedAccounts;
-
   void setLocale(Locale locale) {
     _locale = locale;
     notifyListeners();
@@ -18,16 +15,6 @@ class SettingsProvider extends ChangeNotifier {
 
   void togglePrivateAccount(bool value) {
     _privateAccount = value;
-    notifyListeners();
-  }
-
-  void blockAccount(String userId) {
-    _blockedAccounts.add(userId);
-    notifyListeners();
-  }
-
-  void unblockAccount(String userId) {
-    _blockedAccounts.remove(userId);
     notifyListeners();
   }
 }

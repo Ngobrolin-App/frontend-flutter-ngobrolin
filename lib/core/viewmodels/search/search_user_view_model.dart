@@ -5,8 +5,8 @@ import '../base_view_model.dart';
 class SearchUserViewModel extends BaseViewModel {
   final UserRepository _userRepository;
 
-  List<Map<String, dynamic>> _users = [];
-  List<Map<String, dynamic>> get users => _users;
+  List<UserModel> _users = [];
+  List<UserModel> get users => _users;
 
   String _searchQuery = '';
   String get searchQuery => _searchQuery;
@@ -41,18 +41,7 @@ class SearchUserViewModel extends BaseViewModel {
               limit: _limit,
             );
 
-            _users = userResults
-                .map(
-                  (user) => {
-                    'id': user.id,
-                    'name': user.name,
-                    'username': user.username,
-                    'bio': user.bio ?? '',
-                    'avatarUrl': user.avatarUrl,
-                    'isPrivate': user.isPrivate,
-                  },
-                )
-                .toList();
+            _users = userResults;
 
             // Determine if more pages are available
             _hasMore = userResults.length == _limit;
@@ -79,17 +68,7 @@ class SearchUserViewModel extends BaseViewModel {
         limit: _limit,
       );
 
-      final mapped = userResults
-          .map(
-            (user) => {
-              'id': user.id,
-              'name': user.name,
-              'username': user.username,
-              'bio': user.bio ?? '',
-              'avatarUrl': user.avatarUrl,
-            },
-          )
-          .toList();
+      final mapped = userResults;
 
       _users.addAll(mapped);
       _hasMore = userResults.length == _limit;

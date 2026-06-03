@@ -21,7 +21,10 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
     super.initState();
     // Fetch blocked users when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final blockedUsersViewModel = Provider.of<BlockedUsersViewModel>(context, listen: false);
+      final blockedUsersViewModel = Provider.of<BlockedUsersViewModel>(
+        context,
+        listen: false,
+      );
       blockedUsersViewModel.fetchBlockedUsers();
     });
   }
@@ -41,18 +44,24 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
               ? _buildEmptyState(context)
               : ListView.separated(
                   itemCount: blockedUsers.length,
-                  separatorBuilder: (context, index) => const Divider(height: 1),
+                  separatorBuilder: (context, index) =>
+                      const Divider(height: 1),
                   itemBuilder: (context, index) {
-                    final user = UserModel.fromMinimalJson(blockedUsers[index]);
+                    final user = blockedUsers[index];
 
                     return UserListItem(
                       user: user,
                       onTap: () {
                         // No action on tap for blocked users
                       },
-                      onActionTap: () => _unblockUser(context, user.id, blockedUsersViewModel),
+                      onActionTap: () =>
+                          _unblockUser(context, user.id, blockedUsersViewModel),
                       actionText: context.tr('unblock'),
-                      actionWidget: const Icon(Icons.lock_open, color: Colors.white, size: 16),
+                      actionWidget: const Icon(
+                        Icons.lock_open,
+                        color: Colors.white,
+                        size: 16,
+                      ),
                     );
                   },
                 ),
@@ -111,12 +120,19 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
               // Show confirmation
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(success ? context.tr('user_unblocked') : 'Failed to unblock user'),
+                  content: Text(
+                    success
+                        ? context.tr('user_unblocked')
+                        : 'Failed to unblock user',
+                  ),
                   backgroundColor: success ? Colors.green : Colors.red,
                 ),
               );
             },
-            child: Text(context.tr('unblock'), style: const TextStyle(color: AppColors.primary)),
+            child: Text(
+              context.tr('unblock'),
+              style: const TextStyle(color: AppColors.primary),
+            ),
           ),
         ],
       ),

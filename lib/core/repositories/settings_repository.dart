@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ngobrolin_app/core/models/paginated_result.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 import '../services/api/api_exception.dart';
@@ -9,7 +10,8 @@ class SettingsRepository {
   final ApiService _apiService;
   static const String _localeKey = 'app_locale';
 
-  SettingsRepository({ApiService? apiService}) : _apiService = apiService ?? ApiService();
+  SettingsRepository({ApiService? apiService})
+    : _apiService = apiService ?? ApiService();
 
   /// Get app locale
   Future<Locale> getLocale() async {
@@ -58,45 +60,63 @@ class SettingsRepository {
   }
 
   /// Get blocked users (POST /users/blocked/list) with pagination
-  Future<List<UserModel>> getBlockedUsers({int page = 1, int limit = 20}) async {
-    return _apiService.post<List<UserModel>>(
+  Future<PaginatedResult<UserModel>> getBlockedUsers({
+    int page = 1,
+    int limit = 20,
+  }) async {
+    return _apiService.post<PaginatedResult<UserModel>>(
       '/users/blocked/list',
       data: {'page': page, 'limit': limit},
       parser: (response) {
-        // Tahan terhadap variasi payload: `blockedUsers`, `users`, atau `data`
-        final dynamicRawList =
-            response['blockedUsers'] ?? response['users'] ?? response['data'] ?? [];
+        final blockedUsersList =
+            response['blockedUsers'] as List<dynamic>? ?? [];
+        final pagination =
+            response['pagination'] as Map<String, dynamic>? ?? {};
 
-        final list = (dynamicRawList is List) ? dynamicRawList : <dynamic>[];
+        final items = blockedUsersList
+            .map(
+              (item) => UserModel.fromMinimalJson(
+                item is Map<String, dynamic> ? item : <String, dynamic>{},
+              ),
+            )
+            .toList();
 
-        return list.map((item) {
-          final map = (item is Map<String, dynamic>) ? item : <String, dynamic>{};
-          // Item mungkin langsung user, atau dibungkus dalam `blockedUser`
-          final userJson = map.containsKey('blockedUser')
-              ? (map['blockedUser'] as Map<String, dynamic>? ?? <String, dynamic>{})
-              : map;
-          return UserModel.fromMinimalJson(userJson);
-        }).toList();
+        return PaginatedResult<UserModel>(
+          items: items,
+          total: pagination['total'] as int? ?? 0,
+          page: pagination['page'] as int? ?? 1,
+          limit: pagination['limit'] as int? ?? 20,
+          totalPages: pagination['totalPages'] as int? ?? 1,
+        );
       },
     );
   }
 
   /// Block a user (POST /users/block)
   Future<bool> blockUser(String userId) async {
-    await _apiService.post<Map<String, dynamic>>('/users/block', data: {'userId': userId});
+    await _apiService.post<Map<String, dynamic>>(
+      '/users/block',
+      data: {'userId': userId},
+    );
     return true;
   }
 
   /// Unblock a user (POST /users/unblock)
   Future<bool> unblockUser(String userId) async {
-    await _apiService.post<Map<String, dynamic>>('/users/unblock', data: {'userId': userId});
+    await _apiService.post<Map<String, dynamic>>(
+      '/users/unblock',
+      data: {'userId': userId},
+    );
     return true;
   }
 
   /// Check blocked (dua arah) via /users/get-user: 403 => blocked
   Future<bool> isUserBlocked(String userId) async {
     try {
-      await _apiService.post<Map<String, dynamic>>('/users/get-user', data: {'userId': userId});
+      await _apiService.post<Map<String, dynamic>>(
+        '/users/get-user',
+        data: {'userId': userId},
+      );
       return false;
     } catch (e) {
       if (e is ApiException) {

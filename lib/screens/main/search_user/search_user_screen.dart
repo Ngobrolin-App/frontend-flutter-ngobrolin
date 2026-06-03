@@ -32,13 +32,17 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
     super.initState();
     // Mulai dengan query kosong agar backend mengembalikan semua user
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final searchViewModel = Provider.of<SearchUserViewModel>(context, listen: false);
+      final searchViewModel = Provider.of<SearchUserViewModel>(
+        context,
+        listen: false,
+      );
       searchViewModel.setSearchQuery('');
 
       // Attach scroll listener for load more
       _scrollController.addListener(() {
         final vm = Provider.of<SearchUserViewModel>(context, listen: false);
-        if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200 &&
+        if (_scrollController.position.pixels >=
+                _scrollController.position.maxScrollExtent - 200 &&
             vm.hasMore &&
             !vm.isLoadingMore) {
           vm.loadMoreSearchUser();
@@ -67,7 +71,10 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
       _searchController.clear();
 
       // Reset search query in ViewModel
-      final searchViewModel = Provider.of<SearchUserViewModel>(context, listen: false);
+      final searchViewModel = Provider.of<SearchUserViewModel>(
+        context,
+        listen: false,
+      );
       searchViewModel.setSearchQuery('');
     });
   }
@@ -76,7 +83,10 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
     // Debounce 400ms sebelum memanggil search
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 400), () {
-      final searchViewModel = Provider.of<SearchUserViewModel>(context, listen: false);
+      final searchViewModel = Provider.of<SearchUserViewModel>(
+        context,
+        listen: false,
+      );
       searchViewModel.setSearchQuery(query);
     });
   }
@@ -84,14 +94,16 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
   @override
   Widget build(BuildContext context) {
     final searchViewModel = Provider.of<SearchUserViewModel>(context);
-    final users = searchViewModel.users;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(context.tr('users')),
         actions: [
           IconButton(
-            icon: Iconify(MaterialSymbols.settings_rounded, color: AppColors.white),
+            icon: Iconify(
+              MaterialSymbols.settings_rounded,
+              color: AppColors.white,
+            ),
             onPressed: () {
               Navigator.of(context).pushNamed(AppRoutes.settingsRoute);
             },
@@ -110,8 +122,13 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
                     decoration: InputDecoration(
                       hintText: context.tr('search_users'),
                       prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(24)),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                     ),
                     onChanged: _updateSearchQuery,
                   ),
@@ -119,24 +136,28 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
                 Expanded(
                   child: ListView.separated(
                     controller: _scrollController,
-                    itemCount: users.length + (searchViewModel.isLoadingMore ? 1 : 0),
-                    separatorBuilder: (context, index) => const Divider(height: 1, indent: 72),
+                    itemCount:
+                        searchViewModel.users.length +
+                        (searchViewModel.isLoadingMore ? 1 : 0),
+                    separatorBuilder: (context, index) =>
+                        const Divider(height: 1, indent: 72),
                     itemBuilder: (context, index) {
-                      if (index >= users.length) {
+                      if (index >= searchViewModel.users.length) {
                         return const Padding(
                           padding: EdgeInsets.all(16),
                           child: Center(child: CircularProgressIndicator()),
                         );
                       }
-
-                      final user = UserModel.fromMinimalJson(users[index]);
+                      final user = searchViewModel.users[index];
 
                       return UserListItem(
                         user: user,
                         onTap: () {
-                          Navigator.of(
-                            context,
-                          ).pushNamed(AppRoutes.userProfile, arguments: {'userId': user.id});
+                          print('Tapped on User ID: ${user.id}');
+                          Navigator.of(context).pushNamed(
+                            AppRoutes.userProfile,
+                            arguments: {'userId': user.id},
+                          );
                         },
                         onActionTap: () {
                           Navigator.of(context).pushNamed(

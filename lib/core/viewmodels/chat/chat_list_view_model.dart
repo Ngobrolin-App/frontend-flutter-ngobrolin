@@ -26,10 +26,17 @@ class ChatListViewModel extends BaseViewModel {
 
     return await runBusyFuture(() async {
           try {
-            final result = await _chatRepository.getConversationList(page: _page, limit: _limit);
+            final result = await _chatRepository.getConversationList(
+              page: _page,
+              limit: _limit,
+            );
 
             _chatList = result.items;
             _hasMore = result.page < result.totalPages;
+
+            // print(
+            //   'Fetched chats: ${_chatList.length}, hasMore: $_hasMore, page: ${result.page}, limit: ${result.limit}, total: ${result.total}, totalPages: ${result.totalPages}, ',
+            // ); // Debug log
 
             return true;
           } catch (e) {
@@ -62,9 +69,13 @@ class ChatListViewModel extends BaseViewModel {
 
       // Increment unread only if message is not from current user
       final shouldIncrementUnread =
-          senderId == null || currentUserId == null || senderId != currentUserId;
+          senderId == null ||
+          currentUserId == null ||
+          senderId != currentUserId;
 
-      final newUnreadCount = shouldIncrementUnread ? oldChat.unreadCount + 1 : oldChat.unreadCount;
+      final newUnreadCount = shouldIncrementUnread
+          ? oldChat.unreadCount + 1
+          : oldChat.unreadCount;
 
       _chatList[index] = oldChat.copyWith(
         lastMessage: message,
@@ -93,7 +104,10 @@ class ChatListViewModel extends BaseViewModel {
     return await runBusyFuture(() async {
           try {
             _page += 1;
-            final result = await _chatRepository.getConversationList(page: _page, limit: _limit);
+            final result = await _chatRepository.getConversationList(
+              page: _page,
+              limit: _limit,
+            );
 
             _chatList.addAll(result.items);
             _hasMore = result.page < result.totalPages;
@@ -140,7 +154,9 @@ class ChatListViewModel extends BaseViewModel {
 
       if (conversationId != null && lastMessage != null) {
         final content = lastMessage['content'] as String? ?? '';
-        final createdAt = lastMessage['created_at'] as String? ?? DateTime.now().toIso8601String();
+        final createdAt =
+            lastMessage['created_at'] as String? ??
+            DateTime.now().toIso8601String();
         final senderId = lastMessage['sender_id']?.toString();
         final lastMessageId = lastMessage['id']?.toString();
         final type = lastMessage['type'] as String?;

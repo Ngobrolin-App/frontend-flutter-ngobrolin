@@ -6,14 +6,16 @@ import 'package:dio/dio.dart';
 class UserRepository {
   final ApiService _apiService;
 
-  UserRepository({ApiService? apiService}) : _apiService = apiService ?? ApiService();
+  UserRepository({ApiService? apiService})
+    : _apiService = apiService ?? ApiService();
 
   /// Get user profile by ID (backend expects POST /users/get-user with body)
   Future<UserModel> getUserById(String userId) async {
     return _apiService.post<UserModel>(
       '/users/get-user',
       data: {'userId': userId},
-      parser: (data) => UserModel.fromMinimalJson(data['user'] as Map<String, dynamic>),
+      parser: (data) =>
+          UserModel.fromMinimalJson(data['user'] as Map<String, dynamic>),
     );
   }
 
@@ -21,7 +23,8 @@ class UserRepository {
   Future<UserModel> getCurrentProfile() async {
     return _apiService.post<UserModel>(
       '/users/profile/get',
-      parser: (data) => UserModel.fromJson(data['user'] as Map<String, dynamic>),
+      parser: (data) =>
+          UserModel.fromJson(data['user'] as Map<String, dynamic>),
     );
   }
 
@@ -41,7 +44,8 @@ class UserRepository {
     return _apiService.post<UserModel>(
       '/users/profile/update',
       data: data,
-      parser: (data) => UserModel.fromJson(data['user'] as Map<String, dynamic>),
+      parser: (data) =>
+          UserModel.fromJson(data['user'] as Map<String, dynamic>),
     );
   }
 
@@ -60,7 +64,9 @@ class UserRepository {
 
   /// Upload profile picture using multipart/form-data on edit-profile endpoint
   Future<String> uploadProfilePicture(String userId, String filePath) async {
-    final formData = FormData.fromMap({'avatar': await MultipartFile.fromFile(filePath)});
+    final formData = FormData.fromMap({
+      'avatar': await MultipartFile.fromFile(filePath),
+    });
 
     final response = await _apiService.post<Map<String, dynamic>>(
       '/users/profile/update',
@@ -71,15 +77,23 @@ class UserRepository {
   }
 
   /// Search users with pagination
-  Future<List<UserModel>> searchUsers(String query, {int page = 1, int limit = 20}) async {
+  Future<List<UserModel>> searchUsers(
+    String query, {
+    int page = 1,
+    int limit = 20,
+  }) async {
     return _apiService.post<List<UserModel>>(
       '/users/search',
       data: {'q': query, 'page': page, 'limit': limit},
       parser: (data) {
         final usersList = data['users'] as List<dynamic>;
-        return usersList
-            .map((item) => UserModel.fromMinimalJson(item as Map<String, dynamic>))
+        final result = usersList
+            .map(
+              (item) => UserModel.fromMinimalJson(item as Map<String, dynamic>),
+            )
             .toList();
+
+        return result;
       },
     );
   }
