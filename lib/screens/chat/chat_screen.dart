@@ -15,6 +15,7 @@ import '../../core/viewmodels/settings/settings_view_model.dart';
 import '../../core/widgets/cards/chat_bubble.dart';
 import '../../routes/app_routes.dart';
 import '../../theme/app_colors.dart';
+import 'dart:developer' as developer;
 
 class ChatScreen extends StatefulWidget {
   final String userId;
@@ -118,7 +119,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
       // Define Handlers
       _newMessageHandler = (data) {
-        debugPrint('-------- new_message on chat screen: $data');
+        developer.log('-------- new_message on chat screen: $data');
         try {
           final msgMap = data['message'] as Map<String, dynamic>;
           final convId = msgMap['conversation_id'] as String?;
@@ -141,8 +142,9 @@ class _ChatScreenState extends State<ChatScreen> {
       };
 
       _readStatusHandler = (data) {
-        debugPrint(
+        developer.log(
           '-------- messages_read_status_updated on chat screen: $data',
+          name: 'ChatScreen',
         );
         try {
           final convId = data['conversationId'] as String?;
@@ -156,7 +158,10 @@ class _ChatScreenState extends State<ChatScreen> {
       };
 
       _conversationCreatedHandler = (data) {
-        debugPrint('-------- conversation_created on chat screen: $data');
+        developer.log(
+          '-------- conversation_created on chat screen: $data',
+          name: 'ChatScreen',
+        );
         try {
           final conv = data['conversation'] as Map<String, dynamic>?;
           if (conv == null) return;
@@ -228,7 +233,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
-    debugPrint('-------- ChatScreen dispose called');
+    developer.log('-------- ChatScreen dispose called', name: 'ChatScreen');
     _typingTimer?.cancel();
     _messageController.removeListener(_onTextChanged);
     _messageController.dispose();
@@ -250,7 +255,7 @@ class _ChatScreenState extends State<ChatScreen> {
       socketProvider.off('user_stopped_typing', _stopTypingHandler);
       socketProvider.off('user_status_changed', _statusHandler);
     } catch (e) {
-      debugPrint('Error removing socket listeners: $e');
+      developer.log('ChatScreen - dispose() error: $e', name: 'ChatScreen');
     }
 
     // Lepas listener ViewModel agar tidak bocor
@@ -301,7 +306,6 @@ class _ChatScreenState extends State<ChatScreen> {
       // Kirim pesan via API (backend akan broadcast via socket)
       final success = await chatViewModel.sendMessage(message);
 
-      print('-------- Success send message: $success');
       if (success) {
         _messageController.clear();
 

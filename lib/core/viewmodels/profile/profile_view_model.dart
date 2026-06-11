@@ -1,6 +1,7 @@
 import '../../models/user_model.dart';
 import '../../repositories/user_repository.dart';
 import '../base_view_model.dart';
+import 'dart:developer' as developer;
 
 class ProfileViewModel extends BaseViewModel {
   final UserRepository _userRepository;
@@ -19,6 +20,10 @@ class ProfileViewModel extends BaseViewModel {
 
   /// Fetches user profile data from the API
   Future<bool> fetchCurrentProfile() async {
+    developer.log(
+      'ProfileViewModel - fetchCurrentProfile',
+      name: 'ProfileViewModel',
+    );
     return await runBusyFuture(() async {
           try {
             final response = await _userRepository.getCurrentProfile();
@@ -91,7 +96,10 @@ class ProfileViewModel extends BaseViewModel {
             notifyListeners();
             return success;
           } catch (e) {
-            print('ProfileViewModel - updateProfile() error: $e');
+            developer.log(
+              "ProfileViewModel - updateProfile() error $e",
+              name: 'ProfileViewModel',
+            );
             setError(e.toString());
             return false;
           }

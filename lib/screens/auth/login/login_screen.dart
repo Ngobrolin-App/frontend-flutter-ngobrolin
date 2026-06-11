@@ -9,6 +9,7 @@ import '../../../core/widgets/inputs/custom_text_field.dart';
 import '../../../core/widgets/inputs/password_field.dart';
 import '../../../routes/app_routes.dart';
 import '../../../theme/app_colors.dart';
+import 'dart:developer' as developer;
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -79,7 +80,7 @@ class _LoginScreenState extends State<LoginScreen> {
           );
         }
       } catch (e) {
-        print('Login view error: $e');
+        developer.log('LoginScreen - _login() error: $e', name: 'LoginScreen');
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

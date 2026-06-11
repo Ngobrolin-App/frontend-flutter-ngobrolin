@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../repositories/settings_repository.dart';
 import '../base_view_model.dart';
+import 'dart:developer' as developer;
 
 class SettingsViewModel extends BaseViewModel {
   final SettingsRepository _settingsRepository;
@@ -28,6 +29,10 @@ class SettingsViewModel extends BaseViewModel {
       final user = result.data;
       _privateAccount = user?.isPrivate ?? false;
     } catch (e) {
+      developer.log(
+        'SettingsViewModel - initSettings() error: $e',
+        name: 'SettingsViewModel',
+      );
       setError(e.toString());
     } finally {
       setLoading(false);
@@ -41,6 +46,10 @@ class SettingsViewModel extends BaseViewModel {
       _locale = locale;
       notifyListeners();
     } catch (e) {
+      developer.log(
+        'SettingsViewModel - setLocale() error: $e',
+        name: 'SettingsViewModel',
+      );
       setError(e.toString());
     }
   }
@@ -59,6 +68,10 @@ class SettingsViewModel extends BaseViewModel {
 
             return result.isSuccess;
           } catch (e) {
+            developer.log(
+              'SettingsViewModel - togglePrivateAccount() error: $e',
+              name: 'SettingsViewModel',
+            );
             setError(e.toString());
             return false;
           }
@@ -77,6 +90,10 @@ class SettingsViewModel extends BaseViewModel {
 
             return success;
           } catch (e) {
+            developer.log(
+              'SettingsViewModel - blockAccount() error: $e',
+              name: 'SettingsViewModel',
+            );
             setError(e.toString());
             return false;
           }
@@ -95,6 +112,10 @@ class SettingsViewModel extends BaseViewModel {
 
             return success;
           } catch (e) {
+            developer.log(
+              'SettingsViewModel - unblockAccount() error: $e',
+              name: 'SettingsViewModel',
+            );
             setError(e.toString());
             return false;
           }
@@ -108,6 +129,10 @@ class SettingsViewModel extends BaseViewModel {
       // If not in cache, check with API
       return await _settingsRepository.isUserBlocked(userId);
     } catch (e) {
+      developer.log(
+        'SettingsViewModel - isUserBlocked() error: $e',
+        name: 'SettingsViewModel',
+      );
       setError(e.toString());
       return false;
     }

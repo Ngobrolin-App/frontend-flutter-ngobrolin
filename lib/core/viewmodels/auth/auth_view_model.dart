@@ -4,6 +4,7 @@ import '../base_view_model.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import '../../di/service_locator.dart';
 import '../../repositories/user_repository.dart';
+import 'dart:developer' as developer;
 
 class AuthViewModel extends BaseViewModel {
   final AuthRepository _authRepository;
@@ -32,6 +33,10 @@ class AuthViewModel extends BaseViewModel {
         _user = await _authRepository.getCurrentUser();
       }
     } catch (e) {
+      developer.log(
+        'AuthViewModel - _checkAuthStatus() error: $e',
+        name: 'AuthViewModel',
+      );
       setError(e.toString());
     } finally {
       setLoading(false);
@@ -63,7 +68,10 @@ class AuthViewModel extends BaseViewModel {
 
             return response.isSuccess;
           } catch (e) {
-            print('AuthViewModel - signIn() error: $e');
+            developer.log(
+              'AuthViewModel - signIn() error: $e',
+              name: 'AuthViewModel',
+            );
             setError(e.toString());
             return false;
           }
@@ -103,7 +111,10 @@ class AuthViewModel extends BaseViewModel {
 
             return response.isSuccess;
           } catch (e) {
-            print('AuthViewModel - signUp() error: $e');
+            developer.log(
+              'AuthViewModel - signUp() error: $e',
+              name: 'AuthViewModel',
+            );
             setError(e.toString());
             return false;
           }
@@ -120,6 +131,10 @@ class AuthViewModel extends BaseViewModel {
             setSuccess(result.message);
             return success;
           } catch (e) {
+            developer.log(
+              'AuthViewModel - forgotPassword() error: $e',
+              name: 'AuthViewModel',
+            );
             setError(e.toString());
             return false;
           }
@@ -139,6 +154,10 @@ class AuthViewModel extends BaseViewModel {
             final success = result.isSuccess;
             return success;
           } catch (e) {
+            developer.log(
+              'AuthViewModel - resetPassword() error: $e',
+              name: 'AuthViewModel',
+            );
             setError(e.toString());
             return false;
           }
@@ -147,31 +166,49 @@ class AuthViewModel extends BaseViewModel {
   }
 
   /// Signs out the current user
-  void signOut() {
-    runBusyFuture(() async {
-      try {
-        await _authRepository.signOut();
-        try {
-          final fcmToken = await FirebaseMessaging.instance.getToken();
-          if (fcmToken != null && fcmToken.isNotEmpty) {
-            await serviceLocator<UserRepository>().deleteFcmToken(fcmToken);
+  Future<bool> signOut() async {
+    return await runBusyFuture(() async {
+          try {
+            await _authRepository.signOut();
+            try {
+              final fcmToken = await FirebaseMessaging.instance.getToken();
+              if (fcmToken != null && fcmToken.isNotEmpty) {
+                await serviceLocator<UserRepository>().deleteFcmToken(fcmToken);
+              }
+            } catch (_) {}
+            _token = null;
+            _authenticated = false;
+            _user = null;
+            return true;
+          } catch (e) {
+            developer.log(
+              'AuthViewModel - signOut() error: $e',
+              name: 'AuthViewModel',
+            );
+            setError(e.toString());
+            return false;
           }
-        } catch (_) {}
-        _token = null;
-        _authenticated = false;
-        _user = null;
-        return true;
-      } catch (e) {
-        setError(e.toString());
-        return false;
-      }
-    });
+        }) ??
+        false;
   }
 
-  Future<void> _registerFcmToken() async {
-    final fcmToken = await FirebaseMessaging.instance.getToken();
-    if (fcmToken != null && fcmToken.isNotEmpty) {
-      await serviceLocator<UserRepository>().registerFcmToken(fcmToken);
-    }
+  Future<bool> _registerFcmToken() async {
+    return await runBusyFuture(() async {
+          try {
+            final fcmToken = await FirebaseMessaging.instance.getToken();
+            if (fcmToken != null && fcmToken.isNotEmpty) {
+              await serviceLocator<UserRepository>().registerFcmToken(fcmToken);
+            }
+            return true;
+          } catch (e) {
+            developer.log(
+              'AuthViewModel - _registerFcmToken() error: $e',
+              name: 'AuthViewModel',
+            );
+            setError(e.toString());
+            return false;
+          }
+        }) ??
+        false;
   }
 }

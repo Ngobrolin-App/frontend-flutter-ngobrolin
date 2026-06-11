@@ -207,10 +207,6 @@ class ChatRepository {
       '/messages/get',
       data: {'conversationId': conversationId, 'page': page, 'limit': limit},
       parser: (response) {
-        debugPrint(
-          'ChatRepository - getMessagesByConversationId() response: $response',
-          wrapWidth: 1024,
-        );
         return ApiResponse<PaginatedResult<MessageModel>>.fromJson(response, (
           data,
         ) {

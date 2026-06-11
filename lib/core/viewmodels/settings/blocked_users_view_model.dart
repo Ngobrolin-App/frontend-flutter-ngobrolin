@@ -1,6 +1,7 @@
 import '../../models/user_model.dart';
 import '../../repositories/settings_repository.dart';
 import '../base_view_model.dart';
+import 'dart:developer' as developer;
 
 class BlockedUsersViewModel extends BaseViewModel {
   final SettingsRepository _settingsRepository;
@@ -38,12 +39,12 @@ class BlockedUsersViewModel extends BaseViewModel {
             _hasMore =
                 (paginatedResult?.page ?? 0) <
                 (paginatedResult?.totalPages ?? 0);
-            // print(
-            //   'Fetched blocked users: ${_blockedUsers.length}, hasMore: $_hasMore, page: ${result.page}, limit: ${result.limit}, total: ${result.total}, totalPages: ${result.totalPages}, ',
-            // ); // Debug log
-
             return true;
           } catch (e) {
+            developer.log(
+              'BlockedUsersViewModel - fetchBlockedUsers() error: $e',
+              name: 'BlockedUsersViewModel',
+            );
             setError(e.toString());
             return false;
           }
@@ -71,6 +72,10 @@ class BlockedUsersViewModel extends BaseViewModel {
       _hasMore =
           (paginatedResult?.page ?? 0) < (paginatedResult?.totalPages ?? 0);
     } catch (e) {
+      developer.log(
+        'BlockedUsersViewModel - loadMoreBlockedUsers() error: $e',
+        name: 'BlockedUsersViewModel',
+      );
       setError(e.toString());
       _page = (_page > 1) ? _page - 1 : 1;
     } finally {
@@ -91,6 +96,10 @@ class BlockedUsersViewModel extends BaseViewModel {
             }
             return success;
           } catch (e) {
+            developer.log(
+              'BlockedUsersViewModel - unblockUser() error: $e',
+              name: 'BlockedUsersViewModel',
+            );
             setError(e.toString());
             return false;
           }

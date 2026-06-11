@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'dart:developer' as developer;
 
 /// Custom exception class for API errors
 class ApiException implements Exception {
@@ -10,11 +11,13 @@ class ApiException implements Exception {
 
   /// Factory constructor to create ApiException from DioException
   factory ApiException.fromDioException(DioException exception) {
-    print('========== API ERROR ==========');
-    print(exception.response?.statusCode);
-    print(exception.response?.data);
-    print(exception.response.toString());
-    print('===============================');
+    developer.log('''
+    ========== API ERROR ==========
+    ${exception.response?.statusCode}
+    ${exception.response?.data}
+    ${exception.response.toString()}
+    ===============================
+    ''', name: 'ApiException');
 
     String message = 'Something went wrong';
     int? statusCode = exception.response?.statusCode;

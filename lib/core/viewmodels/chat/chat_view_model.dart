@@ -3,6 +3,7 @@ import 'package:ngobrolin_app/core/models/paginated_result.dart';
 import '../../models/message_model.dart';
 import '../../repositories/chat_repository.dart';
 import '../base_view_model.dart';
+import 'dart:developer' as developer;
 
 class ChatViewModel extends BaseViewModel {
   final ChatRepository _chatRepository;
@@ -74,7 +75,6 @@ class ChatViewModel extends BaseViewModel {
 
   /// Gets private conversation ID by participant ID from the API
   Future<bool> _getPrivateConversationIdByParticipantId() async {
-    print("Loading private conversation ID... $_partnerId");
     return await runBusyFuture(() async {
           try {
             final result = await _chatRepository
@@ -84,8 +84,9 @@ class ChatViewModel extends BaseViewModel {
             _conversationId = conversation?.id;
             return true;
           } catch (e) {
-            print(
-              "ChatViewModel _getPrivateConversationIdByParticipantId error $e",
+            developer.log(
+              "ChatViewModel - _getPrivateConversationIdByParticipantId error $e",
+              name: 'ChatViewModel',
             );
             setError(e.toString());
             return false;
@@ -130,7 +131,10 @@ class ChatViewModel extends BaseViewModel {
             notifyListeners();
             return true;
           } catch (e) {
-            print("ChatViewModel - _getConversationDataOnly() error: $e");
+            developer.log(
+              "ChatViewModel - _getConversationDataOnly() error $e",
+              name: 'ChatViewModel',
+            );
             setError(e.toString());
             return false;
           }
@@ -140,7 +144,6 @@ class ChatViewModel extends BaseViewModel {
 
   /// Loads conversation participants from the API
   Future<bool> _loadParticipant() async {
-    print("Loading partner participants... $_conversationId");
     return await runBusyFuture(() async {
           try {
             if (_conversationId == null) {
@@ -162,6 +165,10 @@ class ChatViewModel extends BaseViewModel {
             notifyListeners();
             return true;
           } catch (e) {
+            developer.log(
+              "ChatViewModel - _loadParticipant() error $e",
+              name: 'ChatViewModel',
+            );
             setError(e.toString());
             return false;
           }
@@ -202,7 +209,10 @@ class ChatViewModel extends BaseViewModel {
 
             return true;
           } catch (e) {
-            print('ChatViewModel - _loadMessages() error: $e');
+            developer.log(
+              "ChatViewModel - _loadMessages() error $e",
+              name: 'ChatViewModel',
+            );
             setError(e.toString());
             return false;
           }
@@ -231,7 +241,10 @@ class ChatViewModel extends BaseViewModel {
       _hasMore =
           (paginatedResult?.page ?? 0) < (paginatedResult?.totalPages ?? 0);
     } catch (e) {
-      print('ChatViewModel - loadMoreMessages() error: $e');
+      developer.log(
+        "ChatViewModel - _loadMoreMessages() error $e",
+        name: 'ChatViewModel',
+      );
 
       setError(e.toString());
       _page = (_page > 1) ? _page - 1 : 1;
@@ -276,6 +289,10 @@ class ChatViewModel extends BaseViewModel {
             // notifyListeners();
             return true;
           } catch (e) {
+            developer.log(
+              "ChatViewModel - sendMessage() error $e",
+              name: 'ChatViewModel',
+            );
             setError(e.toString());
             return false;
           }
@@ -303,6 +320,10 @@ class ChatViewModel extends BaseViewModel {
             // sendMessage akan menambahkan pesan ke list
             return await sendMessage(url, type: type);
           } catch (e) {
+            developer.log(
+              "ChatViewModel - sendAttachment() error $e",
+              name: 'ChatViewModel',
+            );
             setError(e.toString());
             return false;
           }
@@ -357,8 +378,11 @@ class ChatViewModel extends BaseViewModel {
         notifyListeners();
       }
     } catch (e) {
-      // Log error parsing quietly
-      print('Error handling incoming message: $e');
+      developer.log(
+        "ChatViewModel - handleIncomingMessage() error $e",
+        name: 'ChatViewModel',
+      );
+      setError(e.toString());
     }
   }
 
@@ -391,7 +415,11 @@ class ChatViewModel extends BaseViewModel {
       // Update local state
       updateMessagesReadStatus([messageId]);
     } catch (e) {
-      print('Error marking message as read: $e');
+      developer.log(
+        "ChatViewModel - markMessageAsRead() error $e",
+        name: 'ChatViewModel',
+      );
+      setError(e.toString());
     }
   }
 

@@ -31,7 +31,6 @@ class UserRepository {
     return _apiService.post<ApiResponse<UserModel>>(
       '/users/profile/get',
       parser: (response) {
-        print('UserRepository - /users/profile/get response: $response');
         return ApiResponse<UserModel>.fromJson(response, (data) {
           final user = UserModel.fromJson(data as Map<String, dynamic>);
           return user;

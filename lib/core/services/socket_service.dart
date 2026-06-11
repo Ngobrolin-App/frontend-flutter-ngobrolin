@@ -1,4 +1,5 @@
 import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'dart:developer' as developer;
 
 class SocketService {
   IO.Socket? _socket;
@@ -6,25 +7,59 @@ class SocketService {
   bool get isConnected => _socket?.connected ?? false;
 
   void connect({required String url, String? token}) {
-    print('SocketService: connecting to $url with token: ${token != null ? 'present' : 'null'}');
+    developer.log(
+      'SocketService: connecting to $url with token: ${token != null ? 'present' : 'null'}',
+      name: 'SocketService',
+    );
     final opts = IO.OptionBuilder()
         .setTransports(['websocket'])
         .setPath('/socket.io')
         .enableAutoConnect()
         .setTimeout(10000)
-        .setExtraHeaders(token != null ? {'Authorization': 'Bearer $token'} : {})
+        .setExtraHeaders(
+          token != null ? {'Authorization': 'Bearer $token'} : {},
+        )
         .build();
 
     _socket = IO.io(url, opts);
 
-    _socket?.on('connecting', (_) => print('Socket connecting...'));
-    _socket?.on('connect', (_) => print('Socket connected'));
-    _socket?.on('connect_error', (err) => print('Socket connect_error: $err'));
-    _socket?.on('error', (err) => print('Socket error: $err'));
-    _socket?.on('disconnect', (_) => print('Socket disconnect'));
-    _socket?.on('reconnect', (attempt) => print('Socket reconnect: $attempt'));
-    _socket?.on('reconnect_attempt', (attempt) => print('Socket reconnect_attempt: $attempt'));
-    _socket?.on('reconnect_failed', (_) => print('Socket reconnect_failed'));
+    _socket?.on(
+      'connecting',
+      (_) => developer.log('Socket connecting...', name: 'SocketService'),
+    );
+    _socket?.on(
+      'connect',
+      (_) => developer.log('Socket connected', name: 'SocketService'),
+    );
+    _socket?.on(
+      'connect_error',
+      (err) =>
+          developer.log('Socket connect_error: $err', name: 'SocketService'),
+    );
+    _socket?.on(
+      'error',
+      (err) => developer.log('Socket error: $err', name: 'SocketService'),
+    );
+    _socket?.on(
+      'disconnect',
+      (_) => developer.log('Socket disconnect', name: 'SocketService'),
+    );
+    _socket?.on(
+      'reconnect',
+      (attempt) =>
+          developer.log('Socket reconnect: $attempt', name: 'SocketService'),
+    );
+    _socket?.on(
+      'reconnect_attempt',
+      (attempt) => developer.log(
+        'Socket reconnect_attempt: $attempt',
+        name: 'SocketService',
+      ),
+    );
+    _socket?.on(
+      'reconnect_failed',
+      (_) => developer.log('Socket reconnect_failed', name: 'SocketService'),
+    );
   }
 
   void on(String event, void Function(dynamic data) handler) {

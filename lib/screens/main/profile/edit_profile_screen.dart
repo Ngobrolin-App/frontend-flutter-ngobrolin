@@ -87,12 +87,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               : null,
         );
 
-        print('EditProfileScreen - updateProfile() returned: $success');
-
         if (!mounted) return;
 
         if (success) {
-          print('EditProfileScreen - Profile updated successfully');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(context.tr('profile_updated')),
@@ -102,7 +99,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         }
       } catch (e) {
         if (!mounted) return;
-        print('EditProfileScreen - Error updating profile: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString()),

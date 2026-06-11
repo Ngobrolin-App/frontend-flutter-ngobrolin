@@ -23,7 +23,6 @@ class AuthRepository {
       '/auth/login',
       data: {'usernameOrEmail': usernameOrEmail, 'password': password},
       parser: (response) {
-        // print('AuthRepository - /auth/login response: $response');
         return ApiResponse<AuthResponse>.fromJson(response, (data) {
           final authResponse = AuthResponse.fromJson(
             data as Map<String, dynamic>,
@@ -56,7 +55,6 @@ class AuthRepository {
         'password': password,
       },
       parser: (response) {
-        // print('AuthRepository - /auth/register response: $response');
         return ApiResponse<AuthResponse>.fromJson(response, (data) {
           final authResponse = AuthResponse.fromJson(
             data as Map<String, dynamic>,

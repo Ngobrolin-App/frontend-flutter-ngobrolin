@@ -1,6 +1,7 @@
 import '../../models/user_model.dart';
 import '../../repositories/user_repository.dart';
 import '../base_view_model.dart';
+import 'dart:developer' as developer;
 
 class SearchUserViewModel extends BaseViewModel {
   final UserRepository _userRepository;
@@ -52,6 +53,10 @@ class SearchUserViewModel extends BaseViewModel {
                 (paginatedResult?.totalPages ?? 0);
             return true;
           } catch (e) {
+            developer.log(
+              'SearchUserViewModel - searchUsers() error: $e',
+              name: 'SearchUserViewModel',
+            );
             setError(e.toString());
             return false;
           }
@@ -80,6 +85,10 @@ class SearchUserViewModel extends BaseViewModel {
       _hasMore =
           (paginatedResult?.page ?? 0) < (paginatedResult?.totalPages ?? 0);
     } catch (e) {
+      developer.log(
+        'SearchUserViewModel - loadMoreSearchUser() error: $e',
+        name: 'SearchUserViewModel',
+      );
       setError(e.toString());
       // Rollback page increment on error
       _page = (_page > 1) ? _page - 1 : 1;

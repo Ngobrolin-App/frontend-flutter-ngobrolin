@@ -2,6 +2,7 @@ import '../../models/user_model.dart';
 import '../../repositories/user_repository.dart';
 import '../../repositories/settings_repository.dart';
 import '../base_view_model.dart';
+import 'dart:developer' as developer;
 
 class UserProfileViewModel extends BaseViewModel {
   final UserRepository _userRepository;
@@ -28,7 +29,10 @@ class UserProfileViewModel extends BaseViewModel {
             await _checkIfUserBlocked();
             return true;
           } catch (e) {
-            print('UserProfileViewModel - fetchUserProfile() error: $e');
+            developer.log(
+              'UserProfileViewModel - fetchUserProfile() error: $e',
+              name: 'UserProfileViewModel',
+            );
             setError(e.toString());
             return false;
           }
@@ -43,7 +47,11 @@ class UserProfileViewModel extends BaseViewModel {
       _isBlocked = await _settingsRepository.isUserBlocked(_user!.id);
       notifyListeners();
     } catch (e) {
-      // Handle error silently for now
+      developer.log(
+        'UserProfileViewModel - _checkIfUserBlocked() error: $e',
+        name: 'UserProfileViewModel',
+      );
+      setError(e.toString());
     }
   }
 
@@ -60,6 +68,10 @@ class UserProfileViewModel extends BaseViewModel {
             }
             return success;
           } catch (e) {
+            developer.log(
+              'UserProfileViewModel - blockUser() error: $e',
+              name: 'UserProfileViewModel',
+            );
             setError(e.toString());
             return false;
           }
@@ -80,6 +92,10 @@ class UserProfileViewModel extends BaseViewModel {
             }
             return success;
           } catch (e) {
+            developer.log(
+              'UserProfileViewModel - unblockUser() error: $e',
+              name: 'UserProfileViewModel',
+            );
             setError(e.toString());
             return false;
           }

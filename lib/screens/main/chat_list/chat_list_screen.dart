@@ -11,6 +11,7 @@ import '../../../core/viewmodels/chat/chat_list_view_model.dart';
 import '../../../core/widgets/cards/chat_list_item.dart';
 import '../../../routes/app_routes.dart';
 import '../../../theme/app_colors.dart';
+import 'dart:developer' as developer;
 
 class ChatListScreen extends StatefulWidget {
   const ChatListScreen({super.key});
@@ -27,6 +28,8 @@ class _ChatListScreenState extends State<ChatListScreen> {
   late Function(dynamic) _conversationCreatedHandler;
   late Function(dynamic) _conversationReadHandler;
 
+  late SocketProvider _socketProvider;
+
   @override
   void initState() {
     super.initState();
@@ -36,23 +39,26 @@ class _ChatListScreenState extends State<ChatListScreen> {
         context,
         listen: false,
       );
-      final socketProvider = Provider.of<SocketProvider>(
-        context,
-        listen: false,
-      );
+      _socketProvider = Provider.of<SocketProvider>(context, listen: false);
       final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
 
       chatListViewModel.fetchChatList();
 
       // Define Handlers
       _conversationUpdatedHandler = (data) {
-        debugPrint('-------- conversation_updated on chat list screen: $data');
+        developer.log(
+          '-------- conversation_updated on chat list screen: $data',
+          name: 'ChatListScreen,',
+        );
         final currentUserId = authViewModel.user?.id;
         chatListViewModel.handleSocketConversationUpdate(data, currentUserId);
       };
 
       _conversationCreatedHandler = (data) {
-        debugPrint('-------- conversation_created on chat list screen: $data');
+        developer.log(
+          '-------- conversation_created on chat list screen: $data',
+          name: 'ChatListScreen,',
+        );
         chatListViewModel.fetchChatList();
       };
 
@@ -66,9 +72,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
       };
 
       // Register Handlers
-      socketProvider.on('conversation_updated', _conversationUpdatedHandler);
-      socketProvider.on('conversation_created', _conversationCreatedHandler);
-      socketProvider.on('conversation_read_by_me', _conversationReadHandler);
+      _socketProvider.on('conversation_updated', _conversationUpdatedHandler);
+      _socketProvider.on('conversation_created', _conversationCreatedHandler);
+      _socketProvider.on('conversation_read_by_me', _conversationReadHandler);
     });
 
     _scrollController.addListener(() {
@@ -83,15 +89,17 @@ class _ChatListScreenState extends State<ChatListScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
-    final socketProvider = Provider.of<SocketProvider>(context, listen: false);
 
     // Remove specific handlers
     try {
-      socketProvider.off('conversation_updated', _conversationUpdatedHandler);
-      socketProvider.off('conversation_created', _conversationCreatedHandler);
-      socketProvider.off('conversation_read_by_me', _conversationReadHandler);
+      _socketProvider.off('conversation_updated', _conversationUpdatedHandler);
+      _socketProvider.off('conversation_created', _conversationCreatedHandler);
+      _socketProvider.off('conversation_read_by_me', _conversationReadHandler);
     } catch (e) {
-      debugPrint('Error removing socket listeners in chat list: $e');
+      developer.log(
+        'Error removing socket listeners in chat list: $e',
+        name: 'ChatListScreen,',
+      );
     }
 
     super.dispose();
@@ -140,9 +148,6 @@ class _ChatListScreenState extends State<ChatListScreen> {
                 return ChatListItem(
                   chat: chat,
                   onTap: () {
-                    print('Tapped on Chat Props: ${chat.props}');
-                    print('Tapped on chat ID: ${chat.id}');
-                    print('Tapped on chat: ${chat.name}');
                     chatListViewModel.markChatAsRead(chat.id);
                     Navigator.of(context).pushNamed(
                       AppRoutes.chat,
