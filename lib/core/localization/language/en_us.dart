@@ -6,7 +6,8 @@ const Map<String, String> enUS = {
   // Onboarding
   'welcome_message': 'Welcome to Ngobrolin!',
   'welcome_description_1': 'Find new friends and connect anytime, anywhere.',
-  'welcome_description_2': 'Build connections, share stories, and stay close with anyone.',
+  'welcome_description_2':
+      'Build connections, share stories, and stay close with anyone.',
   'start_now': 'Start Now',
 
   // Auth
@@ -31,7 +32,8 @@ const Map<String, String> enUS = {
   'please_enter_username': 'Please enter your username',
   'please_enter_password': 'Please enter your password',
   'username_cannot_contain_spaces': 'Username cannot contain spaces',
-  'password_must_be_at_least_6_characters': 'Password must be at least 6 characters',
+  'password_must_be_at_least_6_characters':
+      'Password must be at least 6 characters',
   'please_confirm_your_password': 'Please confirm your password',
   'passwords_do_not_match': 'Passwords do not match',
 
@@ -66,6 +68,7 @@ const Map<String, String> enUS = {
   // Search
   'search_chat_friends': 'Search chat friends',
   'search_users': 'Search users',
+  'no_users_found': 'No users found',
 
   // Profile
   'edit_profile': 'Edit Profile',
@@ -108,7 +111,8 @@ const Map<String, String> enUS = {
   'no_messages': 'No messages yet',
   'no_chats': 'No chats yet',
   'start_new_chat': 'Start a new chat',
-  'user_is_blocked_cannot_start_chat': 'This user is blocked. You cannot start a chat.',
+  'user_is_blocked_cannot_start_chat':
+      'This user is blocked. You cannot start a chat.',
   'choose_image': 'Choose Image',
   'choose_file': 'Choose File',
   'file': 'File',
@@ -141,4 +145,84 @@ const Map<String, String> enUS = {
   'language': 'Bahasa',
   'english': 'English',
   'indonesia': 'Indonesia',
+
+  // Api Response Messages
+  'user_with_username_or_email_not_found':
+      'User with username or email not found',
+  'password_incorrect': 'Password is incorrect',
+  'current_password_incorrect': 'Current password is incorrect',
+  'login_success': 'Login successful',
+  'registration_success': 'Registration successful',
+  'validation_failed': 'Validation failed',
+  'email_already_exists': 'Email already exists',
+  'user_not_found': 'User not found',
+  'data_retrieved': 'Data retrieved successfully',
+  'email_not_registered': 'Email not registered',
+  'token_invalid_or_expired': 'Token is invalid or has expired',
+  'user_is_blocked': 'User is blocked',
+  'user_blocked_successfully': 'User blocked successfully',
+  'cannot_block_yourself': 'Cannot block yourself',
+  'user_already_blocked': 'User is already blocked',
+  'user_unblocked_successfully': 'User unblocked successfully',
+  'user_is_not_blocked': 'User is not blocked',
+  'partnerid_required': 'PartnerId required',
+  'conversationid_required': 'ConversationId required',
+  'authentication_failed': 'Authentication Failed',
+  'reset_password_email_sent_failed': 'Failed to send the password reset email',
+  'reset_password_email_sent_success':
+      'An email to reset your password has been sent',
+  'create_conversation_failed': 'Failed to create conversation',
+  'create_conversation_private_user_failed':
+      'Failed to create conversation with private user',
+  'create_conversation_blocked_user_failed':
+      'Failed to create conversation with blocked user',
+  'create_conversation_success': 'Successfully started a conversation',
+  'access_denied': 'Access Denied',
+  'conversation_not_found': 'Conversation Not Found',
+  'can_only_update_group_conversations': 'Can only update group conversations',
+  'conversation_update_success': 'Conversation updated successfully',
+  'you_are_not_a_participant': 'You are not a participant in this conversation',
+  'left_conversation_success': 'Successfully left the conversation',
+  'message_sent_success': 'Message sent successfully',
+  'message_sent_failed': 'Failed to send message',
+  'message_not_found': 'Message not found',
+  'can_only_edit_your_own_messages': 'Can only edit your own messages',
+  'can_only_delete_your_own_messages': 'Can only delete your own messages',
+  'message_update_success': 'Message updated successfully',
+  'message_update_failed': 'Failed to update message',
+  'message_delete_success': 'Message deleted successfully',
+  'message_delete_failed': 'Failed to delete message',
+  'messages_marked_as_read': 'Messages marked as read',
+
+  // RESPONSESTATUS STATUSCODE
+  // --- 2xx Success ---
+  'success': 'Success',
+  'resource_created_successfully': 'Resource created successfully',
+  'request_accepted_and_processing':
+      'Request accepted and is currently processing',
+  'request_successful_with_no_content':
+      'Request successful with no content returned',
+  // --- 3xx Redirection ---
+  'resource_moved_permanently': 'Resource moved permanently',
+  'resource_found_elsewhere': 'Resource found elsewhere',
+  'resource_not_modified': 'Resource not modified',
+  // --- 4xx Client Errors ---
+  'bad_request_or_invalid_syntax': 'Bad request or invalid syntax',
+  'unauthorized_access_authentication_required':
+      'Unauthorized access, authentication required',
+  'forbidden_access_permission_denied': 'Forbidden access, permission denied',
+  'resource_not_found': 'Resource not found',
+  'http_method_not_allowed': 'HTTP method not allowed',
+  'resource_conflict_state': 'Resource conflict state',
+  'validation_error': 'Unprocessable entity, validation error',
+  'rate_limit_exceeded': 'Too many requests, rate limit exceeded',
+  // --- 5xx Server Errors ---
+  'internal_server_error': 'Internal server error',
+  'server_does_not_support_functionality':
+      'Server does not support requested functionality',
+  'invalid_response_from_upstream_server':
+      'Bad gateway, invalid response from upstream server',
+  'server_temporarily_overloaded_or_down':
+      'Service unavailable, server temporarily overloaded or down',
+  'upstream_server_timeout': 'Gateway timeout, upstream server timed out',
 };

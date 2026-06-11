@@ -64,20 +64,28 @@ class UserListItem extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     '@${user.username}',
-                    style: const TextStyle(fontSize: 14, color: AppColors.timestamp),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppColors.timestamp,
+                    ),
                   ),
                 ],
               ),
             ),
             // Action button
             if (onActionTap != null &&
-                (actionIcon != null || actionWidget != null || actionText != null) &&
-                !user.isPrivate)
+                (actionIcon != null ||
+                    actionWidget != null ||
+                    actionText != null) &&
+                !(user.isPrivate))
               InkWell(
                 onTap: onActionTap,
                 borderRadius: BorderRadius.circular(20),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.accent,
                     borderRadius: BorderRadius.circular(20),

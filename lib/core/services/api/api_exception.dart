@@ -10,6 +10,12 @@ class ApiException implements Exception {
 
   /// Factory constructor to create ApiException from DioException
   factory ApiException.fromDioException(DioException exception) {
+    print('========== API ERROR ==========');
+    print(exception.response?.statusCode);
+    print(exception.response?.data);
+    print(exception.response.toString());
+    print('===============================');
+
     String message = 'Something went wrong';
     int? statusCode = exception.response?.statusCode;
     dynamic data = exception.response?.data;
@@ -21,32 +27,7 @@ class ApiException implements Exception {
         message = 'Connection timeout. Please check your internet connection.';
         break;
       case DioExceptionType.badResponse:
-        if (statusCode != null) {
-          switch (statusCode) {
-            case 400:
-              message = data?['error'] ?? 'Bad request';
-              break;
-            case 401:
-              message = data?['error'] ?? 'Unauthorized. Please login again.';
-              break;
-            case 403:
-              message =
-                  data?['error'] ??
-                  'Forbidden. You don\'t have permission to access this resource.';
-              break;
-            case 404:
-              message = data?['error'] ?? 'Resource not found.';
-              break;
-            case 500:
-            case 501:
-            case 502:
-            case 503:
-              message = data?['error'] ?? 'Server error. Please try again later.';
-              break;
-            default:
-              message = data?['error'] ?? 'Server error with status code: $statusCode';
-          }
-        }
+        message = data?['message'] ?? 'unknown_error';
         break;
       case DioExceptionType.cancel:
         message = 'Request cancelled';
@@ -68,5 +49,5 @@ class ApiException implements Exception {
   }
 
   @override
-  String toString() => 'Something went wrong: $message';
+  String toString() => message;
 }

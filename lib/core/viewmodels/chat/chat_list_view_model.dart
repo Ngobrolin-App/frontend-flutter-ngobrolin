@@ -31,8 +31,13 @@ class ChatListViewModel extends BaseViewModel {
               limit: _limit,
             );
 
-            _chatList = result.items;
-            _hasMore = result.page < result.totalPages;
+            final paginatedResult = result.data;
+            final conversationList = paginatedResult?.items ?? [];
+
+            _chatList = conversationList;
+            _hasMore =
+                (paginatedResult?.page ?? 0) <
+                (paginatedResult?.totalPages ?? 0);
 
             // print(
             //   'Fetched chats: ${_chatList.length}, hasMore: $_hasMore, page: ${result.page}, limit: ${result.limit}, total: ${result.total}, totalPages: ${result.totalPages}, ',
@@ -109,8 +114,13 @@ class ChatListViewModel extends BaseViewModel {
               limit: _limit,
             );
 
-            _chatList.addAll(result.items);
-            _hasMore = result.page < result.totalPages;
+            final paginatedResult = result.data;
+            final conversationList = paginatedResult?.items ?? [];
+
+            _chatList.addAll(conversationList);
+            _hasMore =
+                (paginatedResult?.page ?? 0) <
+                (paginatedResult?.totalPages ?? 0);
 
             return true;
           } catch (e) {

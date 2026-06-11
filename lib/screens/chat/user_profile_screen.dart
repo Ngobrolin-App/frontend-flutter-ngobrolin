@@ -23,27 +23,54 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   void initState() {
     super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final userProfileViewModel = Provider.of<UserProfileViewModel>(context, listen: false);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final userProfileViewModel = Provider.of<UserProfileViewModel>(
+        context,
+        listen: false,
+      );
       // Ambil data terbaru dari backend
-      userProfileViewModel.fetchUserProfile(widget.userId);
+      final success = await userProfileViewModel.fetchUserProfile(
+        widget.userId,
+      );
+      if (!success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              context.tr(
+                userProfileViewModel.errorMessage ?? 'failed_to_load_profile',
+              ),
+            ),
+          ),
+        );
+        // Navigator.of(context).pop();
+      }
     });
   }
 
   void _startChat() {
-    final userProfileViewModel = Provider.of<UserProfileViewModel>(context, listen: false);
+    final userProfileViewModel = Provider.of<UserProfileViewModel>(
+      context,
+      listen: false,
+    );
     final user = userProfileViewModel.user;
 
     if (user == null) return;
 
     Navigator.of(context).pushReplacementNamed(
       AppRoutes.chat,
-      arguments: {'userId': user.id, 'name': user.name, 'avatarUrl': user.avatarUrl},
+      arguments: {
+        'userId': user.id,
+        'name': user.name,
+        'avatarUrl': user.avatarUrl,
+      },
     );
   }
 
   void _toggleBlockUser() async {
-    final userProfileViewModel = Provider.of<UserProfileViewModel>(context, listen: false);
+    final userProfileViewModel = Provider.of<UserProfileViewModel>(
+      context,
+      listen: false,
+    );
     final user = userProfileViewModel.user;
     final isBlocked = userProfileViewModel.isBlocked;
 
@@ -55,14 +82,23 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("${user.name} ${context.tr('has_been_unblocked')}"),
+            content: Text(
+              context.tr(
+                userProfileViewModel.successMessage ??
+                    'user_unblocked_successfully',
+              ),
+            ),
             backgroundColor: Colors.green,
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("${context.tr('failed_to_unblock')} ${user.name}"),
+            content: Text(
+              context.tr(
+                userProfileViewModel.errorMessage ?? 'failed_to_unblock_user',
+              ),
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -75,7 +111,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           title: Text(context.tr('block_account')),
           content: Text(context.tr('are_you_sure_block')),
           actions: [
-            TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(context.tr('no'))),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(context.tr('no')),
+            ),
             TextButton(
               onPressed: () async {
                 Navigator.of(context).pop();
@@ -85,20 +124,33 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 if (success) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text("${user.name} ${context.tr('has_been_blocked')}"),
+                      content: Text(
+                        context.tr(
+                          userProfileViewModel.successMessage ??
+                              'user_blocked_successfully',
+                        ),
+                      ),
                       backgroundColor: Colors.green,
                     ),
                   );
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text("${context.tr('failed_to_block')} ${user.name}"),
+                      content: Text(
+                        context.tr(
+                          userProfileViewModel.errorMessage ??
+                              'failed_to_block_user',
+                        ),
+                      ),
                       backgroundColor: Colors.red,
                     ),
                   );
                 }
               },
-              child: Text(context.tr('yes'), style: const TextStyle(color: AppColors.warning)),
+              child: Text(
+                context.tr('yes'),
+                style: const TextStyle(color: AppColors.warning),
+              ),
             ),
           ],
         ),
@@ -115,11 +167,16 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         final isLoading = userProfileViewModel.isLoading;
 
         if (isLoading || user == null) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
         }
 
         // Tentukan self vs target dan status privat
-        final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+        final authViewModel = Provider.of<AuthViewModel>(
+          context,
+          listen: false,
+        );
         final currentUserId = authViewModel.user?.id;
         final isSelf = currentUserId == user.id;
         final isPrivate = user.isPrivate;
@@ -167,7 +224,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       const SizedBox(height: 4),
                       Text(
                         '@${user.username}',
-                        style: const TextStyle(fontSize: 16, color: Colors.white70),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.white70,
+                        ),
                       ),
                     ],
                   ),
@@ -185,10 +245,16 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           children: [
                             Text(
                               context.tr('bio'),
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             const SizedBox(height: 8),
-                            Text(user.bio!, style: const TextStyle(fontSize: 16)),
+                            Text(
+                              user.bio!,
+                              style: const TextStyle(fontSize: 16),
+                            ),
                           ],
                         ),
                       ),
@@ -207,7 +273,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         PrimaryButton(
                           text: context.tr('start_chat'),
                           onPressed: _startChat,
-                          icon: const Iconify(Mdi.message_plus, color: AppColors.white),
+                          icon: const Iconify(
+                            Mdi.message_plus,
+                            color: AppColors.white,
+                          ),
                         ),
 
                       const SizedBox(height: 16),
@@ -217,17 +286,25 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         onPressed: _toggleBlockUser,
                         icon: Icon(
                           isBlocked ? Icons.person_add : Icons.block,
-                          color: isBlocked ? AppColors.primary : AppColors.warning,
+                          color: isBlocked
+                              ? AppColors.primary
+                              : AppColors.warning,
                         ),
                         label: Text(
-                          isBlocked ? context.tr('unblock_user') : context.tr('block_account'),
+                          isBlocked
+                              ? context.tr('unblock_user')
+                              : context.tr('block_account'),
                           style: TextStyle(
-                            color: isBlocked ? AppColors.primary : AppColors.warning,
+                            color: isBlocked
+                                ? AppColors.primary
+                                : AppColors.warning,
                           ),
                         ),
                         style: OutlinedButton.styleFrom(
                           side: BorderSide(
-                            color: isBlocked ? AppColors.primary : AppColors.warning,
+                            color: isBlocked
+                                ? AppColors.primary
+                                : AppColors.warning,
                           ),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           minimumSize: const Size(double.infinity, 50),

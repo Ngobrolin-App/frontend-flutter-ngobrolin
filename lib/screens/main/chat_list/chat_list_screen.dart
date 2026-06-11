@@ -5,9 +5,9 @@ import 'package:iconify_flutter/icons/material_symbols.dart';
 import 'package:ngobrolin_app/core/providers/socket_provider.dart';
 import 'package:ngobrolin_app/core/viewmodels/auth/auth_view_model.dart';
 import 'package:provider/provider.dart';
+import 'package:ngobrolin_app/core/widgets/states/empty_state.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/viewmodels/chat/chat_list_view_model.dart';
-import '../../../core/widgets/buttons/primary_button.dart';
 import '../../../core/widgets/cards/chat_list_item.dart';
 import '../../../routes/app_routes.dart';
 import '../../../theme/app_colors.dart';
@@ -32,8 +32,14 @@ class _ChatListScreenState extends State<ChatListScreen> {
     super.initState();
     _scrollController = ScrollController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final chatListViewModel = Provider.of<ChatListViewModel>(context, listen: false);
-      final socketProvider = Provider.of<SocketProvider>(context, listen: false);
+      final chatListViewModel = Provider.of<ChatListViewModel>(
+        context,
+        listen: false,
+      );
+      final socketProvider = Provider.of<SocketProvider>(
+        context,
+        listen: false,
+      );
       final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
 
       chatListViewModel.fetchChatList();
@@ -67,7 +73,8 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
     _scrollController.addListener(() {
       final vm = Provider.of<ChatListViewModel>(context, listen: false);
-      if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+      if (_scrollController.position.pixels >=
+          _scrollController.position.maxScrollExtent - 200) {
         vm.loadMoreChatList();
       }
     });
@@ -100,7 +107,10 @@ class _ChatListScreenState extends State<ChatListScreen> {
         title: Text(context.tr('chats')),
         actions: [
           IconButton(
-            icon: Iconify(MaterialSymbols.settings_rounded, color: AppColors.white),
+            icon: Iconify(
+              MaterialSymbols.settings_rounded,
+              color: AppColors.white,
+            ),
             onPressed: () {
               Navigator.of(context).pushNamed(AppRoutes.settingsRoute);
             },
@@ -110,11 +120,21 @@ class _ChatListScreenState extends State<ChatListScreen> {
       body: chatListViewModel.isLoading && chatList.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : chatList.isEmpty
-          ? _buildEmptyState(context)
+          ? EmptyState(
+              title: context.tr('no_chats'),
+              showButton: true,
+              buttonText: context.tr('start_new_chat'),
+              onButtonPressed: () {
+                Navigator.of(
+                  context,
+                ).pushNamed(AppRoutes.main, arguments: {'tabIndex': 1});
+              },
+            )
           : ListView.separated(
               controller: _scrollController,
               itemCount: chatList.length,
-              separatorBuilder: (context, index) => const Divider(height: 1, indent: 72),
+              separatorBuilder: (context, index) =>
+                  const Divider(height: 1, indent: 72),
               itemBuilder: (context, index) {
                 final chat = chatList[index];
                 return ChatListItem(
@@ -140,38 +160,13 @@ class _ChatListScreenState extends State<ChatListScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           // Navigate to search users screen with the intent to start a new chat
-          Navigator.of(context).pushNamed(AppRoutes.main, arguments: {'tabIndex': 1});
+          Navigator.of(
+            context,
+          ).pushNamed(AppRoutes.main, arguments: {'tabIndex': 1});
         },
         backgroundColor: AppColors.accent,
         shape: CircleBorder(),
         child: Iconify(Mdi.message_plus, color: AppColors.white),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.asset('assets/empty_state/img-empty-state.png', width: 150, height: 150),
-          const SizedBox(height: 16),
-          Text(
-            context.tr('no_chats'),
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 24),
-          PrimaryButton(
-            padding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-            text: context.tr('start_new_chat'),
-            onPressed: () {
-              // Navigate to search users screen
-              Navigator.of(context).pushNamed(AppRoutes.main, arguments: {'tabIndex': 1});
-            },
-            icon: const Iconify(MaterialSymbols.add_rounded, color: Colors.white),
-            isFullWidth: false,
-          ),
-        ],
       ),
     );
   }

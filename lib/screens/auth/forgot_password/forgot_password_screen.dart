@@ -29,27 +29,46 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
 
       try {
-        final success = await authViewModel.forgotPassword(_emailController.text);
+        final success = await authViewModel.forgotPassword(
+          _emailController.text,
+        );
 
         if (!mounted) return;
 
         if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                context.tr(
+                  authViewModel.successMessage ??
+                      'reset_password_email_sent_success',
+                ),
+              ),
+              backgroundColor: AppColors.accent,
+            ),
+          );
           setState(() {
             _isSuccess = true;
           });
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(authViewModel.errorMessage ?? context.tr('forgot_password_failed')),
+              content: Text(
+                authViewModel.errorMessage ??
+                    context.tr('forgot_password_failed'),
+              ),
               backgroundColor: AppColors.warning,
             ),
           );
         }
       } catch (e) {
         if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: AppColors.warning));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: AppColors.warning,
+          ),
+        );
       }
     }
   }
@@ -120,7 +139,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               if (value == null || value.isEmpty) {
                 return context.tr('please_enter_email');
               }
-              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+              if (!RegExp(
+                r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+              ).hasMatch(value)) {
                 return context.tr('invalid_email');
               }
               return null;
@@ -145,7 +166,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         const SizedBox(height: 48),
-        const Icon(Icons.mark_email_read_outlined, size: 100, color: AppColors.primary),
+        const Icon(
+          Icons.mark_email_read_outlined,
+          size: 100,
+          color: AppColors.primary,
+        ),
         const SizedBox(height: 24),
         Text(
           context.tr('email_sent'),

@@ -52,7 +52,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
         );
 
         // Also update the legacy provider (sinkronisasi state)
-        await authProvider.signUp(_usernameController.text, _passwordController.text);
+        await authProvider.signUp(
+          _usernameController.text,
+          _passwordController.text,
+        );
 
         if (!mounted) return;
 
@@ -60,17 +63,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
           // Navigate to login screen on successful registration
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(context.tr('registration_successful')),
+              content: Text(
+                context.tr(
+                  authViewModel.successMessage ?? 'registration_success',
+                ),
+              ),
               backgroundColor: Colors.green,
             ),
           );
 
-          Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
+          Navigator.of(
+            context,
+          ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
         } else {
           // Show error message if registration failed
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(authViewModel.errorMessage ?? context.tr('registration_failed')),
+              content: Text(
+                authViewModel.errorMessage ?? context.tr('registration_failed'),
+              ),
               backgroundColor: AppColors.warning,
             ),
           );
@@ -78,9 +89,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       } catch (e) {
         // Show error message
         if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: AppColors.warning));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: AppColors.warning,
+          ),
+        );
       }
     }
   }
@@ -150,7 +164,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       if (value == null || value.isEmpty) {
                         return context.tr('please_enter_email');
                       }
-                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                      if (!RegExp(
+                        r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                      ).hasMatch(value)) {
                         return context.tr('invalid_email');
                       }
                       return null;
@@ -188,7 +204,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         return context.tr('please_enter_password');
                       }
                       if (value.length < 6) {
-                        return context.tr('password_must_be_at_least_6_characters');
+                        return context.tr(
+                          'password_must_be_at_least_6_characters',
+                        );
                       }
                       return null;
                     },

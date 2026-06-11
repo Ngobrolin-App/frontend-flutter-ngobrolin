@@ -33,7 +33,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     if (_formKey.currentState?.validate() ?? false) {
       if (widget.token == null || widget.token!.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('invalid_token')), backgroundColor: AppColors.warning),
+          SnackBar(
+            content: Text(context.tr('invalid_token')),
+            backgroundColor: AppColors.warning,
+          ),
         );
         return;
       }
@@ -41,27 +44,46 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
 
       try {
-        final success = await authViewModel.resetPassword(widget.token!, _passwordController.text);
+        final success = await authViewModel.resetPassword(
+          widget.token!,
+          _passwordController.text,
+        );
 
         if (!mounted) return;
 
         if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                context.tr(
+                  authViewModel.successMessage ?? 'password_reset_success_desc',
+                ),
+              ),
+              backgroundColor: AppColors.accent,
+            ),
+          );
           setState(() {
             _isSuccess = true;
           });
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(authViewModel.errorMessage ?? context.tr('reset_password_failed')),
+              content: Text(
+                authViewModel.errorMessage ??
+                    context.tr('reset_password_failed'),
+              ),
               backgroundColor: AppColors.warning,
             ),
           );
         }
       } catch (e) {
         if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: AppColors.warning));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: AppColors.warning,
+          ),
+        );
       }
     }
   }
@@ -193,7 +215,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         PrimaryButton(
           text: context.tr('back_to_login'),
           onPressed: () {
-            Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
+            Navigator.of(
+              context,
+            ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
           },
         ),
       ],

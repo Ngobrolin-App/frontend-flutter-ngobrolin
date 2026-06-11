@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/ic.dart';
+import 'package:ngobrolin_app/core/widgets/states/empty_state.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/viewmodels/settings/blocked_users_view_model.dart';
 import '../../theme/app_colors.dart';
 import '../../core/widgets/cards/user_list_item.dart';
-import '../../core/models/user_model.dart';
 
 class BlockedUsersScreen extends StatefulWidget {
   const BlockedUsersScreen({super.key});
@@ -41,7 +41,15 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
           body: isLoading
               ? const Center(child: CircularProgressIndicator())
               : blockedUsers.isEmpty
-              ? _buildEmptyState(context)
+              ? EmptyState(
+                  image: const Iconify(
+                    Ic.round_block,
+                    size: 80,
+                    color: AppColors.lightGrey,
+                  ),
+                  title: context.tr('no_blocked_users'),
+                  subtitle: context.tr('no_blocked_users_description'),
+                )
               : ListView.separated(
                   itemCount: blockedUsers.length,
                   separatorBuilder: (context, index) =>
@@ -70,28 +78,6 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Iconify(Ic.round_block, size: 80, color: AppColors.lightGrey),
-          const SizedBox(height: 16),
-          Text(
-            context.tr('no_blocked_users'),
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            context.tr('no_blocked_users_description'),
-            style: const TextStyle(fontSize: 16, color: AppColors.grey),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
   void _unblockUser(
     BuildContext context,
     String userId,
@@ -117,6 +103,31 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
               // Unblock the user
               final success = await blockedUsersViewModel.unblockUser(userId);
 
+              if (success) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      context.tr(
+                        blockedUsersViewModel.successMessage ??
+                            'user_unblocked',
+                      ),
+                    ),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      context.tr(
+                        blockedUsersViewModel.errorMessage ??
+                            'failed_to_unblock_user',
+                      ),
+                    ),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
               // Show confirmation
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(

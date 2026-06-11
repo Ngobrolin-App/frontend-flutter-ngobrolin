@@ -35,16 +35,21 @@ class SearchUserViewModel extends BaseViewModel {
   Future<bool> searchUsers() async {
     return await runBusyFuture(() async {
           try {
-            final userResults = await _userRepository.searchUsers(
+            final result = await _userRepository.searchUsers(
               _searchQuery,
               page: _page,
               limit: _limit,
             );
 
+            final paginatedResult = result.data;
+
+            final userResults = paginatedResult?.items ?? [];
             _users = userResults;
 
             // Determine if more pages are available
-            _hasMore = userResults.length == _limit;
+            _hasMore =
+                (paginatedResult?.page ?? 0) <
+                (paginatedResult?.totalPages ?? 0);
             return true;
           } catch (e) {
             setError(e.toString());
@@ -62,16 +67,18 @@ class SearchUserViewModel extends BaseViewModel {
 
     try {
       _page += 1;
-      final userResults = await _userRepository.searchUsers(
+      final result = await _userRepository.searchUsers(
         _searchQuery,
         page: _page,
         limit: _limit,
       );
 
-      final mapped = userResults;
+      final paginatedResult = result.data;
+      final userResults = paginatedResult?.items ?? [];
 
-      _users.addAll(mapped);
-      _hasMore = userResults.length == _limit;
+      _users.addAll(userResults);
+      _hasMore =
+          (paginatedResult?.page ?? 0) < (paginatedResult?.totalPages ?? 0);
     } catch (e) {
       setError(e.toString());
       // Rollback page increment on error
@@ -79,31 +86,6 @@ class SearchUserViewModel extends BaseViewModel {
     } finally {
       _isLoadingMore = false;
       notifyListeners();
-    }
-  }
-
-  /// Gets user details by ID
-  Future<Map<String, dynamic>?> getUserDetails(String userId) async {
-    try {
-      setLoading(true);
-
-      final user = await _userRepository.getUserById(userId);
-
-      // Convert to map format for compatibility with existing UI
-      final userMap = {
-        'id': user.id,
-        'name': user.name,
-        'username': user.username,
-        'bio': user.bio ?? '',
-        'avatarUrl': user.avatarUrl,
-      };
-
-      return userMap;
-    } catch (e) {
-      setError(e.toString());
-      return null;
-    } finally {
-      setLoading(false);
     }
   }
 }

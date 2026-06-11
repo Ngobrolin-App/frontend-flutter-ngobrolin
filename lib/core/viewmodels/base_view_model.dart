@@ -6,6 +6,9 @@ class BaseViewModel extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  String? _successMessage;
+  String? get successMessage => _successMessage;
+
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
@@ -14,6 +17,12 @@ class BaseViewModel extends ChangeNotifier {
   /// Sets the loading state and notifies listeners
   void setLoading(bool loading) {
     _isLoading = loading;
+    notifyListeners();
+  }
+
+  /// Sets a success message and notifies listeners
+  void setSuccess(String? message) {
+    _successMessage = message;
     notifyListeners();
   }
 

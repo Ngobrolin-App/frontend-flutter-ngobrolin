@@ -41,30 +41,52 @@ class _LoginScreenState extends State<LoginScreen> {
         );
 
         // Sinkronisasi state ke provider lama agar tetap konsisten
-        await authProvider.signIn(_usernameOrEmailController.text, _passwordController.text);
+        await authProvider.signIn(
+          _usernameOrEmailController.text,
+          _passwordController.text,
+        );
 
         if (!mounted) return;
 
         if (success) {
-          final socketProvider = Provider.of<SocketProvider>(context, listen: false);
+          final socketProvider = Provider.of<SocketProvider>(
+            context,
+            listen: false,
+          );
           await socketProvider.init(token: authViewModel.token);
 
           if (mounted) {
-            Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.main, (route) => false);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  context.tr(authViewModel.successMessage ?? 'login_success'),
+                ),
+                backgroundColor: AppColors.accent,
+              ),
+            );
+            Navigator.of(
+              context,
+            ).pushNamedAndRemoveUntil(AppRoutes.main, (route) => false);
           }
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(authViewModel.errorMessage ?? context.tr('login_failed')),
+              content: Text(
+                context.tr(authViewModel.errorMessage ?? 'login_failed'),
+              ),
               backgroundColor: AppColors.warning,
             ),
           );
         }
       } catch (e) {
+        print('Login view error: $e');
         if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: AppColors.warning));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: AppColors.warning,
+          ),
+        );
       }
     }
   }
@@ -143,7 +165,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: () {
-                        Navigator.of(context).pushNamed(AppRoutes.forgotPassword);
+                        Navigator.of(
+                          context,
+                        ).pushNamed(AppRoutes.forgotPassword);
                       },
                       child: Text(
                         context.tr('forgot_password'),

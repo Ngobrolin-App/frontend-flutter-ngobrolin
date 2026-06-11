@@ -1,3 +1,5 @@
+import 'package:ngobrolin_app/core/models/paginated_result.dart';
+
 import '../../models/message_model.dart';
 import '../../repositories/chat_repository.dart';
 import '../base_view_model.dart';
@@ -36,11 +38,24 @@ class ChatViewModel extends BaseViewModel {
   String? _conversationGroupImage;
   String? get conversationGroupImage => _conversationGroupImage;
 
+  // Pagination state
+  int _page = 1;
+  final int _limit = 20;
+  bool _isLoadingMore = false;
+  bool get isLoadingMore => _isLoadingMore;
+  bool _hasMore = true;
+  bool get hasMore => _hasMore;
+
   ChatViewModel({ChatRepository? chatRepository})
     : _chatRepository = chatRepository ?? ChatRepository();
 
   /// Initializes the chat with a specific user
-  void initChat(String? userId, String? name, String? avatarUrl, String? conversationId) async {
+  void initChat(
+    String? userId,
+    String? name,
+    String? avatarUrl,
+    String? conversationId,
+  ) async {
     _partnerId = userId ?? '';
     _partnerName = name ?? '';
     _partnerAvatarUrl = avatarUrl ?? '';
@@ -62,10 +77,16 @@ class ChatViewModel extends BaseViewModel {
     print("Loading private conversation ID... $_partnerId");
     return await runBusyFuture(() async {
           try {
-            final convId = await _chatRepository.findPrivateConversationIdWith(_partnerId);
-            _conversationId = convId;
+            final result = await _chatRepository
+                .getPrivateConversationByPartnerId(_partnerId);
+
+            final conversation = result.data;
+            _conversationId = conversation?.id;
             return true;
           } catch (e) {
+            print(
+              "ChatViewModel _getPrivateConversationIdByParticipantId error $e",
+            );
             setError(e.toString());
             return false;
           }
@@ -83,34 +104,33 @@ class ChatViewModel extends BaseViewModel {
     notifyListeners();
   }
 
-  void setConversationId(String id) {
+  void setConversationId(String? id) {
     _conversationId = id;
     notifyListeners();
   }
 
   /// Gets conversation details from the API
   Future<bool> _getConversationDataOnly() async {
-    print("Loading conversation... $_conversationId");
     return await runBusyFuture(() async {
           try {
             if (_conversationId == null) {
               return false;
             }
 
-            final conversation = await _chatRepository.getConversationById(
+            final result = await _chatRepository.getConversationById(
               conversationId: _conversationId!,
-              isShowParticipants: false,
+              isShowParticipants: true,
             );
+            final conversation = result.data;
 
-            _conversationType = conversation['conversation']['type'];
-            _conversationName = conversation['conversation']['name'];
-            _conversationGroupImage = conversation['conversation']['group_image'];
-
-            print("get conversation data only: $conversation");
+            _conversationType = conversation?.type;
+            _conversationName = conversation?.name;
+            _conversationGroupImage = conversation?.groupImage;
 
             notifyListeners();
             return true;
           } catch (e) {
+            print("ChatViewModel - _getConversationDataOnly() error: $e");
             setError(e.toString());
             return false;
           }
@@ -127,10 +147,12 @@ class ChatViewModel extends BaseViewModel {
               return false;
             }
 
-            final participants = await _chatRepository.getConversationParticipants(
+            final result = await _chatRepository.getConversationParticipants(
               conversationId: _conversationId!,
               isIncludeMe: _conversationType != 'private',
             );
+
+            final participants = result.data ?? [];
 
             if (_conversationType == 'private') {
               _partnerName = participants.first.name;
@@ -155,14 +177,23 @@ class ChatViewModel extends BaseViewModel {
               return false;
             }
 
-            _messages = await _chatRepository.getMessagesByConversationId(
+            final result = await _chatRepository.getMessagesByConversationId(
               conversationId: _conversationId!,
+              page: _page,
+              limit: _limit,
             );
-
+            final paginatedResult = result.data;
+            final messages = paginatedResult?.items ?? [];
+            _messages = messages;
+            _hasMore =
+                (paginatedResult?.page ?? 0) <
+                (paginatedResult?.totalPages ?? 0);
             notifyListeners();
 
             final lastMessage = _messages.isNotEmpty ? _messages.last : null;
-            if (lastMessage != null && !lastMessage.isRead && lastMessage.senderId == _partnerId) {
+            if (lastMessage != null &&
+                !lastMessage.isRead &&
+                lastMessage.senderId == _partnerId) {
               await _chatRepository.markAsRead(
                 conversationId: _conversationId!,
                 messageId: lastMessage.id,
@@ -171,11 +202,43 @@ class ChatViewModel extends BaseViewModel {
 
             return true;
           } catch (e) {
+            print('ChatViewModel - _loadMessages() error: $e');
             setError(e.toString());
             return false;
           }
         }) ??
         false;
+  }
+
+  Future<void> _loadMoreMessages() async {
+    if (_isLoadingMore || !_hasMore) return;
+    _isLoadingMore = true;
+    notifyListeners();
+
+    try {
+      _page += 1;
+
+      final result = await _chatRepository.getMessagesByConversationId(
+        conversationId: _conversationId!,
+        page: _page,
+        limit: _limit,
+      );
+
+      final paginatedResult = result.data;
+
+      final messages = paginatedResult?.items ?? [];
+      _messages.addAll(messages);
+      _hasMore =
+          (paginatedResult?.page ?? 0) < (paginatedResult?.totalPages ?? 0);
+    } catch (e) {
+      print('ChatViewModel - loadMoreMessages() error: $e');
+
+      setError(e.toString());
+      _page = (_page > 1) ? _page - 1 : 1;
+    } finally {
+      _isLoadingMore = false;
+      notifyListeners();
+    }
   }
 
   /// Sends a new message
@@ -186,20 +249,26 @@ class ChatViewModel extends BaseViewModel {
     // Tapi karena kita butuh ID dari server, kita tunggu saja.
 
     if (_conversationId == null) {
-      final convId = await _chatRepository.getOrCreatePrivateConversationId(_partnerId);
+      final result = await _chatRepository.getOrCreatePrivateConversationId(
+        _partnerId,
+      );
+      final conversation = result.data;
+      final convId = conversation?.id;
       setConversationId(convId);
     }
 
     return await runBusyFuture(() async {
           try {
-            final newMessage = await _chatRepository.sendMessage(
+            final result = await _chatRepository.sendMessage(
               conversationId: _conversationId!,
               content: content,
               type: type,
             );
 
-            final exists = _messages.any((m) => m.id == newMessage.id);
-            if (!exists) {
+            final newMessage = result.data;
+
+            final exists = _messages.any((m) => m.id == newMessage?.id);
+            if (!exists && (newMessage != null)) {
               _messages.add(newMessage);
               notifyListeners();
             }
@@ -216,12 +285,21 @@ class ChatViewModel extends BaseViewModel {
 
   Future<bool> sendAttachment(String filePath, String type) async {
     if (_conversationId == null) {
-      final convId = await _chatRepository.getOrCreatePrivateConversationId(_partnerId);
+      final result = await _chatRepository.getOrCreatePrivateConversationId(
+        _partnerId,
+      );
+      final conversation = result.data;
+      final convId = conversation?.id;
       setConversationId(convId);
     }
     return await runBusyFuture(() async {
           try {
-            final url = await _chatRepository.uploadAttachment(filePath: filePath, type: type);
+            final result = await _chatRepository.uploadAttachment(
+              filePath: filePath,
+              type: type,
+            );
+
+            final url = result.data ?? '';
             // sendMessage akan menambahkan pesan ke list
             return await sendMessage(url, type: type);
           } catch (e) {
@@ -241,12 +319,14 @@ class ChatViewModel extends BaseViewModel {
       } else if (messageData is Map<String, dynamic>) {
         // Handle kemungkinan snake_case dari socket
         // Jika struktur sama dengan API response (snake_case), kita mapping manual
-        if (messageData.containsKey('created_at') || messageData.containsKey('sender_id')) {
+        if (messageData.containsKey('created_at') ||
+            messageData.containsKey('sender_id')) {
           final senderId =
               (messageData['sender_id']?.toString()) ??
               (messageData['sender']?['id']?.toString() ?? '');
           final createdAtStr =
-              (messageData['created_at'] as String?) ?? DateTime.now().toIso8601String();
+              (messageData['created_at'] as String?) ??
+              DateTime.now().toIso8601String();
 
           message = MessageModel(
             id: messageData['id']?.toString() ?? '',
@@ -303,7 +383,10 @@ class ChatViewModel extends BaseViewModel {
   Future<void> markMessageAsRead(String messageId) async {
     if (_conversationId == null) return;
     try {
-      await _chatRepository.markAsRead(conversationId: _conversationId!, messageId: messageId);
+      await _chatRepository.markAsRead(
+        conversationId: _conversationId!,
+        messageId: messageId,
+      );
 
       // Update local state
       updateMessagesReadStatus([messageId]);

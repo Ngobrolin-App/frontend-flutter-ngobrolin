@@ -76,28 +76,39 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       try {
         final profileVM = Provider.of<ProfileViewModel>(context, listen: false);
 
-        final updated = await profileVM.updateProfile(
+        final success = await profileVM.updateProfile(
           name: _nameController.text.trim(),
           email: _emailController.text.trim(),
           bio: _bioController.text.trim(),
           avatarUrl: _imageFile?.path,
           newPassword: _changePassword ? _passwordController.text.trim() : null,
-          currentPassword: _changePassword ? _currentPasswordController.text.trim() : null,
+          currentPassword: _changePassword
+              ? _currentPasswordController.text.trim()
+              : null,
         );
+
+        print('EditProfileScreen - updateProfile() returned: $success');
 
         if (!mounted) return;
 
-        if (updated) {
+        if (success) {
+          print('EditProfileScreen - Profile updated successfully');
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.tr('profile_updated')), backgroundColor: Colors.green),
+            SnackBar(
+              content: Text(context.tr('profile_updated')),
+              backgroundColor: Colors.green,
+            ),
           );
-          Navigator.of(context).pop();
         }
       } catch (e) {
         if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: AppColors.warning));
+        print('EditProfileScreen - Error updating profile: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: AppColors.warning,
+          ),
+        );
       } finally {
         if (mounted) {
           setState(() {
@@ -131,7 +142,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             : (widget.user.avatarUrl != null
                                   ? NetworkImage(widget.user.avatarUrl!)
                                   : null),
-                        child: (_imageFile == null && widget.user.avatarUrl == null)
+                        child:
+                            (_imageFile == null &&
+                                widget.user.avatarUrl == null)
                             ? Text(
                                 widget.user.name.isNotEmpty
                                     ? widget.user.name[0].toUpperCase()
@@ -190,7 +203,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     if (value == null || value.isEmpty) {
                       return context.tr('please_enter_email');
                     }
-                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                    if (!RegExp(
+                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                    ).hasMatch(value)) {
                       return context.tr('invalid_email');
                     }
                     return null;

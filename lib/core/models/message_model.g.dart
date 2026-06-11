@@ -14,6 +14,10 @@ MessageModel _$MessageModelFromJson(Map<String, dynamic> json) => MessageModel(
   type: json['type'] as String? ?? 'text',
   isRead: json['isRead'] as bool? ?? false,
   createdAt: DateTime.parse(json['createdAt'] as String),
+  sender: json['sender'] == null
+      ? null
+      : UserModel.fromJson(json['sender'] as Map<String, dynamic>),
+  isSendByMe: json['isSendByMe'] as bool?,
 );
 
 Map<String, dynamic> _$MessageModelToJson(MessageModel instance) =>
@@ -25,4 +29,6 @@ Map<String, dynamic> _$MessageModelToJson(MessageModel instance) =>
       'type': instance.type,
       'isRead': instance.isRead,
       'createdAt': instance.createdAt.toIso8601String(),
+      'sender': instance.sender,
+      'isSendByMe': instance.isSendByMe,
     };

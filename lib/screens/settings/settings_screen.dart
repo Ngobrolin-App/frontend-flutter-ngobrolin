@@ -24,7 +24,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.initState();
     // Initialize settings
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final settingsViewModel = Provider.of<SettingsViewModel>(context, listen: false);
+      final settingsViewModel = Provider.of<SettingsViewModel>(
+        context,
+        listen: false,
+      );
       settingsViewModel.initSettings();
     });
   }
@@ -44,7 +47,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ListTile(
                   title: Text(context.tr('app_language')),
                   subtitle: Text(
-                    settingsViewModel.locale.languageCode == 'en' ? 'English' : 'Indonesia',
+                    settingsViewModel.locale.languageCode == 'en'
+                        ? 'English'
+                        : 'Indonesia',
                   ),
                   leading: const Iconify(Fa.language, color: AppColors.text),
                   trailing: const Iconify(
@@ -65,9 +70,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onChanged: (value) async {
                     // Update both old and new providers
                     await settingsViewModel.togglePrivateAccount(value);
-                    settingsProvider.togglePrivateAccount(value);
+                    settingsProvider.togglePrivateAccount(
+                      settingsViewModel.privateAccount,
+                    );
                   },
-                  secondary: const Iconify(MaterialSymbols.lock_outline, color: AppColors.text),
+                  secondary: const Iconify(
+                    MaterialSymbols.lock_outline,
+                    color: AppColors.text,
+                  ),
                 ),
 
                 const Divider(),
@@ -91,7 +101,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 // About app
                 ListTile(
                   title: Text(context.tr('about_ngobrolin')),
-                  leading: const Iconify(Mdi.information_outline, color: AppColors.text),
+                  leading: const Iconify(
+                    Mdi.information_outline,
+                    color: AppColors.text,
+                  ),
                   onTap: () {
                     _showAboutDialog(context);
                   },
@@ -102,8 +115,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showLanguageDialog(BuildContext context) {
-    final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    final settingsViewModel = Provider.of<SettingsViewModel>(context, listen: false);
+    final settingsProvider = Provider.of<SettingsProvider>(
+      context,
+      listen: false,
+    );
+    final settingsViewModel = Provider.of<SettingsViewModel>(
+      context,
+      listen: false,
+    );
 
     showDialog(
       context: context,
@@ -206,7 +225,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           height: 50,
         ),
         applicationLegalese: context.tr('2025_ngobrolin'),
-        children: [const SizedBox(height: 16), Text(context.tr('about_ngobrolin_description'))],
+        children: [
+          const SizedBox(height: 16),
+          Text(context.tr('about_ngobrolin_description')),
+        ],
       ),
     );
   }

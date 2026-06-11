@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../models/user_model.dart';
 import '../../repositories/settings_repository.dart';
 import '../base_view_model.dart';
 
@@ -25,7 +24,9 @@ class SettingsViewModel extends BaseViewModel {
       _locale = await _settingsRepository.getLocale();
 
       // Load private account setting
-      _privateAccount = await _settingsRepository.getPrivateAccountSetting();
+      final result = await _settingsRepository.getPrivateAccountSetting();
+      final user = result.data;
+      _privateAccount = user?.isPrivate ?? false;
     } catch (e) {
       setError(e.toString());
     } finally {
@@ -48,12 +49,15 @@ class SettingsViewModel extends BaseViewModel {
   Future<bool> togglePrivateAccount(bool value) async {
     return await runBusyFuture(() async {
           try {
-            final success = await _settingsRepository
+            final result = await _settingsRepository
                 .updatePrivateAccountSetting(value);
-            if (success) {
-              _privateAccount = value;
-            }
-            return success;
+
+            final updatedUser = result.data;
+
+            _privateAccount = updatedUser?.isPrivate ?? value;
+            notifyListeners();
+
+            return result.isSuccess;
           } catch (e) {
             setError(e.toString());
             return false;
@@ -66,7 +70,10 @@ class SettingsViewModel extends BaseViewModel {
   Future<bool> blockAccount(String userId, String username, String name) async {
     return await runBusyFuture(() async {
           try {
-            final success = await _settingsRepository.blockUser(userId);
+            final result = await _settingsRepository.blockUser(userId);
+            final success = result.isSuccess;
+
+            setSuccess(result.message);
 
             return success;
           } catch (e) {
@@ -81,7 +88,10 @@ class SettingsViewModel extends BaseViewModel {
   Future<bool> unblockAccount(String userId) async {
     return await runBusyFuture(() async {
           try {
-            final success = await _settingsRepository.unblockUser(userId);
+            final result = await _settingsRepository.unblockUser(userId);
+            final success = result.isSuccess;
+
+            setSuccess(result.message);
 
             return success;
           } catch (e) {

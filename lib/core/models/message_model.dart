@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:ngobrolin_app/core/models/user_model.dart';
 
 part 'message_model.g.dart';
 
@@ -12,6 +13,8 @@ class MessageModel extends Equatable {
   final String type;
   final bool isRead;
   final DateTime createdAt;
+  final UserModel? sender;
+  final bool? isSendByMe;
 
   const MessageModel({
     required this.id,
@@ -21,10 +24,13 @@ class MessageModel extends Equatable {
     this.type = 'text',
     this.isRead = false,
     required this.createdAt,
+    this.sender,
+    this.isSendByMe,
   });
 
   /// Creates a MessageModel from JSON data
-  factory MessageModel.fromJson(Map<String, dynamic> json) => _$MessageModelFromJson(json);
+  factory MessageModel.fromJson(Map<String, dynamic> json) =>
+      _$MessageModelFromJson(json);
 
   /// Converts MessageModel to JSON
   Map<String, dynamic> toJson() => _$MessageModelToJson(this);
@@ -38,6 +44,8 @@ class MessageModel extends Equatable {
     String? type,
     bool? isRead,
     DateTime? createdAt,
+    UserModel? sender,
+    bool? isSendByMe,
   }) {
     return MessageModel(
       id: id ?? this.id,
@@ -47,6 +55,8 @@ class MessageModel extends Equatable {
       type: type ?? this.type,
       isRead: isRead ?? this.isRead,
       createdAt: createdAt ?? this.createdAt,
+      sender: sender ?? this.sender,
+      isSendByMe: isSendByMe ?? this.isSendByMe,
     );
   }
 
@@ -54,5 +64,14 @@ class MessageModel extends Equatable {
   bool isSentByMe(String currentUserId) => senderId == currentUserId;
 
   @override
-  List<Object?> get props => [id, conversationId, senderId, content, type, isRead, createdAt];
+  List<Object?> get props => [
+    id,
+    conversationId,
+    senderId,
+    content,
+    type,
+    isRead,
+    createdAt,
+    sender,
+  ];
 }

@@ -30,7 +30,8 @@ class UserModel extends Equatable {
   });
 
   /// Creates a UserModel from JSON data
-  factory UserModel.fromJson(Map<String, dynamic> json) => _$UserModelFromJson(json);
+  factory UserModel.fromJson(Map<String, dynamic> json) =>
+      _$UserModelFromJson(json);
 
   /// Converts UserModel to JSON
   Map<String, dynamic> toJson() => _$UserModelToJson(this);
@@ -75,8 +76,12 @@ class UserModel extends Equatable {
       avatarUrl: json['avatarUrl'] as String?,
       language: json['language'] as String,
       isPrivate: (json['isPrivate'] as bool?) ?? false,
-      createdAt: createdAtStr != null ? DateTime.parse(createdAtStr) : DateTime.now(),
-      updatedAt: updatedAtStr != null ? DateTime.parse(updatedAtStr) : DateTime.now(),
+      createdAt: createdAtStr != null
+          ? DateTime.parse(createdAtStr)
+          : DateTime.now(),
+      updatedAt: updatedAtStr != null
+          ? DateTime.parse(updatedAtStr)
+          : DateTime.now(),
     );
   }
 

@@ -5,7 +5,7 @@ import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/material_symbols.dart';
 import 'package:iconify_flutter/icons/mdi.dart';
 import 'package:provider/provider.dart';
-import '../../../core/models/user_model.dart';
+import 'package:ngobrolin_app/core/widgets/states/empty_state.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/viewmodels/search/search_user_view_model.dart';
 import '../../../core/widgets/cards/user_list_item.dart';
@@ -21,7 +21,6 @@ class SearchUserScreen extends StatefulWidget {
 
 class _SearchUserScreenState extends State<SearchUserScreen> {
   final TextEditingController _searchController = TextEditingController();
-  bool _isSearching = false;
   Timer? _debounce;
 
   // Scroll controller for pagination
@@ -57,26 +56,6 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
     _searchController.dispose();
     _scrollController.dispose();
     super.dispose();
-  }
-
-  void _startSearch() {
-    setState(() {
-      _isSearching = true;
-    });
-  }
-
-  void _stopSearch() {
-    setState(() {
-      _isSearching = false;
-      _searchController.clear();
-
-      // Reset search query in ViewModel
-      final searchViewModel = Provider.of<SearchUserViewModel>(
-        context,
-        listen: false,
-      );
-      searchViewModel.setSearchQuery('');
-    });
   }
 
   void _updateSearchQuery(String query) {
@@ -134,50 +113,54 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
                   ),
                 ),
                 Expanded(
-                  child: ListView.separated(
-                    controller: _scrollController,
-                    itemCount:
-                        searchViewModel.users.length +
-                        (searchViewModel.isLoadingMore ? 1 : 0),
-                    separatorBuilder: (context, index) =>
-                        const Divider(height: 1, indent: 72),
-                    itemBuilder: (context, index) {
-                      if (index >= searchViewModel.users.length) {
-                        return const Padding(
-                          padding: EdgeInsets.all(16),
-                          child: Center(child: CircularProgressIndicator()),
-                        );
-                      }
-                      final user = searchViewModel.users[index];
+                  child: searchViewModel.users.isEmpty
+                      ? EmptyState(title: context.tr('no_users_found'))
+                      : ListView.separated(
+                          controller: _scrollController,
+                          itemCount:
+                              searchViewModel.users.length +
+                              (searchViewModel.isLoadingMore ? 1 : 0),
+                          separatorBuilder: (context, index) =>
+                              const Divider(height: 1, indent: 72),
+                          itemBuilder: (context, index) {
+                            if (index >= searchViewModel.users.length) {
+                              return const Padding(
+                                padding: EdgeInsets.all(16),
+                                child: Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              );
+                            }
+                            final user = searchViewModel.users[index];
 
-                      return UserListItem(
-                        user: user,
-                        onTap: () {
-                          print('Tapped on User ID: ${user.id}');
-                          Navigator.of(context).pushNamed(
-                            AppRoutes.userProfile,
-                            arguments: {'userId': user.id},
-                          );
-                        },
-                        onActionTap: () {
-                          Navigator.of(context).pushNamed(
-                            AppRoutes.chat,
-                            arguments: {
-                              'userId': user.id,
-                              'name': user.name,
-                              'avatarUrl': user.avatarUrl,
-                            },
-                          );
-                        },
-                        actionWidget: Iconify(
-                          Mdi.message_plus_outline,
-                          color: AppColors.white,
-                          size: 16,
+                            return UserListItem(
+                              user: user,
+                              onTap: () {
+                                print('Tapped on User ID: ${user.id}');
+                                Navigator.of(context).pushNamed(
+                                  AppRoutes.userProfile,
+                                  arguments: {'userId': user.id},
+                                );
+                              },
+                              onActionTap: () {
+                                Navigator.of(context).pushNamed(
+                                  AppRoutes.chat,
+                                  arguments: {
+                                    'userId': user.id,
+                                    'name': user.name,
+                                    'avatarUrl': user.avatarUrl,
+                                  },
+                                );
+                              },
+                              actionWidget: Iconify(
+                                Mdi.message_plus_outline,
+                                color: AppColors.white,
+                                size: 16,
+                              ),
+                              actionText: context.tr('message'),
+                            );
+                          },
                         ),
-                        actionText: context.tr('message'),
-                      );
-                    },
-                  ),
                 ),
               ],
             ),

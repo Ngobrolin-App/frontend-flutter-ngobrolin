@@ -1,3 +1,4 @@
+import 'package:ngobrolin_app/core/models/api_response.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../models/auth_response.dart';
@@ -10,56 +11,84 @@ class AuthRepository {
   static const String _tokenKey = 'auth_token';
   static const String _userKey = 'user_data';
 
-  AuthRepository({ApiService? apiService}) : _apiService = apiService ?? ApiService();
+  AuthRepository({ApiService? apiService})
+    : _apiService = apiService ?? ApiService();
 
   /// Sign in with username or email and password
-  Future<AuthResponse> signIn(String usernameOrEmail, String password) async {
-    final response = await _apiService.post<Map<String, dynamic>>(
+  Future<ApiResponse<AuthResponse>> signIn(
+    String usernameOrEmail,
+    String password,
+  ) async {
+    final response = await _apiService.post<ApiResponse<AuthResponse>>(
       '/auth/login',
       data: {'usernameOrEmail': usernameOrEmail, 'password': password},
+      parser: (response) {
+        // print('AuthRepository - /auth/login response: $response');
+        return ApiResponse<AuthResponse>.fromJson(response, (data) {
+          final authResponse = AuthResponse.fromJson(
+            data as Map<String, dynamic>,
+          );
+          return authResponse;
+        });
+      },
     );
 
-    final authResponse = AuthResponse.fromJson(response);
+    if (response.data != null) {
+      await _saveAuthData(response.data!);
+    }
 
-    // Save token and user data
-    await _saveAuthData(authResponse);
-
-    return authResponse;
+    return response;
   }
 
   /// Register a new user
-  Future<AuthResponse> signUp({
+  Future<ApiResponse<AuthResponse>> signUp({
     required String username,
     required String email,
     required String name,
     required String password,
   }) async {
-    final response = await _apiService.post<Map<String, dynamic>>(
+    final response = await _apiService.post<ApiResponse<AuthResponse>>(
       '/auth/register',
-      data: {'username': username, 'email': email, 'name': name, 'password': password},
+      data: {
+        'username': username,
+        'email': email,
+        'name': name,
+        'password': password,
+      },
+      parser: (response) {
+        // print('AuthRepository - /auth/register response: $response');
+        return ApiResponse<AuthResponse>.fromJson(response, (data) {
+          final authResponse = AuthResponse.fromJson(
+            data as Map<String, dynamic>,
+          );
+          return authResponse;
+        });
+      },
     );
 
-    final authResponse = AuthResponse.fromJson(response);
+    if (response.data != null) {
+      await _saveAuthData(response.data!);
+    }
 
-    // Save token and user data
-    await _saveAuthData(authResponse);
-
-    return authResponse;
+    return response;
   }
 
   /// Request password reset
-  Future<bool> forgotPassword(String email) async {
-    await _apiService.post<Map<String, dynamic>>('/auth/forgot-password', data: {'email': email});
-    return true;
+  Future<ApiResponse> forgotPassword(String email) async {
+    return await _apiService.post<ApiResponse>(
+      '/auth/forgot-password',
+      data: {'email': email},
+      parser: (response) => ApiResponse.fromJson(response, null),
+    );
   }
 
   /// Reset password
-  Future<bool> resetPassword(String token, String newPassword) async {
-    await _apiService.post<Map<String, dynamic>>(
+  Future<ApiResponse> resetPassword(String token, String newPassword) async {
+    return await _apiService.post<ApiResponse>(
       '/auth/reset-password',
       data: {'token': token, 'newPassword': newPassword},
+      parser: (response) => ApiResponse.fromJson(response, null),
     );
-    return true;
   }
 
   /// Sign out the current user
@@ -87,7 +116,8 @@ class AuthRepository {
       final userJsonStr = prefs.getString(_userKey);
       if (userJsonStr == null) return null;
 
-      final Map<String, dynamic> decoded = jsonDecode(userJsonStr) as Map<String, dynamic>;
+      final Map<String, dynamic> decoded =
+          jsonDecode(userJsonStr) as Map<String, dynamic>;
       return UserModel.fromJson(decoded);
     } catch (_) {
       return null;

@@ -11,9 +11,9 @@ class BlockedUsersViewModel extends BaseViewModel {
   // Pagination state
   int _page = 1;
   final int _limit = 20;
-  bool _hasMore = true;
   bool _isLoadingMore = false;
   bool get isLoadingMore => _isLoadingMore;
+  bool _hasMore = true;
   bool get hasMore => _hasMore;
 
   BlockedUsersViewModel({SettingsRepository? settingsRepository})
@@ -32,8 +32,12 @@ class BlockedUsersViewModel extends BaseViewModel {
               limit: _limit,
             );
 
-            _blockedUsers = result.items;
-            _hasMore = result.page < result.totalPages;
+            final paginatedResult = result.data;
+
+            _blockedUsers = paginatedResult?.items ?? [];
+            _hasMore =
+                (paginatedResult?.page ?? 0) <
+                (paginatedResult?.totalPages ?? 0);
             // print(
             //   'Fetched blocked users: ${_blockedUsers.length}, hasMore: $_hasMore, page: ${result.page}, limit: ${result.limit}, total: ${result.total}, totalPages: ${result.totalPages}, ',
             // ); // Debug log
@@ -61,8 +65,11 @@ class BlockedUsersViewModel extends BaseViewModel {
         limit: _limit,
       );
 
-      _blockedUsers.addAll(result.items);
-      _hasMore = result.page < result.totalPages;
+      final paginatedResult = result.data;
+
+      _blockedUsers.addAll(paginatedResult?.items ?? []);
+      _hasMore =
+          (paginatedResult?.page ?? 0) < (paginatedResult?.totalPages ?? 0);
     } catch (e) {
       setError(e.toString());
       _page = (_page > 1) ? _page - 1 : 1;
@@ -76,7 +83,9 @@ class BlockedUsersViewModel extends BaseViewModel {
   Future<bool> unblockUser(String userId) async {
     return await runBusyFuture(() async {
           try {
-            final success = await _settingsRepository.unblockUser(userId);
+            final result = await _settingsRepository.unblockUser(userId);
+            final success = result.isSuccess;
+            setSuccess(result.message);
             if (success) {
               _blockedUsers.removeWhere((user) => user.id == userId);
             }
@@ -87,15 +96,5 @@ class BlockedUsersViewModel extends BaseViewModel {
           }
         }) ??
         false;
-  }
-
-  /// Checks if a user is blocked
-  Future<bool> isUserBlocked(String userId) async {
-    try {
-      return await _settingsRepository.isUserBlocked(userId);
-    } catch (e) {
-      setError(e.toString());
-      return false;
-    }
   }
 }

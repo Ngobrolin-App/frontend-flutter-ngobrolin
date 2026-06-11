@@ -13,18 +13,22 @@ class UserProfileViewModel extends BaseViewModel {
   bool _isBlocked = false;
   bool get isBlocked => _isBlocked;
 
-  UserProfileViewModel({UserRepository? userRepository, SettingsRepository? settingsRepository})
-    : _userRepository = userRepository ?? UserRepository(),
-      _settingsRepository = settingsRepository ?? SettingsRepository();
+  UserProfileViewModel({
+    UserRepository? userRepository,
+    SettingsRepository? settingsRepository,
+  }) : _userRepository = userRepository ?? UserRepository(),
+       _settingsRepository = settingsRepository ?? SettingsRepository();
 
   /// Fetches user profile data from the API
   Future<bool> fetchUserProfile(String userId) async {
     return await runBusyFuture(() async {
           try {
-            _user = await _userRepository.getUserById(userId);
+            final result = await _userRepository.getUserById(userId);
+            _user = result.data;
             await _checkIfUserBlocked();
             return true;
           } catch (e) {
+            print('UserProfileViewModel - fetchUserProfile() error: $e');
             setError(e.toString());
             return false;
           }
@@ -48,8 +52,10 @@ class UserProfileViewModel extends BaseViewModel {
     if (_user == null) return false;
     return await runBusyFuture(() async {
           try {
-            final success = await _settingsRepository.blockUser(_user!.id);
+            final result = await _settingsRepository.blockUser(_user!.id);
+            final success = result.isSuccess;
             if (success) {
+              setSuccess(result.message);
               _isBlocked = true;
             }
             return success;
@@ -66,8 +72,10 @@ class UserProfileViewModel extends BaseViewModel {
     if (_user == null) return false;
     return await runBusyFuture(() async {
           try {
-            final success = await _settingsRepository.unblockUser(_user!.id);
+            final result = await _settingsRepository.unblockUser(_user!.id);
+            final success = result.isSuccess;
             if (success) {
+              setSuccess(result.message);
               _isBlocked = false;
             }
             return success;

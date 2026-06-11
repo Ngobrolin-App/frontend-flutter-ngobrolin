@@ -5,8 +5,10 @@ const Map<String, String> idID = {
 
   // Onboarding
   'welcome_message': 'Selamat datang di Ngobrolin!',
-  'welcome_description_1': 'Temukan teman baru dan terhubung kapan saja, di mana saja.',
-  'welcome_description_2': 'Bangun koneksi, berbagi cerita, dan tetap dekat dengan siapa pun.',
+  'welcome_description_1':
+      'Temukan teman baru dan terhubung kapan saja, di mana saja.',
+  'welcome_description_2':
+      'Bangun koneksi, berbagi cerita, dan tetap dekat dengan siapa pun.',
   'start_now': 'Mulai Sekarang',
 
   // Auth
@@ -69,6 +71,7 @@ const Map<String, String> idID = {
   // Search
   'search_chat_friends': 'Cari teman obrolan',
   'search_users': 'Cari pengguna',
+  'no_users_found': 'Tidak ada pengguna yang ditemukan',
 
   // Profile
   'edit_profile': 'Ganti Profil',
@@ -99,7 +102,8 @@ const Map<String, String> idID = {
   'no_blocked_users_description': 'Tidak ada pengguna yang diblokir saat ini.',
   'unblock': 'Batal Blokir',
   'unblock_user': 'Batal Blokir',
-  'unblock_user_confirmation': 'Apakah Kamu yakin ingin membatalkan blokir pengguna ini?',
+  'unblock_user_confirmation':
+      'Apakah Kamu yakin ingin membatalkan blokir pengguna ini?',
   'user_unblocked': 'Pengguna dibatalkan blokir',
   'about_ngobrolin': 'Tentang Ngobrolin',
   'about_ngobrolin_description':
@@ -111,7 +115,8 @@ const Map<String, String> idID = {
   'no_messages': 'Belum ada pesan',
   'no_chats': 'Belum ada obrolan',
   'start_new_chat': 'Mulai obrolan baru',
-  'user_is_blocked_cannot_start_chat': 'Pengguna ini diblokir. Kamu tidak bisa memulai obrolan.',
+  'user_is_blocked_cannot_start_chat':
+      'Pengguna ini diblokir. Kamu tidak bisa memulai obrolan.',
   'choose_image': 'Pilih Gambar',
   'choose_file': 'Pilih File',
   'file': 'File',
@@ -145,4 +150,88 @@ const Map<String, String> idID = {
   'language': 'Bahasa',
   'english': 'English',
   'indonesia': 'Indonesia',
+
+  // Api Response Messages
+  'user_with_username_or_email_not_found':
+      'Pengguna dengan username atau email tidak ditemukan',
+  'password_incorrect': 'Password salah',
+  'current_password_incorrect': 'Password saat ini salah',
+  'login_success': 'Login berhasil',
+  'registration_success': 'Pendaftaran berhasil',
+  'validation_failed': 'Validasi gagal',
+  'email_already_exists': 'Email sudah terdaftar',
+  'user_not_found': 'Pengguna tidak ditemukan',
+  'data_retrieved': 'Data berhasil diambil',
+  'email_not_registered': 'Email tidak terdaftar',
+  'token_invalid_or_expired': 'Token tidak valid atau telah kedaluwarsa',
+  'user_is_blocked': 'Pengguna diblokir',
+  'user_blocked_successfully': 'Pengguna berhasil diblokir',
+  'cannot_block_yourself': 'Tidak dapat memblokir diri sendiri',
+  'user_already_blocked': 'Pengguna sudah diblokir',
+  'user_unblocked_successfully': 'Pengguna berhasil dibatalkan blokir',
+  'user_is_not_blocked': 'Pengguna tidak diblokir',
+  'partnerid_required': 'PartnerId diperlukan',
+  'conversationid_required': 'ConversationId diperlukan',
+  'authentication_failed': 'Autentikasi Gagal',
+  'reset_password_email_sent_failed':
+      'Gagal mengirim email untuk mereset kata sandi',
+  'reset_password_email_sent_success':
+      'Email untuk mereset kata sandi Anda telah dikirim',
+  'create_conversation_failed': 'Gagal membuat percakapan',
+  'create_conversation_private_user_failed':
+      'Gagal membuat percakapan dengan pengguna yang akunnya diprivatisasi',
+  'create_conversation_blocked_user_failed':
+      'Gagal membuat percakapan dengan pengguna yang diblokir',
+  'create_conversation_success': 'Berhasil membuat percakapan',
+  'access_denied': 'Akses Ditolak',
+  'conversation_not_found': 'Percakapan tidak ditemukan',
+  'can_only_update_group_conversations':
+      'Hanya dapat memperbarui percakapan grup',
+  'you_are_not_a_participant':
+      'Anda bukan salah satu peserta dalam percakapan ini',
+  'left_conversation_success': 'Berhasil keluar dari percakapan',
+  'message_sent_success': 'Berhasil mengirim pesan',
+  'message_sent_failed': 'Gagal mengirim pesan',
+  'message_not_found': 'Pesan tidak ditemukan',
+  'can_only_edit_your_own_messages': 'Hanya dapat mengedit pesan Anda sendiri',
+  'can_only_delete_your_own_messages':
+      'Hanya dapat menghapus pesan Anda sendiri',
+  'message_update_success': 'Pesan berhasil diperbarui',
+  'message_update_failed': 'Pesan gagal diperbarui',
+  'message_delete_success': 'Pesan berhasil dihapus',
+  'message_delete_failed': 'Pesan gagal dihapus',
+  'messages_marked_as_read': 'Pesan ditandai sebagai sudah dibaca',
+
+  // RESPONSESTATUS STATUSCODE
+  // --- 2xx Success ---
+  'success': 'Berhasil',
+  'resource_created_successfully': 'Data berhasil dibuat',
+  'request_accepted_and_processing': 'Permintaan diterima dan sedang diproses',
+  'request_successful_with_no_content':
+      'Permintaan berhasil tetapi tidak ada konten yang dikembalikan',
+  // --- 3xx Redirection ---
+  'resource_moved_permanently': 'Sumber daya telah dipindahkan secara permanen',
+  'resource_found_elsewhere': 'Sumber daya ditemukan di lokasi lain',
+  'resource_not_modified': 'Sumber daya tidak ada perubahan',
+  // --- 4xx Client Errors ---
+  'bad_request_or_invalid_syntax':
+      'Permintaan tidak valid atau kesalahan sintaksis',
+  'unauthorized_access_authentication_required':
+      'Akses ditolak, diperlukan autentikasi',
+  'forbidden_access_permission_denied':
+      'Akses dilarang, Anda tidak memiliki izin',
+  'resource_not_found': 'Data atau halaman tidak ditemukan',
+  'http_method_not_allowed': 'Metode HTTP tidak diizinkan untuk jalur ini',
+  'resource_conflict_state': 'Terjadi konflik pada status data saat ini',
+  'validation_error': 'Gagal memproses data, terjadi kesalahan validasi',
+  'rate_limit_exceeded': 'Terlalu banyak permintaan, silakan coba lagi nanti',
+  // --- 5xx Server Errors ---
+  'internal_server_error': 'Terjadi kesalahan internal pada server',
+  'server_does_not_support_functionality':
+      'Server tidak mendukung fitur yang diminta',
+  'invalid_response_from_upstream_server':
+      'Gerbang salah, respons tidak valid dari server hulu',
+  'server_temporarily_overloaded_or_down':
+      'Layanan tidak tersedia, server mungkin sibuk atau mati',
+  'upstream_server_timeout': 'Waktu permintaan habis pada gerbang hulu',
 };

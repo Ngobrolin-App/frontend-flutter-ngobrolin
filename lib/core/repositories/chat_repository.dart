@@ -1,5 +1,8 @@
 import 'dart:developer';
 
+import 'package:flutter/widgets.dart';
+import 'package:ngobrolin_app/core/models/api_response.dart';
+import 'package:ngobrolin_app/core/models/conversation_model.dart';
 import 'package:ngobrolin_app/core/models/conversation_participant_model.dart';
 
 import '../models/chat_list_item_model.dart';
@@ -12,18 +15,23 @@ import 'package:dio/dio.dart';
 class ChatRepository {
   final ApiService _apiService;
 
-  ChatRepository({ApiService? apiService}) : _apiService = apiService ?? ApiService();
+  ChatRepository({ApiService? apiService})
+    : _apiService = apiService ?? ApiService();
 
   /// Get conversation list from backend with pagination
-  Future<PaginatedResult<ChatListItemModel>> getConversationList({
+  Future<ApiResponse<PaginatedResult<ChatListItemModel>>> getConversationList({
     int page = 1,
     int limit = 20,
   }) async {
-    return _apiService.post<PaginatedResult<ChatListItemModel>>(
+    return _apiService.post<ApiResponse<PaginatedResult<ChatListItemModel>>>(
       '/conversations/list',
       // Backend membaca dari req.query, jadi kirim sebagai queryParameters
       queryParameters: {'page': page, 'limit': limit},
-      parser: _parseConversationList,
+      parser: (response) =>
+          ApiResponse<PaginatedResult<ChatListItemModel>>.fromJson(
+            response,
+            (data) => _parseConversationList(data),
+          ),
     );
   }
 
@@ -41,8 +49,12 @@ class ChatRepository {
       final partner = participants.isNotEmpty ? participants.first : null;
 
       final lastMessage = conv['lastMessage'] as Map<String, dynamic>?;
-      final lastContent = lastMessage != null ? (lastMessage['content'] as String? ?? '') : '';
-      final lastMessageId = lastMessage != null ? (lastMessage['id'] as String?) : null;
+      final lastContent = lastMessage != null
+          ? (lastMessage['content'] as String? ?? '')
+          : '';
+      final lastMessageId = lastMessage != null
+          ? (lastMessage['id'] as String?)
+          : null;
       final lastMessageType = lastMessage != null
           ? (lastMessage['type'] as String? ?? 'text')
           : 'text';
@@ -101,155 +113,166 @@ class ChatRepository {
   }
 
   /// Mark messages as read in a conversation
-  Future<bool> markAsRead({required String conversationId, required String messageId}) async {
-    await _apiService.post<Map<String, dynamic>>(
+  Future<ApiResponse> markAsRead({
+    required String conversationId,
+    required String messageId,
+  }) async {
+    return await _apiService.post<ApiResponse>(
       '/messages/mark-read',
       data: {'conversationId': conversationId, 'messageId': messageId},
+      parser: (response) => ApiResponse.fromJson(response, null),
     );
-    return true;
   }
 
   // Tambahkan helper untuk dapat/membuat conversation privat dan mengembalikan id-nya
-  Future<String> getOrCreatePrivateConversationId(String participantId) async {
-    return _apiService.post<String>(
+  Future<ApiResponse<ConversationModel>> getOrCreatePrivateConversationId(
+    String participantId,
+  ) async {
+    return _apiService.post<ApiResponse<ConversationModel>>(
       '/conversations/create',
       data: {'type': 'private', 'participantId': participantId},
-      parser: (data) {
-        final conversation = data['conversation'] as Map<String, dynamic>;
-        return conversation['id'] as String;
-      },
+      parser: (response) => ApiResponse<ConversationModel>.fromJson(
+        response,
+        (data) => ConversationModel.fromJson(data),
+      ),
     );
   }
 
-  Future<String?> findPrivateConversationIdWith(String participantId) async {
-    return _apiService.post<String?>(
-      '/conversations/list',
-      queryParameters: {'page': 1, 'limit': 100},
-      parser: (data) {
-        final conversations = (data['conversations'] as List<dynamic>)
-            .map((e) => e as Map<String, dynamic>)
-            .toList();
-        for (final conv in conversations) {
-          final type = conv['type'] as String?;
-          if (type == 'private') {
-            final participants = (conv['participants'] as List<dynamic>? ?? [])
-                .map((p) => p as Map<String, dynamic>)
-                .toList();
-            final found = participants.any((p) => (p['id']?.toString()) == participantId);
-            if (found) {
-              return conv['id'] as String;
-            }
-          }
-        }
-        return null;
+  Future<ApiResponse<ConversationModel>> getPrivateConversationByPartnerId(
+    String partnerId,
+  ) async {
+    return _apiService.post<ApiResponse<ConversationModel>>(
+      '/conversations/private-conversation',
+      data: {'partnerId': partnerId},
+      parser: (response) {
+        return ApiResponse<ConversationModel>.fromJson(
+          response,
+          (data) => ConversationModel.fromJson(data),
+        );
       },
-    );
-  }
-
-  // Ambil pesan berdasarkan conversationId sesuai backend (raw untuk akses type)
-  Future<List<Map<String, dynamic>>> getMessagesByConversationIdRaw({
-    required String conversationId,
-  }) async {
-    return _apiService.post<List<Map<String, dynamic>>>(
-      '/messages/get',
-      data: {'conversationId': conversationId},
-      parser: (data) =>
-          (data['messages'] as List<dynamic>).map((e) => e as Map<String, dynamic>).toList(),
     );
   }
 
   /// Get conversation participants
-  Future<Map<String, dynamic>> getConversationById({
+  Future<ApiResponse<ConversationModel>> getConversationById({
     required String conversationId,
     bool isShowParticipants = true,
     bool isParticipantsIncludeMe = true,
   }) async {
-    return await _apiService.post<Map<String, dynamic>>(
+    return await _apiService.post<ApiResponse<ConversationModel>>(
       '/conversations/get',
       data: {
         'conversationId': conversationId,
         'isShowParticipants': isShowParticipants,
         'isParticipantsIncludeMe': isParticipantsIncludeMe,
       },
+      parser: (response) => ApiResponse<ConversationModel>.fromJson(
+        response,
+        (data) => ConversationModel.fromJson(data),
+      ),
     );
   }
 
   /// Get conversation participants
-  Future<List<ConversationParticipantModel>> getConversationParticipants({
+  Future<ApiResponse<List<ConversationParticipantModel>>>
+  getConversationParticipants({
     required String conversationId,
     bool isIncludeMe = true,
   }) async {
-    final response = await _apiService.post<Map<String, dynamic>>(
-      '/conversations/participants',
-      data: {'conversationId': conversationId, 'isIncludeMe': isIncludeMe},
-    );
-
-    print('-------- getConversationParticipants response: $response');
-    print('-------- getConversationParticipants response: ${response['participants']}');
-
-    final conversationParticipantsResponse = (response['participants'] as List<dynamic>)
-        .map((e) => ConversationParticipantModel.fromJson(e as Map<String, dynamic>))
-        .toList();
-    print(
-      '-------- getConversationParticipants conversationParticipantsResponse: $conversationParticipantsResponse',
-    );
-
-    return conversationParticipantsResponse;
+    return await _apiService
+        .post<ApiResponse<List<ConversationParticipantModel>>>(
+          '/conversations/participants',
+          data: {'conversationId': conversationId, 'isIncludeMe': isIncludeMe},
+          parser: (response) =>
+              ApiResponse<List<ConversationParticipantModel>>.fromJson(
+                response,
+                (data) => (data as List<dynamic>)
+                    .map(
+                      (e) => ConversationParticipantModel.fromJson(
+                        e as Map<String, dynamic>,
+                      ),
+                    )
+                    .toList(),
+              ),
+        );
   }
 
-  Future<List<MessageModel>> getMessagesByConversationId({required String conversationId}) async {
-    final items = await getMessagesByConversationIdRaw(conversationId: conversationId);
-    return items.map((item) {
-      final senderId = (item['sender_id']?.toString()) ?? (item['sender']?['id']?.toString() ?? '');
-      final createdAtStr = (item['created_at'] as String?) ?? DateTime.now().toIso8601String();
-      return MessageModel(
-        id: item['id'] as String,
-        conversationId: conversationId,
-        senderId: senderId,
-        content: (item['content'] as String?) ?? '',
-        type: (item['type'] as String?) ?? 'text',
-        isRead: (item['is_read'] as bool?) ?? false,
-        createdAt: DateTime.parse(createdAtStr),
-      );
-    }).toList();
+  Future<ApiResponse<PaginatedResult<MessageModel>>>
+  getMessagesByConversationId({
+    required String conversationId,
+    int page = 1,
+    int limit = 20,
+  }) async {
+    return await _apiService.post<ApiResponse<PaginatedResult<MessageModel>>>(
+      '/messages/get',
+      data: {'conversationId': conversationId, 'page': page, 'limit': limit},
+      parser: (response) {
+        debugPrint(
+          'ChatRepository - getMessagesByConversationId() response: $response',
+          wrapWidth: 1024,
+        );
+        return ApiResponse<PaginatedResult<MessageModel>>.fromJson(response, (
+          data,
+        ) {
+          final pagination = data['pagination'] as Map<String, dynamic>? ?? {};
+          final messages = data['messages'] as List<dynamic>? ?? [];
+
+          final items = messages
+              .map(
+                (item) => MessageModel.fromJson(
+                  item is Map<String, dynamic> ? item : <String, dynamic>{},
+                ),
+              )
+              .toList();
+
+          return PaginatedResult(
+            items: items,
+            total: pagination['total'] as int? ?? 0,
+            page: pagination['page'] as int? ?? 1,
+            limit: pagination['limit'] as int? ?? 20,
+            totalPages: pagination['totalPages'] as int? ?? 1,
+          );
+        });
+      },
+    );
   }
 
   /// Send a message (kontrak baru: pakai conversationId dan endpoint backend)
-  Future<MessageModel> sendMessage({
+  Future<ApiResponse<MessageModel>> sendMessage({
     required String conversationId,
     required String content,
     String type = 'text',
   }) async {
-    return _apiService.post<MessageModel>(
+    return _apiService.post<ApiResponse<MessageModel>>(
       '/messages/send',
-      data: {'conversationId': conversationId, 'content': content, 'type': type},
+      data: {
+        'conversationId': conversationId,
+        'content': content,
+        'type': type,
+      },
       parser: (response) {
-        final data = response['data'] as Map<String, dynamic>;
-        final senderId =
-            (data['sender_id']?.toString()) ?? (data['sender']?['id']?.toString() ?? '');
-        final createdAtStr = (data['created_at'] as String?) ?? DateTime.now().toIso8601String();
-        return MessageModel(
-          id: data['id'] as String,
-          conversationId: conversationId,
-          senderId: senderId,
-          content: (data['content'] as String?) ?? '',
-          type: (data['type'] as String?) ?? 'text',
-          isRead: false,
-          createdAt: DateTime.parse(createdAtStr),
+        return ApiResponse<MessageModel>.fromJson(
+          response,
+          (data) => MessageModel.fromJson(data),
         );
       },
     );
   }
 
-  Future<String> uploadAttachment({required String filePath, required String type}) async {
+  Future<ApiResponse<String>> uploadAttachment({
+    required String filePath,
+    required String type,
+  }) async {
     final formData = FormData.fromMap({
       'file': await MultipartFile.fromFile(filePath),
       'type': type,
     });
-    return _apiService.post<String>(
+    return _apiService.post<ApiResponse<String>>(
       '/messages/upload',
       data: formData,
-      parser: (data) => (data['url'] as String? ?? '').toString(),
+      parser: (response) => ApiResponse<String>.fromJson(response, (data) {
+        return (data['url'] as String? ?? '').toString();
+      }),
     );
   }
 }

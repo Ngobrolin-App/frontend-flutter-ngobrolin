@@ -7,6 +7,7 @@ import 'package:iconify_flutter/icons/ic.dart';
 import 'package:iconify_flutter/icons/material_symbols.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:ngobrolin_app/core/widgets/states/empty_state.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/providers/socket_provider.dart';
 import '../../core/viewmodels/chat/chat_view_model.dart';
@@ -55,8 +56,14 @@ class _ChatScreenState extends State<ChatScreen> {
     _messageController.addListener(_onTextChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final chatViewModel = Provider.of<ChatViewModel>(context, listen: false);
-      final settingsViewModel = Provider.of<SettingsViewModel>(context, listen: false);
-      final socketProvider = Provider.of<SocketProvider>(context, listen: false);
+      final settingsViewModel = Provider.of<SettingsViewModel>(
+        context,
+        listen: false,
+      );
+      final socketProvider = Provider.of<SocketProvider>(
+        context,
+        listen: false,
+      );
       final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
 
       // Cek blokir (dua arah). Jika diblokir, jangan mulai chat.
@@ -73,7 +80,12 @@ class _ChatScreenState extends State<ChatScreen> {
         return;
       }
 
-      chatViewModel.initChat(widget.userId, widget.name, widget.avatarUrl, widget.chatId);
+      chatViewModel.initChat(
+        widget.userId,
+        widget.name,
+        widget.avatarUrl,
+        widget.chatId,
+      );
 
       // Pasang listener: join room sekali dan auto-scroll saat jumlah pesan berubah
       _vmListener = () {
@@ -85,7 +97,9 @@ class _ChatScreenState extends State<ChatScreen> {
         final count = chatViewModel.messages.length;
         if (count != _lastMessageCount) {
           _lastMessageCount = count;
-          WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+          WidgetsBinding.instance.addPostFrameCallback(
+            (_) => _scrollToBottom(),
+          );
         }
       };
       chatViewModel.addListener(_vmListener!);
@@ -127,7 +141,9 @@ class _ChatScreenState extends State<ChatScreen> {
       };
 
       _readStatusHandler = (data) {
-        debugPrint('-------- messages_read_status_updated on chat screen: $data');
+        debugPrint(
+          '-------- messages_read_status_updated on chat screen: $data',
+        );
         try {
           final convId = data['conversationId'] as String?;
           if (convId != null && convId == chatViewModel.conversationId) {
@@ -149,7 +165,9 @@ class _ChatScreenState extends State<ChatScreen> {
               .map((e) => e as Map<String, dynamic>)
               .toList();
           final myId = authViewModel.user?.id;
-          final isMeIncluded = participantsRaw.any((p) => (p['id']?.toString() ?? '') == myId);
+          final isMeIncluded = participantsRaw.any(
+            (p) => (p['id']?.toString() ?? '') == myId,
+          );
           final isPartnerIncluded = participantsRaw.any(
             (p) => (p['id']?.toString() ?? '') == widget.userId,
           );
@@ -168,7 +186,8 @@ class _ChatScreenState extends State<ChatScreen> {
         try {
           final convId = data['conversationId'] as String?;
           final userId = data['userId'] as String?;
-          if (convId == chatViewModel.conversationId && userId == widget.userId) {
+          if (convId == chatViewModel.conversationId &&
+              userId == widget.userId) {
             chatViewModel.setPartnerTyping(true);
           }
         } catch (_) {}
@@ -178,7 +197,8 @@ class _ChatScreenState extends State<ChatScreen> {
         try {
           final convId = data['conversationId'] as String?;
           final userId = data['userId'] as String?;
-          if (convId == chatViewModel.conversationId && userId == widget.userId) {
+          if (convId == chatViewModel.conversationId &&
+              userId == widget.userId) {
             chatViewModel.setPartnerTyping(false);
           }
         } catch (_) {}
@@ -298,7 +318,9 @@ class _ChatScreenState extends State<ChatScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${context.tr('failed_to_send_message')}: ${e.toString()}'),
+          content: Text(
+            '${context.tr('failed_to_send_message')}: ${e.toString()}',
+          ),
           backgroundColor: AppColors.warning,
         ),
       );
@@ -317,9 +339,10 @@ class _ChatScreenState extends State<ChatScreen> {
       appBar: AppBar(
         title: GestureDetector(
           onTap: () {
-            Navigator.of(
-              context,
-            ).pushNamed(AppRoutes.userProfile, arguments: {'userId': chatViewModel.partnerId});
+            Navigator.of(context).pushNamed(
+              AppRoutes.userProfile,
+              arguments: {'userId': chatViewModel.partnerId},
+            );
           },
           child: Row(
             children: [
@@ -348,12 +371,18 @@ class _ChatScreenState extends State<ChatScreen> {
                   if (chatViewModel.isPartnerTyping)
                     Text(
                       '${context.tr('typing')}...',
-                      style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                      ),
                     )
                   else if (chatViewModel.partnerStatus == 'online')
                     Text(
                       context.tr('online'),
-                      style: const TextStyle(fontSize: 12, color: Colors.greenAccent),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.greenAccent,
+                      ),
                     ),
                 ],
               ),
@@ -390,7 +419,10 @@ class _ChatScreenState extends State<ChatScreen> {
             child: (chatViewModel.isLoading && messages.isEmpty)
                 ? const Center(child: CircularProgressIndicator())
                 : messages.isEmpty
-                ? _buildEmptyState(context)
+                ? EmptyState(
+                    title: context.tr('no_messages'),
+                    subtitle: context.tr('start_new_chat'),
+                  )
                 : ListView.builder(
                     controller: _scrollController,
                     padding: const EdgeInsets.all(16),
@@ -422,13 +454,19 @@ class _ChatScreenState extends State<ChatScreen> {
               children: [
                 // Attachment button
                 IconButton(
-                  icon: Iconify(MaterialSymbols.attach_file, color: AppColors.grey),
+                  icon: Iconify(
+                    MaterialSymbols.attach_file,
+                    color: AppColors.grey,
+                  ),
                   onPressed: () async {
                     final choice = await showModalBottomSheet<String>(
                       context: context,
                       builder: (ctx) => SafeArea(
                         child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 24),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 24,
+                            horizontal: 24,
+                          ),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -438,7 +476,9 @@ class _ChatScreenState extends State<ChatScreen> {
                                   children: [
                                     const Icon(Icons.image),
                                     const SizedBox(width: 12),
-                                    Expanded(child: Text(context.tr('choose_image'))),
+                                    Expanded(
+                                      child: Text(context.tr('choose_image')),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -449,7 +489,9 @@ class _ChatScreenState extends State<ChatScreen> {
                                   children: [
                                     const Icon(Icons.insert_drive_file),
                                     const SizedBox(width: 12),
-                                    Expanded(child: Text(context.tr('choose_file'))),
+                                    Expanded(
+                                      child: Text(context.tr('choose_file')),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -472,7 +514,9 @@ class _ChatScreenState extends State<ChatScreen> {
                         _scrollToBottom();
                       }
                     } else if (choice == 'file') {
-                      final result = await FilePicker.platform.pickFiles(type: FileType.any);
+                      final result = await FilePicker.platform.pickFiles(
+                        type: FileType.any,
+                      );
                       final path = result?.files.first.path;
                       if (path != null) {
                         await Provider.of<ChatViewModel>(
@@ -497,7 +541,10 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                       filled: true,
                       fillColor: AppColors.lightGrey.withOpacity(0.3),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                     ),
                     textInputAction: TextInputAction.send,
                     onSubmitted: (_) => _sendMessage(),
@@ -511,34 +558,19 @@ class _ChatScreenState extends State<ChatScreen> {
                       ? const SizedBox(
                           width: 24,
                           height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accent),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.accent,
+                          ),
                         )
-                      : Iconify(MaterialSymbols.send_rounded, color: AppColors.accent),
+                      : Iconify(
+                          MaterialSymbols.send_rounded,
+                          color: AppColors.accent,
+                        ),
                   onPressed: chatViewModel.isLoading ? null : _sendMessage,
                 ),
               ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyState(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.asset('assets/empty_state/img-empty-state.png', width: 120, height: 120),
-          const SizedBox(height: 16),
-          Text(
-            context.tr('no_messages'),
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            context.tr('start_new_chat'),
-            style: const TextStyle(fontSize: 16, color: AppColors.grey),
           ),
         ],
       ),
@@ -552,13 +584,19 @@ class _ChatScreenState extends State<ChatScreen> {
         title: Text(context.tr('block_account')),
         content: Text(context.tr('are_you_sure_block')),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(context.tr('no'))),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(context.tr('no')),
+          ),
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
               _blockUser(context);
             },
-            child: Text(context.tr('yes'), style: const TextStyle(color: AppColors.warning)),
+            child: Text(
+              context.tr('yes'),
+              style: const TextStyle(color: AppColors.warning),
+            ),
           ),
         ],
       ),
@@ -566,23 +604,40 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _blockUser(BuildContext context) {
-    final settingsViewModel = Provider.of<SettingsViewModel>(context, listen: false);
+    final settingsViewModel = Provider.of<SettingsViewModel>(
+      context,
+      listen: false,
+    );
 
     // Block user using SettingsViewModel
-    settingsViewModel.blockAccount(widget.userId, widget.name, widget.name).then((success) {
-      if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${widget.name} has been blocked'), backgroundColor: Colors.green),
-        );
-        Navigator.of(context).pop();
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to block ${widget.name}'),
-            backgroundColor: AppColors.warning,
-          ),
-        );
-      }
-    });
+    settingsViewModel
+        .blockAccount(widget.userId, widget.name, widget.name)
+        .then((success) {
+          if (success) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  context.tr(
+                    settingsViewModel.successMessage ??
+                        'user_blocked_successfully',
+                  ),
+                ),
+                backgroundColor: Colors.green,
+              ),
+            );
+            Navigator.of(context).pop();
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  context.tr(
+                    settingsViewModel.errorMessage ?? 'failed_to_block_user',
+                  ),
+                ),
+                backgroundColor: AppColors.warning,
+              ),
+            );
+          }
+        });
   }
 }

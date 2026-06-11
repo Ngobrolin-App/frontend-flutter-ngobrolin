@@ -38,17 +38,32 @@ class AuthViewModel extends BaseViewModel {
     }
   }
 
-  /// Signs in a user with username or email and password
   Future<bool> signIn(String usernameOrEmail, String password) async {
     return await runBusyFuture(() async {
           try {
-            final authResponse = await _authRepository.signIn(usernameOrEmail, password);
+            final response = await _authRepository.signIn(
+              usernameOrEmail,
+              password,
+            );
+
+            final authResponse = response.data;
+
+            if (authResponse == null) {
+              setError('invalid_response');
+              return false;
+            }
+
+            setSuccess(response.message);
+
             _token = authResponse.token;
             _user = authResponse.user;
             _authenticated = true;
+
             await _registerFcmToken();
-            return true;
+
+            return response.isSuccess;
           } catch (e) {
+            print('AuthViewModel - signIn() error: $e');
             setError(e.toString());
             return false;
           }
@@ -65,18 +80,30 @@ class AuthViewModel extends BaseViewModel {
   }) async {
     return await runBusyFuture(() async {
           try {
-            final authResponse = await _authRepository.signUp(
+            final response = await _authRepository.signUp(
               username: username,
               email: email,
               name: name,
               password: password,
             );
+
+            final authResponse = response.data;
+            if (authResponse == null) {
+              setError('invalid_response');
+              return false;
+            }
+
+            setSuccess(response.message);
+
             _token = authResponse.token;
             _user = authResponse.user;
             _authenticated = true;
+
             await _registerFcmToken();
-            return true;
+
+            return response.isSuccess;
           } catch (e) {
+            print('AuthViewModel - signUp() error: $e');
             setError(e.toString());
             return false;
           }
@@ -88,7 +115,10 @@ class AuthViewModel extends BaseViewModel {
   Future<bool> forgotPassword(String email) async {
     return await runBusyFuture(() async {
           try {
-            return await _authRepository.forgotPassword(email);
+            final result = await _authRepository.forgotPassword(email);
+            final success = result.isSuccess;
+            setSuccess(result.message);
+            return success;
           } catch (e) {
             setError(e.toString());
             return false;
@@ -101,7 +131,13 @@ class AuthViewModel extends BaseViewModel {
   Future<bool> resetPassword(String token, String newPassword) async {
     return await runBusyFuture(() async {
           try {
-            return await _authRepository.resetPassword(token, newPassword);
+            final result = await _authRepository.resetPassword(
+              token,
+              newPassword,
+            );
+            setSuccess(result.message);
+            final success = result.isSuccess;
+            return success;
           } catch (e) {
             setError(e.toString());
             return false;
