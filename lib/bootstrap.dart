@@ -21,8 +21,6 @@ import 'core/di/service_locator.dart';
 import 'core/localization/app_localizations.dart';
 
 // Providers
-import 'core/providers/auth_provider.dart';
-import 'core/providers/settings_provider.dart';
 import 'core/providers/socket_provider.dart';
 
 // ViewModels
@@ -115,7 +113,9 @@ Future<void> bootstrap() async {
     );
 
     await flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(androidChannel);
   }
 
@@ -159,20 +159,29 @@ Future<void> bootstrap() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => SettingsProvider()),
-
         // ❌ JANGAN INIT SOCKET DI SINI
         ChangeNotifierProvider(create: (_) => SocketProvider()),
 
         ChangeNotifierProvider(create: (_) => serviceLocator<AuthViewModel>()),
-        ChangeNotifierProvider(create: (_) => serviceLocator<ProfileViewModel>()),
-        ChangeNotifierProvider(create: (_) => serviceLocator<UserProfileViewModel>()),
+        ChangeNotifierProvider(
+          create: (_) => serviceLocator<ProfileViewModel>(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => serviceLocator<UserProfileViewModel>(),
+        ),
         ChangeNotifierProvider(create: (_) => serviceLocator<ChatViewModel>()),
-        ChangeNotifierProvider(create: (_) => serviceLocator<ChatListViewModel>()),
-        ChangeNotifierProvider(create: (_) => serviceLocator<SearchUserViewModel>()),
-        ChangeNotifierProvider(create: (_) => serviceLocator<SettingsViewModel>()),
-        ChangeNotifierProvider(create: (_) => serviceLocator<BlockedUsersViewModel>()),
+        ChangeNotifierProvider(
+          create: (_) => serviceLocator<ChatListViewModel>(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => serviceLocator<SearchUserViewModel>(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => serviceLocator<SettingsViewModel>(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => serviceLocator<BlockedUsersViewModel>(),
+        ),
       ],
       child: const MyApp(),
     ),
@@ -197,7 +206,10 @@ class _MyAppState extends State<MyApp> {
     // FCM token refresh
     FirebaseMessaging.instance.onTokenRefresh.listen((token) async {
       if (mounted) {
-        final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+        final authViewModel = Provider.of<AuthViewModel>(
+          context,
+          listen: false,
+        );
         if (authViewModel.authenticated) {
           await serviceLocator<UserRepository>().registerFcmToken(token);
         }
@@ -208,8 +220,14 @@ class _MyAppState extends State<MyApp> {
     // POST FRAME INIT (AMAN)
     // =======================
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final socketProvider = Provider.of<SocketProvider>(context, listen: false);
-      final chatListViewModel = Provider.of<ChatListViewModel>(context, listen: false);
+      final socketProvider = Provider.of<SocketProvider>(
+        context,
+        listen: false,
+      );
+      final chatListViewModel = Provider.of<ChatListViewModel>(
+        context,
+        listen: false,
+      );
 
       // 🔥 SOCKET INIT DI SINI (ANTI BLACKSCREEN)
       try {
@@ -245,7 +263,7 @@ class _MyAppState extends State<MyApp> {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      locale: context.watch<SettingsProvider>().locale,
+      locale: context.watch<SettingsViewModel>().locale,
       theme: AppTheme.lightTheme,
       initialRoute: AppRoutes.splash,
       onGenerateRoute: AppRoutes.generateRoute,

@@ -6,7 +6,6 @@ import '../models/user_model.dart';
 import '../services/api/api_exception.dart';
 import '../services/api/api_service.dart';
 
-/// Repository for settings related operations
 class SettingsRepository {
   final ApiService _apiService;
   static const String _localeKey = 'app_locale';
@@ -14,21 +13,19 @@ class SettingsRepository {
   SettingsRepository({ApiService? apiService})
     : _apiService = apiService ?? ApiService();
 
-  /// Get app locale
   Future<Locale> getLocale() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final localeString = prefs.getString(_localeKey);
-      if (localeString == null) {
+      if (localeString == null || localeString.isEmpty) {
         return const Locale('id'); // Default locale
       }
       return Locale(localeString);
-    } catch (e) {
-      return const Locale('id'); // Default locale on error
+    } catch (_) {
+      return const Locale('id');
     }
   }
 
-  /// Set app locale
   Future<void> setLocale(Locale locale) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -38,38 +35,35 @@ class SettingsRepository {
     }
   }
 
-  /// Get private account setting
   Future<ApiResponse<UserModel>> getPrivateAccountSetting() async {
-    // Backend menggunakan POST /users/profile/get
     return _apiService.post<ApiResponse<UserModel>>(
       '/users/profile/get',
       parser: (response) {
         return ApiResponse<UserModel>.fromJson(response, (data) {
-          final user = UserModel.fromJson(data as Map<String, dynamic>);
-          return user;
+          final mappedData =
+              data as Map<String, dynamic>? ?? <String, dynamic>{};
+          return UserModel.fromJson(mappedData);
         });
       },
     );
   }
 
-  /// Update private account setting
   Future<ApiResponse<UserModel>> updatePrivateAccountSetting(
     bool isPrivate,
   ) async {
-    // Backend menggunakan POST /users/profile/update
     return _apiService.post<ApiResponse<UserModel>>(
       '/users/profile/update',
       data: {'isPrivate': isPrivate},
       parser: (response) {
         return ApiResponse<UserModel>.fromJson(response, (data) {
-          final user = UserModel.fromJson(data as Map<String, dynamic>);
-          return user;
+          final mappedData =
+              data as Map<String, dynamic>? ?? <String, dynamic>{};
+          return UserModel.fromJson(mappedData);
         });
       },
     );
   }
 
-  /// Get blocked users (POST /users/blocked/list) with pagination
   Future<ApiResponse<PaginatedResult<UserModel>>> getBlockedUsers({
     int page = 1,
     int limit = 20,
@@ -81,8 +75,12 @@ class SettingsRepository {
         return ApiResponse<PaginatedResult<UserModel>>.fromJson(response, (
           data,
         ) {
-          final blockedUsersList = data['blockedUsers'] as List<dynamic>? ?? [];
-          final pagination = data['pagination'] as Map<String, dynamic>? ?? {};
+          final mappedData =
+              data as Map<String, dynamic>? ?? <String, dynamic>{};
+          final blockedUsersList =
+              mappedData['blockedUsers'] as List<dynamic>? ?? [];
+          final pagination =
+              mappedData['pagination'] as Map<String, dynamic>? ?? {};
 
           final items = blockedUsersList
               .map(
@@ -94,17 +92,16 @@ class SettingsRepository {
 
           return PaginatedResult<UserModel>(
             items: items,
-            total: pagination['total'] as int? ?? 0,
-            page: pagination['page'] as int? ?? 1,
-            limit: pagination['limit'] as int? ?? 20,
-            totalPages: pagination['totalPages'] as int? ?? 1,
+            total: (pagination['total'] as int?) ?? 0,
+            page: (pagination['page'] as int?) ?? 1,
+            limit: (pagination['limit'] as int?) ?? 20,
+            totalPages: (pagination['totalPages'] as int?) ?? 1,
           );
         });
       },
     );
   }
 
-  /// Block a user (POST /users/block)
   Future<ApiResponse<void>> blockUser(String userId) async {
     return await _apiService.post<ApiResponse<void>>(
       '/users/block',
@@ -115,7 +112,6 @@ class SettingsRepository {
     );
   }
 
-  /// Unblock a user (POST /users/unblock)
   Future<ApiResponse<void>> unblockUser(String userId) async {
     return await _apiService.post<ApiResponse<void>>(
       '/users/unblock',
@@ -126,7 +122,6 @@ class SettingsRepository {
     );
   }
 
-  /// Check blocked (dua arah) via /users/get-user: 403 => blocked
   Future<bool> isUserBlocked(String userId) async {
     try {
       await _apiService.post<ApiResponse<UserModel>>(
@@ -134,8 +129,9 @@ class SettingsRepository {
         data: {'userId': userId},
         parser: (response) {
           return ApiResponse<UserModel>.fromJson(response, (data) {
-            final user = UserModel.fromJson(data as Map<String, dynamic>);
-            return user;
+            final mappedData =
+                data as Map<String, dynamic>? ?? <String, dynamic>{};
+            return UserModel.fromJson(mappedData);
           });
         },
       );
@@ -145,6 +141,7 @@ class SettingsRepository {
         if (e.statusCode == 403) {
           return true;
         }
+
         rethrow;
       }
       throw ApiException(message: e.toString());

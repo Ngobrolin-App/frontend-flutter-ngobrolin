@@ -19,129 +19,107 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch blocked users when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final blockedUsersViewModel = Provider.of<BlockedUsersViewModel>(
+      if (!mounted) return;
+      Provider.of<BlockedUsersViewModel>(
         context,
         listen: false,
-      );
-      blockedUsersViewModel.fetchBlockedUsers();
+      ).fetchBlockedUsers();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<BlockedUsersViewModel>(
-      builder: (context, blockedUsersViewModel, child) {
-        final blockedUsers = blockedUsersViewModel.blockedUsers;
-        final isLoading = blockedUsersViewModel.isLoading;
+    // OPTIMASI: Pindahkan Scaffold ke luar Consumer agar tidak ikut rebuild menyeluruh
+    return Scaffold(
+      appBar: AppBar(title: Text(context.tr('blocked_users'))),
+      body: Consumer<BlockedUsersViewModel>(
+        builder: (context, blockedUsersViewModel, _) {
+          if (blockedUsersViewModel.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-        return Scaffold(
-          appBar: AppBar(title: Text(context.tr('blocked_users'))),
-          body: isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : blockedUsers.isEmpty
-              ? EmptyState(
-                  image: const Iconify(
-                    Ic.round_block,
-                    size: 80,
-                    color: AppColors.lightGrey,
-                  ),
-                  title: context.tr('no_blocked_users'),
-                  subtitle: context.tr('no_blocked_users_description'),
-                )
-              : ListView.separated(
-                  itemCount: blockedUsers.length,
-                  separatorBuilder: (context, index) =>
-                      const Divider(height: 1),
-                  itemBuilder: (context, index) {
-                    final user = blockedUsers[index];
+          final blockedUsers = blockedUsersViewModel.blockedUsers;
 
-                    return UserListItem(
-                      user: user,
-                      onTap: () {
-                        // No action on tap for blocked users
-                      },
-                      onActionTap: () =>
-                          _unblockUser(context, user.id, blockedUsersViewModel),
-                      actionText: context.tr('unblock'),
-                      actionWidget: const Icon(
-                        Icons.lock_open,
-                        color: Colors.white,
-                        size: 16,
-                      ),
-                    );
-                  },
+          if (blockedUsers.isEmpty) {
+            return EmptyState(
+              image: const Iconify(
+                Ic.round_block,
+                size: 80,
+                color: AppColors.lightGrey,
+              ),
+              title: context.tr('no_blocked_users'),
+              subtitle: context.tr('no_blocked_users_description'),
+            );
+          }
+
+          return ListView.separated(
+            itemCount: blockedUsers.length,
+            separatorBuilder: (context, index) => const Divider(height: 1),
+            itemBuilder: (context, index) {
+              final user = blockedUsers[index];
+
+              return UserListItem(
+                user: user,
+                onTap: () {},
+                onActionTap: () => _unblockUser(user.id, blockedUsersViewModel),
+                actionText: context.tr('unblock'),
+                actionWidget: const Icon(
+                  Icons.lock_open,
+                  color: Colors.white,
+                  size: 16,
                 ),
-        );
-      },
+              );
+            },
+          );
+        },
+      ),
     );
   }
 
-  void _unblockUser(
-    BuildContext context,
-    String userId,
-    BlockedUsersViewModel blockedUsersViewModel,
-  ) {
+  void _unblockUser(String userId, BlockedUsersViewModel viewModel) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.tr('unblock_user')),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(dialogContext.tr('unblock_user')),
         content: Text(
-          context.tr('unblock_user_confirmation'),
+          dialogContext.tr('unblock_user_confirmation'),
           style: const TextStyle(fontSize: 16),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(context.tr('cancel')),
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(dialogContext.tr('cancel')),
           ),
           TextButton(
             onPressed: () async {
-              Navigator.of(context).pop();
+              // Tutup dialog terlebih dahulu menggunakan dialogContext
+              Navigator.of(dialogContext).pop();
 
-              // Unblock the user
-              final success = await blockedUsersViewModel.unblockUser(userId);
+              // Eksekusi API Unblock
+              final success = await viewModel.unblockUser(userId);
 
-              if (success) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      context.tr(
-                        blockedUsersViewModel.successMessage ??
-                            'user_unblocked',
-                      ),
-                    ),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      context.tr(
-                        blockedUsersViewModel.errorMessage ??
-                            'failed_to_unblock_user',
-                      ),
-                    ),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
-              // Show confirmation
+              // Amankan pengecekan jika state widget sudah tidak aktif/dihancurkan
+              if (!mounted) return;
+
+              // Ambil pesan dari view model atau gunakan fallback lokalisasi bahasa
+              final message = success
+                  ? context.tr(viewModel.successMessage ?? 'user_unblocked')
+                  : context.tr(
+                      viewModel.errorMessage ?? 'failed_to_unblock_user',
+                    );
+
+              // Tampilkan notifikasi tunggal secara bersih
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(
-                    success
-                        ? context.tr('user_unblocked')
-                        : 'Failed to unblock user',
-                  ),
+                  content: Text(message),
                   backgroundColor: success ? Colors.green : Colors.red,
+                  behavior: SnackBarBehavior.floating,
                 ),
               );
             },
             child: Text(
-              context.tr('unblock'),
+              dialogContext.tr('unblock'),
               style: const TextStyle(color: AppColors.primary),
             ),
           ),

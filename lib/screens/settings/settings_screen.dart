@@ -6,7 +6,6 @@ import 'package:iconify_flutter/icons/material_symbols.dart';
 import 'package:iconify_flutter/icons/ic.dart';
 import 'package:iconify_flutter/icons/mdi.dart';
 import '../../core/localization/app_localizations.dart';
-import '../../core/providers/settings_provider.dart';
 import '../../core/viewmodels/settings/settings_view_model.dart';
 import '../../routes/app_routes.dart';
 import '../../theme/app_colors.dart';
@@ -22,212 +21,180 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
-    // Initialize settings
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final settingsViewModel = Provider.of<SettingsViewModel>(
-        context,
-        listen: false,
-      );
-      settingsViewModel.initSettings();
+      if (!mounted) return;
+      Provider.of<SettingsViewModel>(context, listen: false).initSettings();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final settingsProvider = Provider.of<SettingsProvider>(context);
-    final settingsViewModel = Provider.of<SettingsViewModel>(context);
-
-    return Scaffold(
-      appBar: AppBar(title: Text(context.tr('settings'))),
-      body: settingsViewModel.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              children: [
-                // Language settings
-                ListTile(
-                  title: Text(context.tr('app_language')),
-                  subtitle: Text(
-                    settingsViewModel.locale.languageCode == 'en'
-                        ? 'English'
-                        : 'Indonesia',
-                  ),
-                  leading: const Iconify(Fa.language, color: AppColors.text),
-                  trailing: const Iconify(
-                    MaterialSymbols.arrow_forward_ios_rounded,
-                    color: AppColors.text,
-                    size: 16,
-                  ),
-                  onTap: () => _showLanguageDialog(context),
-                ),
-
-                const Divider(),
-
-                // Private account toggle
-                SwitchListTile(
-                  title: Text(context.tr('private_account')),
-                  subtitle: Text(context.tr('private_account_description')),
-                  value: settingsViewModel.privateAccount,
-                  onChanged: (value) async {
-                    // Update both old and new providers
-                    await settingsViewModel.togglePrivateAccount(value);
-                    settingsProvider.togglePrivateAccount(
-                      settingsViewModel.privateAccount,
-                    );
-                  },
-                  secondary: const Iconify(
-                    MaterialSymbols.lock_outline,
-                    color: AppColors.text,
-                  ),
-                ),
-
-                const Divider(),
-
-                // Blocked users
-                ListTile(
-                  title: Text(context.tr('blocked_users')),
-                  leading: const Iconify(Ic.round_block, color: AppColors.text),
-                  trailing: const Iconify(
-                    MaterialSymbols.arrow_forward_ios_rounded,
-                    color: AppColors.text,
-                    size: 16,
-                  ),
-                  onTap: () {
-                    Navigator.of(context).pushNamed(AppRoutes.blockedUsers);
-                  },
-                ),
-
-                const Divider(),
-
-                // About app
-                ListTile(
-                  title: Text(context.tr('about_ngobrolin')),
-                  leading: const Iconify(
-                    Mdi.information_outline,
-                    color: AppColors.text,
-                  ),
-                  onTap: () {
-                    _showAboutDialog(context);
-                  },
-                ),
-              ],
-            ),
-    );
-  }
-
-  void _showLanguageDialog(BuildContext context) {
-    final settingsProvider = Provider.of<SettingsProvider>(
-      context,
-      listen: false,
-    );
+    // OPTIMASI: Jangan dengarkan perubahan (listen: false) di tingkat atas build
+    // untuk mencegah pemborosan siklus rendering Scaffold & AppBar.
     final settingsViewModel = Provider.of<SettingsViewModel>(
       context,
       listen: false,
     );
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.tr('app_language')),
-        content: RadioGroup<String>(
-          groupValue: settingsViewModel.locale.languageCode,
-          onChanged: (value) {
-            if (value != null) {
-              // Update both old and new providers
-              settingsViewModel.setLocale(Locale(value));
-              settingsProvider.setLocale(Locale(value));
-              Navigator.of(context).pop();
-            }
-          },
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
+    return Scaffold(
+      appBar: AppBar(title: Text(context.tr('settings'))),
+      body: Selector<SettingsViewModel, bool>(
+        selector: (_, vm) => vm.isLoading,
+        builder: (context, isLoading, _) {
+          if (isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          return ListView(
             children: [
-              ListTile(
-                title: Text(context.tr('English')),
-                leading: Radio<String>(value: 'en'),
+              // Language settings area
+              Selector<SettingsViewModel, Locale>(
+                selector: (_, vm) => vm.locale,
+                builder: (context, locale, _) {
+                  return ListTile(
+                    title: Text(context.tr('app_language')),
+                    subtitle: Text(
+                      locale.languageCode == 'en' ? 'English' : 'Indonesia',
+                    ),
+                    leading: const Iconify(Fa.language, color: AppColors.text),
+                    trailing: const Iconify(
+                      MaterialSymbols.arrow_forward_ios_rounded,
+                      color: AppColors.text,
+                      size: 16,
+                    ),
+                    onTap: () => _showLanguageDialog(context),
+                  );
+                },
               ),
+
+              const Divider(),
+
+              // OPTIMASI: Isolasi SwitchListTile menggunakan Selector khusus
+              // Widget hanya akan rebuild jika nilai 'privateAccount' benar-benar berubah.
+              Selector<SettingsViewModel, bool>(
+                selector: (_, vm) => vm.privateAccount,
+                builder: (context, isPrivate, _) {
+                  return SwitchListTile(
+                    title: Text(context.tr('private_account')),
+                    subtitle: Text(context.tr('private_account_description')),
+                    value: isPrivate,
+                    onChanged: (value) async {
+                      await settingsViewModel.togglePrivateAccount(value);
+                    },
+                    secondary: const Iconify(
+                      MaterialSymbols.lock_outline,
+                      color: AppColors.text,
+                    ),
+                  );
+                },
+              ),
+
+              const Divider(),
+
+              // Blocked users link
               ListTile(
-                title: Text(context.tr('Indonesia')),
-                leading: Radio<String>(value: 'id'),
+                title: Text(context.tr('blocked_users')),
+                leading: const Iconify(Ic.round_block, color: AppColors.text),
+                trailing: const Iconify(
+                  MaterialSymbols.arrow_forward_ios_rounded,
+                  color: AppColors.text,
+                  size: 16,
+                ),
+                onTap: () {
+                  Navigator.of(context).pushNamed(AppRoutes.blockedUsers);
+                },
+              ),
+
+              const Divider(),
+
+              // About application
+              ListTile(
+                title: Text(context.tr('about_ngobrolin')),
+                leading: const Iconify(
+                  Mdi.information_outline,
+                  color: AppColors.text,
+                ),
+                onTap: () {
+                  _showAboutDialog(context);
+                },
               ),
             ],
-          ),
-        ),
-        // Column(
-        //   mainAxisSize: MainAxisSize.min,
-        //   children: [
-        //     // English option
-        //     ListTile(
-        //       title: const Text('English'),
-        //       leading: Radio<String>(
-        //         value: 'en',
-        //         groupValue: settingsViewModel.locale.languageCode,
-        //         onChanged: (value) {
-        //           if (value != null) {
-        //             // Update both old and new providers
-        //             settingsViewModel.setLocale(const Locale('en'));
-        //             settingsProvider.setLocale(const Locale('en'));
-        //             Navigator.of(context).pop();
-        //           }
-        //         },
-        //       ),
-        //       onTap: () {
-        //         // Update both old and new providers
-        //         settingsViewModel.setLocale(const Locale('en'));
-        //         settingsProvider.setLocale(const Locale('en'));
-        //         Navigator.of(context).pop();
-        //       },
-        //     ),
+          );
+        },
+      ),
+    );
+  }
 
-        //     // Indonesian option
-        //     ListTile(
-        //       title: const Text('Indonesia'),
-        //       leading: Radio<String>(
-        //         value: 'id',
-        //         groupValue: settingsViewModel.locale.languageCode,
-        //         onChanged: (value) {
-        //           if (value != null) {
-        //             // Update both old and new providers
-        //             settingsViewModel.setLocale(const Locale('id'));
-        //             settingsProvider.setLocale(const Locale('id'));
-        //             Navigator.of(context).pop();
-        //           }
-        //         },
-        //       ),
-        //       onTap: () {
-        //         // Update both old and new providers
-        //         settingsViewModel.setLocale(const Locale('id'));
-        //         settingsProvider.setLocale(const Locale('id'));
-        //         Navigator.of(context).pop();
-        //       },
-        //     ),
-        //   ],
-        // ),
+  void _showLanguageDialog(BuildContext context) {
+    final settingsViewModel = Provider.of<SettingsViewModel>(
+      context,
+      listen: false,
+    );
+    final currentLanguageCode = settingsViewModel.locale.languageCode;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(dialogContext.tr('app_language')),
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            RadioListTile<String>(
+              title: Text(dialogContext.tr('English')),
+              value: 'en',
+              groupValue: currentLanguageCode,
+              onChanged: (value) =>
+                  _changeLanguage(dialogContext, value, settingsViewModel),
+            ),
+            RadioListTile<String>(
+              title: Text(dialogContext.tr('Indonesia')),
+              value: 'id',
+              groupValue: currentLanguageCode,
+              onChanged: (value) =>
+                  _changeLanguage(dialogContext, value, settingsViewModel),
+            ),
+          ],
+        ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(context.tr('cancel')),
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(dialogContext.tr('cancel')),
           ),
         ],
       ),
     );
   }
 
+  void _changeLanguage(
+    BuildContext dialogContext,
+    String? value,
+    SettingsViewModel viewModel,
+  ) {
+    if (value != null) {
+      final newLocale = Locale(value);
+      viewModel.setLocale(newLocale);
+      Navigator.of(dialogContext).pop();
+    }
+  }
+
   void _showAboutDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AboutDialog(
-        applicationName: context.tr('app_name'),
+      builder: (dialogContext) => AboutDialog(
+        applicationName: dialogContext.tr('app_name'),
         applicationVersion: '1.0.0',
         applicationIcon: Image.asset(
           'assets/apps_logo/app-icon-ngobrolin-enhanced-transparent.png',
           width: 50,
           height: 50,
+          errorBuilder: (_, __, ___) =>
+              const Icon(Icons.apps, size: 50, color: AppColors.primary),
         ),
-        applicationLegalese: context.tr('2025_ngobrolin'),
+        applicationLegalese: dialogContext.tr('2025_ngobrolin'),
         children: [
           const SizedBox(height: 16),
-          Text(context.tr('about_ngobrolin_description')),
+          Text(dialogContext.tr('about_ngobrolin_description')),
         ],
       ),
     );

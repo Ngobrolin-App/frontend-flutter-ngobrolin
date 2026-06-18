@@ -10,38 +10,39 @@ class SocketProvider extends ChangeNotifier {
   bool _connected = false;
   bool get connected => _connected;
 
+  bool _authenticated = false;
+  bool get authenticated => _authenticated;
+
   Future<void> init({String? token}) async {
     final baseUrl = dotenv.env['WS_BASE_URL'] ?? 'http://localhost:3000';
-    developer.log(
-      'SocketProvider.init: baseUrl=$baseUrl',
-      name: 'SocketProvider',
-    );
 
     String? authToken = token;
     if (authToken == null || authToken.isEmpty) {
       final prefs = await SharedPreferences.getInstance();
       authToken = prefs.getString('auth_token');
     }
+
+    // SOLUSI: Bersihkan koneksi lama dan pendengar event lama secara menyeluruh
+    _resetState();
+    _socket.clearListeners();
+    _socket.disconnect();
+
     developer.log(
-      'SocketProvider.init: token ${authToken != null && authToken.isNotEmpty ? 'present' : 'null'}',
+      'SocketProvider.init: Initializing new socket connection',
       name: 'SocketProvider',
     );
-
-    // Putuskan koneksi lama sebelum membuat yang baru
-    if (_socket.isConnected) {
-      developer.log(
-        'SocketProvider.init: disconnecting previous socket',
-        name: 'SocketProvider',
-      );
-      _socket.disconnect();
-    }
-
     _socket.connect(url: baseUrl, token: authToken);
 
+    // Set up core listeners
+    _setupSocketListeners(authToken);
+  }
+
+  void _setupSocketListeners(String? authToken) {
     _socket.on('connect', (_) {
       developer.log('SocketProvider: connected', name: 'SocketProvider');
       _connected = true;
 
+      // Gunakan fallback emit ini HANYA JIKA backend tidak membaca extraHeaders saat handshake
       if (authToken != null && authToken.isNotEmpty) {
         _socket.emit('authenticate', {'token': authToken});
       }
@@ -52,55 +53,68 @@ class SocketProvider extends ChangeNotifier {
     _socket.on('disconnect', (_) {
       developer.log('SocketProvider: disconnected', name: 'SocketProvider');
       _connected = false;
+      _authenticated = false; // SOLUSI: Reset status auth saat koneksi terputus
+
       notifyListeners();
     });
 
-    // Contoh event pesan
-    _socket.on('message', (data) {
+    _socket.on('authenticated', (data) {
       developer.log(
-        'SocketProvider: Incoming message: $data',
+        'SocketProvider: authenticated successfully',
         name: 'SocketProvider',
       );
-      // handle incoming message
+      _authenticated = true;
+      notifyListeners();
+    });
+
+    _socket.on('auth_error', (data) {
+      developer.log(
+        'SocketProvider: auth_error - $data',
+        name: 'SocketProvider',
+      );
+      _connected = false;
+      _authenticated = false;
       notifyListeners();
     });
   }
 
+  void _resetState() {
+    _connected = false;
+    _authenticated = false;
+  }
+
+  // Passthrough methods untuk UI / Screen Components
   void on(String event, void Function(dynamic data) handler) {
     _socket.on(event, handler);
   }
 
-  // Tambah off untuk melepas listener dari luar
   void off(String event, [dynamic handler]) {
     _socket.off(event, handler);
   }
 
-  // Join conversation room passthrough
   void joinConversation(String conversationId) {
     _socket.joinConversation(conversationId);
   }
 
-  // Leave conversation room passthrough
   void leaveConversation(String conversationId) {
     _socket.leaveConversation(conversationId);
   }
 
-  // Emit typing start event
   void sendTypingStart(String conversationId) {
     _socket.emit('typing_start', {'conversationId': conversationId});
   }
 
-  // Emit typing stop event
   void sendTypingStop(String conversationId) {
     _socket.emit('typing_stop', {'conversationId': conversationId});
   }
 
-  // Emit user status update
   void updateStatus(String status) {
     _socket.emit('update_status', {'status': status});
   }
 
-  void disposeSocket() {
+  @override
+  void dispose() {
     _socket.disconnect();
+    super.dispose();
   }
 }

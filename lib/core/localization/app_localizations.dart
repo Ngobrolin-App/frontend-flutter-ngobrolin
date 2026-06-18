@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'language/en_us.dart';
 import 'language/id_id.dart';
+import 'dart:developer' as developer;
 
 class AppLocalizations {
   final Locale locale;
@@ -12,26 +13,41 @@ class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
 
-  static final Map<String, Map<String, String>> _localizedValues = {'en': enUS, 'id': idID};
+  static final Map<String, Map<String, String>> _localizedValues = {
+    'en': enUS,
+    'id': idID,
+  };
 
   String translate(String key) {
     return _localizedValues[locale.languageCode]?[key] ?? key;
   }
 
-  String formatDate(DateTime date) {
+  String formatDate(DateTime? date) {
+    if (date == null) return '';
+
+    // Konversi ke waktu lokal HP pengguna
+    final localDate = date.toLocal();
     final DateFormat formatter = DateFormat.yMMMd(locale.toString());
-    return formatter.format(date);
+    return formatter.format(localDate);
   }
 
   String formatTime(DateTime time) {
+    developer.log(
+      'AppLocalizations - formatTime - time: $time',
+      name: 'AppLocalizations',
+    );
+
+    final DateTime localTime = time.toLocal();
     final DateFormat formatter = DateFormat.Hm(locale.toString());
-    return formatter.format(time);
+    return formatter.format(localTime);
   }
 }
 
-class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override

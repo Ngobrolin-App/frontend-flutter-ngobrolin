@@ -3,6 +3,8 @@ import '../../repositories/user_repository.dart';
 import '../base_view_model.dart';
 import 'dart:developer' as developer;
 
+/// ViewModel responsible for executing remote user lookup requests,
+/// filtering participant matches, and orchestrating list pagination.
 class SearchUserViewModel extends BaseViewModel {
   final UserRepository _userRepository;
 
@@ -12,7 +14,7 @@ class SearchUserViewModel extends BaseViewModel {
   String _searchQuery = '';
   String get searchQuery => _searchQuery;
 
-  // Pagination state
+  // Pagination states
   int _page = 1;
   final int _limit = 20;
   bool _hasMore = true;
@@ -23,16 +25,16 @@ class SearchUserViewModel extends BaseViewModel {
   SearchUserViewModel({UserRepository? userRepository})
     : _userRepository = userRepository ?? UserRepository();
 
-  /// Sets the search query and triggers a search
+  /// Sets the real-time search criteria string and resets query indices.
   void setSearchQuery(String query) {
     _searchQuery = query;
-    // Reset pagination when query changes
     _page = 1;
     _hasMore = true;
+
     searchUsers();
   }
 
-  /// Searches for users based on the current query (first page)
+  /// Queries the API engine to gather matching user records matching page 1.
   Future<bool> searchUsers() async {
     return await runBusyFuture(() async {
           try {
@@ -43,14 +45,15 @@ class SearchUserViewModel extends BaseViewModel {
             );
 
             final paginatedResult = result.data;
-
             final userResults = paginatedResult?.items ?? [];
             _users = userResults;
 
-            // Determine if more pages are available
+            // Evaluates remote limits to determine additional sequential pages availability
             _hasMore =
                 (paginatedResult?.page ?? 0) <
                 (paginatedResult?.totalPages ?? 0);
+
+            notifyListeners();
             return true;
           } catch (e) {
             developer.log(
@@ -64,7 +67,7 @@ class SearchUserViewModel extends BaseViewModel {
         false;
   }
 
-  /// Loads next page and appends to list
+  /// Appends supplementary search matching results down the collection index.
   Future<void> loadMoreSearchUser() async {
     if (_isLoadingMore || !_hasMore) return;
     _isLoadingMore = true;
@@ -84,13 +87,16 @@ class SearchUserViewModel extends BaseViewModel {
       _users.addAll(userResults);
       _hasMore =
           (paginatedResult?.page ?? 0) < (paginatedResult?.totalPages ?? 0);
+
+      notifyListeners();
     } catch (e) {
       developer.log(
         'SearchUserViewModel - loadMoreSearchUser() error: $e',
         name: 'SearchUserViewModel',
       );
       setError(e.toString());
-      // Rollback page increment on error
+
+      // Rollback current page pointer safely upon experiencing pipeline transmission drops
       _page = (_page > 1) ? _page - 1 : 1;
     } finally {
       _isLoadingMore = false;

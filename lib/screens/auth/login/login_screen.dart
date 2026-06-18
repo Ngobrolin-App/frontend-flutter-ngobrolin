@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:ngobrolin_app/core/providers/socket_provider.dart';
 import 'package:provider/provider.dart';
 import '../../../core/localization/app_localizations.dart';
-import '../../../core/providers/auth_provider.dart';
 import '../../../core/viewmodels/auth/auth_view_model.dart';
 import '../../../core/widgets/buttons/primary_button.dart';
 import '../../../core/widgets/inputs/custom_text_field.dart';
@@ -31,70 +30,68 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _login() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
-      try {
-        final success = await authViewModel.signIn(
-          _usernameOrEmailController.text,
-          _passwordController.text,
-        );
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
 
-        // Sinkronisasi state ke provider lama agar tetap konsisten
-        await authProvider.signIn(
-          _usernameOrEmailController.text,
-          _passwordController.text,
+    try {
+      final inputCredential = _usernameOrEmailController.text.trim();
+      final inputPassword = _passwordController.text;
+
+      // 1. Jalankan autentikasi utama melalui ViewModel
+      final success = await authViewModel.signIn(
+        inputCredential,
+        inputPassword,
+      );
+
+      if (!mounted) return;
+
+      if (success) {
+        // 3. Inisialisasi WebSocket menggunakan token dari ViewModel
+        final socketProvider = Provider.of<SocketProvider>(
+          context,
+          listen: false,
         );
+        await socketProvider.init(token: authViewModel.token);
 
         if (!mounted) return;
 
-        if (success) {
-          final socketProvider = Provider.of<SocketProvider>(
-            context,
-            listen: false,
-          );
-          await socketProvider.init(token: authViewModel.token);
-
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  context.tr(authViewModel.successMessage ?? 'login_success'),
-                ),
-                backgroundColor: AppColors.accent,
-              ),
-            );
-            Navigator.of(
-              context,
-            ).pushNamedAndRemoveUntil(AppRoutes.main, (route) => false);
-          }
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                context.tr(authViewModel.errorMessage ?? 'login_failed'),
-              ),
-              backgroundColor: AppColors.warning,
-            ),
-          );
-        }
-      } catch (e) {
-        developer.log('LoginScreen - _login() error: $e', name: 'LoginScreen');
-        if (!mounted) return;
+        final successMsg = authViewModel.successMessage ?? 'login_success';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString()),
+            content: Text(context.tr(successMsg)),
+            backgroundColor: AppColors.accent,
+          ),
+        );
+
+        Navigator.of(
+          context,
+        ).pushNamedAndRemoveUntil(AppRoutes.main, (route) => false);
+      } else {
+        final errorMsg = authViewModel.errorMessage ?? 'login_failed';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.tr(errorMsg)),
             backgroundColor: AppColors.warning,
           ),
         );
       }
+    } catch (e) {
+      developer.log('LoginScreen - _login() error: $e', name: 'LoginScreen');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString()),
+          backgroundColor: AppColors.warning,
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final authViewModel = Provider.of<AuthViewModel>(context);
+    // OPTIMASI: Mendengarkan perubahan properti 'isLoading' saja untuk efisiensi rebuild UI
+    final isLoading = context.select<AuthViewModel, bool>((vm) => vm.isLoading);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -114,14 +111,19 @@ class _LoginScreenState extends State<LoginScreen> {
                     'assets/apps_logo/app-icon-ngobrolin-enhanced-transparent.png',
                     width: 200,
                     height: 200,
+                    errorBuilder: (context, error, stackTrace) => const Icon(
+                      Icons.image_not_supported,
+                      size: 120,
+                      color: Colors.grey,
+                    ),
                   ),
 
                   const SizedBox(height: 16),
 
-                  // App name
+                  // Title
                   Text(
                     context.tr('sign_in'),
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
                       color: AppColors.primary,
@@ -135,8 +137,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     hintText: context.tr('enter_username_or_email'),
                     labelText: context.tr('username_or_email'),
                     prefixIcon: const Icon(Icons.person_outline),
+                    enabled: !isLoading, // Kunci input saat loading berjalan
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
+                      if (value == null || value.trim().isEmpty) {
                         return context.tr('please_enter_username_or_email');
                       }
                       return null;
@@ -150,6 +153,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: _passwordController,
                     hintText: context.tr('enter_password'),
                     labelText: context.tr('password'),
+                    enabled: !isLoading, // Kunci input saat loading berjalan
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return context.tr('please_enter_password');
@@ -157,7 +161,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       return null;
                     },
                     textInputAction: TextInputAction.done,
-                    onSubmitted: (_) => _login(),
+                    onSubmitted: isLoading ? null : (_) => _login(),
                   ),
                   const SizedBox(height: 8),
 
@@ -165,11 +169,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: () {
-                        Navigator.of(
-                          context,
-                        ).pushNamed(AppRoutes.forgotPassword);
-                      },
+                      onPressed: isLoading
+                          ? null
+                          : () {
+                              Navigator.of(
+                                context,
+                              ).pushNamed(AppRoutes.forgotPassword);
+                            },
                       child: Text(
                         context.tr('forgot_password'),
                         style: const TextStyle(color: AppColors.primary),
@@ -181,12 +187,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   // Login button
                   PrimaryButton(
                     text: context.tr('sign_in'),
-                    onPressed: authViewModel.isLoading
-                        ? null
-                        : () {
-                            _login();
-                          },
-                    isLoading: authViewModel.isLoading,
+                    onPressed: isLoading ? null : _login,
+                    isLoading: isLoading,
                   ),
                   const SizedBox(height: 24),
 
@@ -196,9 +198,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       Text(context.tr('dont_have_account')),
                       TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pushNamed(AppRoutes.register);
-                        },
+                        onPressed: isLoading
+                            ? null
+                            : () {
+                                Navigator.of(
+                                  context,
+                                ).pushNamed(AppRoutes.register);
+                              },
                         child: Text(
                           context.tr('register'),
                           style: const TextStyle(

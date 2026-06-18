@@ -30,67 +30,63 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   }
 
   Future<void> _submit() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      if (widget.token == null || widget.token!.isEmpty) {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    if (widget.token == null || widget.token!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.tr('invalid_token')),
+          backgroundColor: AppColors.warning,
+        ),
+      );
+      return;
+    }
+
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+
+    try {
+      final success = await authViewModel.resetPassword(
+        widget.token!,
+        _passwordController.text
+            .trim(), // Opsional: Tambahkan .trim() jika spasi diabaikan backend
+      );
+
+      if (!mounted) return;
+
+      if (success) {
+        final msgKey =
+            authViewModel.successMessage ?? 'password_reset_success_desc';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(context.tr('invalid_token')),
-            backgroundColor: AppColors.warning,
+            content: Text(context.tr(msgKey)),
+            backgroundColor: AppColors.accent,
           ),
         );
-        return;
-      }
-
-      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-
-      try {
-        final success = await authViewModel.resetPassword(
-          widget.token!,
-          _passwordController.text,
-        );
-
-        if (!mounted) return;
-
-        if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                context.tr(
-                  authViewModel.successMessage ?? 'password_reset_success_desc',
-                ),
-              ),
-              backgroundColor: AppColors.accent,
-            ),
-          );
-          setState(() {
-            _isSuccess = true;
-          });
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                authViewModel.errorMessage ??
-                    context.tr('reset_password_failed'),
-              ),
-              backgroundColor: AppColors.warning,
-            ),
-          );
-        }
-      } catch (e) {
-        if (!mounted) return;
+        setState(() {
+          _isSuccess = true;
+        });
+      } else {
+        final errorMsg =
+            authViewModel.errorMessage ?? context.tr('reset_password_failed');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: AppColors.warning,
-          ),
+          SnackBar(content: Text(errorMsg), backgroundColor: AppColors.warning),
         );
       }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString()),
+          backgroundColor: AppColors.warning,
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final authViewModel = Provider.of<AuthViewModel>(context);
+    // OPTIMASI: Hanya mengamati perubahan status isLoading
+    final isLoading = context.select<AuthViewModel, bool>((vm) => vm.isLoading);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -105,14 +101,14 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             padding: const EdgeInsets.all(24.0),
             child: _isSuccess
                 ? _buildSuccessState(context)
-                : _buildFormState(context, authViewModel),
+                : _buildFormState(context, isLoading),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildFormState(BuildContext context, AuthViewModel authViewModel) {
+  Widget _buildFormState(BuildContext context, bool isLoading) {
     return Form(
       key: _formKey,
       child: Column(
@@ -124,6 +120,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             'assets/apps_logo/app-icon-ngobrolin-enhanced-transparent.png',
             width: 150,
             height: 150,
+            errorBuilder: (context, error, stackTrace) => const Icon(
+              Icons.image_not_supported,
+              size: 100,
+              color: Colors.grey,
+            ),
           ),
           const SizedBox(height: 16),
 
@@ -148,11 +149,12 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             controller: _passwordController,
             hintText: context.tr('enter_new_password'),
             labelText: context.tr('new_password'),
+            enabled: !isLoading, // Cegah input saat loading berjalan
             validator: (value) {
-              if (value == null || value.isEmpty) {
+              if (value == null || value.trim().isEmpty) {
                 return context.tr('please_enter_password');
               }
-              if (value.length < 6) {
+              if (value.trim().length < 6) {
                 return context.tr('password_must_be_at_least_6_characters');
               }
               return null;
@@ -165,24 +167,25 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             controller: _confirmPasswordController,
             hintText: context.tr('confirm_new_password'),
             labelText: context.tr('confirm_password'),
+            enabled: !isLoading, // Cegah input saat loading berjalan
             validator: (value) {
-              if (value == null || value.isEmpty) {
+              if (value == null || value.trim().isEmpty) {
                 return context.tr('please_confirm_your_password');
               }
-              if (value != _passwordController.text) {
+              if (value.trim() != _passwordController.text.trim()) {
                 return context.tr('passwords_do_not_match');
               }
               return null;
             },
             textInputAction: TextInputAction.done,
-            onSubmitted: (_) => _submit(),
+            onSubmitted: isLoading ? null : (_) => _submit(),
           ),
           const SizedBox(height: 32),
 
           PrimaryButton(
             text: context.tr('reset_password'),
-            onPressed: authViewModel.isLoading ? null : _submit,
-            isLoading: authViewModel.isLoading,
+            onPressed: isLoading ? null : _submit,
+            isLoading: isLoading,
           ),
         ],
       ),

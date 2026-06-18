@@ -12,6 +12,7 @@ class PasswordField extends StatefulWidget {
   final FocusNode? focusNode;
   final TextInputAction? textInputAction;
   final void Function(String)? onSubmitted;
+  final bool enabled;
 
   const PasswordField({
     Key? key,
@@ -23,6 +24,7 @@ class PasswordField extends StatefulWidget {
     this.focusNode,
     this.textInputAction,
     this.onSubmitted,
+    this.enabled = true,
   }) : super(key: key);
 
   @override
@@ -40,6 +42,7 @@ class _PasswordFieldState extends State<PasswordField> {
       labelText: widget.labelText,
       obscureText: _obscureText,
       keyboardType: TextInputType.visiblePassword,
+      enabled: widget.enabled,
       validator: widget.validator,
       onChanged: widget.onChanged,
       focusNode: widget.focusNode,

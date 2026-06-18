@@ -1,49 +1,63 @@
-import 'dart:developer';
-
-import 'package:flutter/widgets.dart';
+import 'dart:developer' as developer;
 import 'package:ngobrolin_app/core/models/api_response.dart';
 import 'package:ngobrolin_app/core/models/conversation_model.dart';
 import 'package:ngobrolin_app/core/models/conversation_participant_model.dart';
-
 import '../models/chat_list_item_model.dart';
 import '../models/message_model.dart';
 import '../models/paginated_result.dart';
 import '../services/api/api_service.dart';
 import 'package:dio/dio.dart';
 
-/// Repository for chat related operations
 class ChatRepository {
   final ApiService _apiService;
 
   ChatRepository({ApiService? apiService})
     : _apiService = apiService ?? ApiService();
 
-  /// Get conversation list from backend with pagination
   Future<ApiResponse<PaginatedResult<ChatListItemModel>>> getConversationList({
     int page = 1,
     int limit = 20,
   }) async {
     return _apiService.post<ApiResponse<PaginatedResult<ChatListItemModel>>>(
       '/conversations/list',
-      // Backend membaca dari req.query, jadi kirim sebagai queryParameters
       queryParameters: {'page': page, 'limit': limit},
-      parser: (response) =>
-          ApiResponse<PaginatedResult<ChatListItemModel>>.fromJson(
-            response,
-            (data) => _parseConversationList(data),
-          ),
+      parser: (response) {
+        developer.log(
+          'ChatRepository - getConversationList response: $response',
+          name: 'ChatRepository',
+        );
+        return ApiResponse<PaginatedResult<ChatListItemModel>>.fromJson(
+          response,
+          (data) => _parseConversationList(data),
+        );
+      },
     );
   }
 
   PaginatedResult<ChatListItemModel> _parseConversationList(dynamic response) {
-    final conversations = (response['conversations'] as List<dynamic>);
-    final pagination = (response['pagination'] as Map<String, dynamic>);
+    developer.log(
+      'ChatRepository - _parseConversationList response: $response',
+      name: 'ChatRepository',
+    );
+    if (response == null) {
+      return PaginatedResult<ChatListItemModel>(
+        items: [],
+        total: 0,
+        page: 1,
+        limit: 20,
+        totalPages: 1,
+      );
+    }
+
+    final conversations = (response['conversations'] as List<dynamic>? ?? []);
+    final pagination = (response['pagination'] as Map<String, dynamic>? ?? {});
 
     final chats = conversations.map((convRaw) {
-      final conv = convRaw as Map<String, dynamic>;
+      final conv = convRaw as Map<String, dynamic>? ?? <String, dynamic>{};
       final type = conv['type'] as String?;
+
       final participants = (conv['participants'] as List<dynamic>? ?? [])
-          .map((p) => p as Map<String, dynamic>)
+          .map((p) => p as Map<String, dynamic>? ?? <String, dynamic>{})
           .toList();
 
       final partner = participants.isNotEmpty ? participants.first : null;
@@ -60,15 +74,14 @@ class ChatRepository {
           : 'text';
 
       final lastCreatedAtStr = lastMessage != null
-          ? (lastMessage['created_at'] as String?)
+          ? (lastMessage['createdAt'] as String?)
           : (conv['joined_at'] as String?);
-      final timestamp = lastCreatedAtStr != null
-          ? DateTime.parse(lastCreatedAtStr)
-          : DateTime.now();
 
+      final timestamp = lastCreatedAtStr != null
+          ? DateTime.tryParse(lastCreatedAtStr) ?? DateTime.now()
+          : DateTime.now();
       final unreadCount = (conv['unreadCount'] as int?) ?? 0;
 
-      // Map untuk private vs group
       final isGroup = type == 'group';
       final name = isGroup
           ? (conv['name'] as String? ?? 'Group')
@@ -77,13 +90,10 @@ class ChatRepository {
           ? (conv['name'] as String? ?? 'Group')
           : (partner?['username'] as String? ?? '');
       final avatarUrl = isGroup
-          ? (conv['group_image'] as String?)
+          ? (conv['groupImage'] as String?)
           : (partner?['avatarUrl'] as String?);
 
-      // id Chat pakai id conversation (sesuai kebutuhan ViewModel/Screen)
-      final convId = conv['id'] as String;
-
-      // userId untuk navigasi ke chat; saat private pakai partner.id, saat group fallback ke conversation id
+      final convId = (conv['id'] as String? ?? '');
       final userId = !isGroup ? (partner?['id'] as String? ?? convId) : convId;
 
       return ChatListItemModel(
@@ -101,18 +111,15 @@ class ChatRepository {
       );
     }).toList();
 
-    log('-------- chats: $chats');
-
     return PaginatedResult<ChatListItemModel>(
       items: chats,
-      page: pagination['page'] as int,
-      limit: pagination['limit'] as int,
-      total: pagination['total'] as int,
-      totalPages: pagination['totalPages'] as int,
+      page: (pagination['page'] as int?) ?? 1,
+      limit: (pagination['limit'] as int?) ?? 20,
+      total: (pagination['total'] as int?) ?? 0,
+      totalPages: (pagination['totalPages'] as int?) ?? 1,
     );
   }
 
-  /// Mark messages as read in a conversation
   Future<ApiResponse> markAsRead({
     required String conversationId,
     required String messageId,
@@ -124,17 +131,20 @@ class ChatRepository {
     );
   }
 
-  // Tambahkan helper untuk dapat/membuat conversation privat dan mengembalikan id-nya
   Future<ApiResponse<ConversationModel>> getOrCreatePrivateConversationId(
     String participantId,
   ) async {
     return _apiService.post<ApiResponse<ConversationModel>>(
       '/conversations/create',
       data: {'type': 'private', 'participantId': participantId},
-      parser: (response) => ApiResponse<ConversationModel>.fromJson(
-        response,
-        (data) => ConversationModel.fromJson(data),
-      ),
+      parser: (response) {
+        return ApiResponse<ConversationModel>.fromJson(
+          response,
+          (data) => ConversationModel.fromJson(
+            data as Map<String, dynamic>? ?? <String, dynamic>{},
+          ),
+        );
+      },
     );
   }
 
@@ -147,13 +157,14 @@ class ChatRepository {
       parser: (response) {
         return ApiResponse<ConversationModel>.fromJson(
           response,
-          (data) => ConversationModel.fromJson(data),
+          (data) => ConversationModel.fromJson(
+            data as Map<String, dynamic>? ?? <String, dynamic>{},
+          ),
         );
       },
     );
   }
 
-  /// Get conversation participants
   Future<ApiResponse<ConversationModel>> getConversationById({
     required String conversationId,
     bool isShowParticipants = true,
@@ -168,12 +179,13 @@ class ChatRepository {
       },
       parser: (response) => ApiResponse<ConversationModel>.fromJson(
         response,
-        (data) => ConversationModel.fromJson(data),
+        (data) => ConversationModel.fromJson(
+          data as Map<String, dynamic>? ?? <String, dynamic>{},
+        ),
       ),
     );
   }
 
-  /// Get conversation participants
   Future<ApiResponse<List<ConversationParticipantModel>>>
   getConversationParticipants({
     required String conversationId,
@@ -186,10 +198,10 @@ class ChatRepository {
           parser: (response) =>
               ApiResponse<List<ConversationParticipantModel>>.fromJson(
                 response,
-                (data) => (data as List<dynamic>)
+                (data) => (data as List<dynamic>? ?? [])
                     .map(
                       (e) => ConversationParticipantModel.fromJson(
-                        e as Map<String, dynamic>,
+                        e as Map<String, dynamic>? ?? <String, dynamic>{},
                       ),
                     )
                     .toList(),
@@ -210,8 +222,11 @@ class ChatRepository {
         return ApiResponse<PaginatedResult<MessageModel>>.fromJson(response, (
           data,
         ) {
-          final pagination = data['pagination'] as Map<String, dynamic>? ?? {};
-          final messages = data['messages'] as List<dynamic>? ?? [];
+          final mappedData =
+              data as Map<String, dynamic>? ?? <String, dynamic>{};
+          final pagination =
+              mappedData['pagination'] as Map<String, dynamic>? ?? {};
+          final messages = mappedData['messages'] as List<dynamic>? ?? [];
 
           final items = messages
               .map(
@@ -223,17 +238,16 @@ class ChatRepository {
 
           return PaginatedResult(
             items: items,
-            total: pagination['total'] as int? ?? 0,
-            page: pagination['page'] as int? ?? 1,
-            limit: pagination['limit'] as int? ?? 20,
-            totalPages: pagination['totalPages'] as int? ?? 1,
+            total: (pagination['total'] as int?) ?? 0,
+            page: (pagination['page'] as int?) ?? 1,
+            limit: (pagination['limit'] as int?) ?? 20,
+            totalPages: (pagination['totalPages'] as int?) ?? 1,
           );
         });
       },
     );
   }
 
-  /// Send a message (kontrak baru: pakai conversationId dan endpoint backend)
   Future<ApiResponse<MessageModel>> sendMessage({
     required String conversationId,
     required String content,
@@ -249,7 +263,9 @@ class ChatRepository {
       parser: (response) {
         return ApiResponse<MessageModel>.fromJson(
           response,
-          (data) => MessageModel.fromJson(data),
+          (data) => MessageModel.fromJson(
+            data as Map<String, dynamic>? ?? <String, dynamic>{},
+          ),
         );
       },
     );
@@ -263,11 +279,14 @@ class ChatRepository {
       'file': await MultipartFile.fromFile(filePath),
       'type': type,
     });
+
     return _apiService.post<ApiResponse<String>>(
       '/messages/upload',
       data: formData,
+      options: Options(contentType: 'multipart/form-data'),
       parser: (response) => ApiResponse<String>.fromJson(response, (data) {
-        return (data['url'] as String? ?? '').toString();
+        final dataMap = data as Map<String, dynamic>? ?? <String, dynamic>{};
+        return (dataMap['url'] as String? ?? '').toString();
       }),
     );
   }

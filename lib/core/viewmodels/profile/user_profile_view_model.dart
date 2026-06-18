@@ -4,6 +4,8 @@ import '../../repositories/settings_repository.dart';
 import '../base_view_model.dart';
 import 'dart:developer' as developer;
 
+/// ViewModel responsible for inspecting external peer profiles and managing targeting features
+/// like blocking or unblocking corresponding users.
 class UserProfileViewModel extends BaseViewModel {
   final UserRepository _userRepository;
   final SettingsRepository _settingsRepository;
@@ -20,13 +22,17 @@ class UserProfileViewModel extends BaseViewModel {
   }) : _userRepository = userRepository ?? UserRepository(),
        _settingsRepository = settingsRepository ?? SettingsRepository();
 
-  /// Fetches user profile data from the API
+  /// Fetches standard user profile metrics and evaluates target relationship blocks.
   Future<bool> fetchUserProfile(String userId) async {
     return await runBusyFuture(() async {
           try {
             final result = await _userRepository.getUserById(userId);
             _user = result.data;
+
+            // Evaluates relationship constraints quietly prior to refreshing components layout
             await _checkIfUserBlocked();
+
+            notifyListeners();
             return true;
           } catch (e) {
             developer.log(
@@ -40,32 +46,35 @@ class UserProfileViewModel extends BaseViewModel {
         false;
   }
 
-  /// Checks if the current user is blocked
+  /// Internal checker routine targeting remote database blacklists.
+  /// Removes duplicate UI notifications to stay lightweight.
   Future<void> _checkIfUserBlocked() async {
     if (_user == null) return;
     try {
       _isBlocked = await _settingsRepository.isUserBlocked(_user!.id);
-      notifyListeners();
     } catch (e) {
       developer.log(
         'UserProfileViewModel - _checkIfUserBlocked() error: $e',
         name: 'UserProfileViewModel',
       );
-      setError(e.toString());
+      // Suppresses global state errors to prevent valid profiles layout from breaking unexpectedly
     }
   }
 
-  /// Blocks the current user
+  /// Registers a block flag against the focused user account index.
   Future<bool> blockUser() async {
     if (_user == null) return false;
     return await runBusyFuture(() async {
           try {
             final result = await _settingsRepository.blockUser(_user!.id);
             final success = result.isSuccess;
+
             if (success) {
               setSuccess(result.message);
               _isBlocked = true;
             }
+
+            notifyListeners();
             return success;
           } catch (e) {
             developer.log(
@@ -79,17 +88,20 @@ class UserProfileViewModel extends BaseViewModel {
         false;
   }
 
-  /// Unblocks the current user
+  /// Removes a block flag constraint targeting the focused user account instance.
   Future<bool> unblockUser() async {
     if (_user == null) return false;
     return await runBusyFuture(() async {
           try {
             final result = await _settingsRepository.unblockUser(_user!.id);
             final success = result.isSuccess;
+
             if (success) {
               setSuccess(result.message);
               _isBlocked = false;
             }
+
+            notifyListeners();
             return success;
           } catch (e) {
             developer.log(
@@ -103,7 +115,7 @@ class UserProfileViewModel extends BaseViewModel {
         false;
   }
 
-  /// Toggles block status of the user
+  /// Proxy wrapper switch mapping to toggle user structural blockage boundaries seamlessly.
   Future<bool> toggleBlockUser() async {
     if (_isBlocked) {
       return await unblockUser();

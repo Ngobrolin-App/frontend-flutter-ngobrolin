@@ -4,8 +4,10 @@ import 'dart:convert';
 import '../models/auth_response.dart';
 import '../models/user_model.dart';
 import '../services/api/api_service.dart';
+import 'dart:developer' as developer;
 
-/// Repository for authentication related operations
+/// Repository handling infrastructure calls for remote network authentication,
+/// registration pipelines, and local cache session storage keys.
 class AuthRepository {
   final ApiService _apiService;
   static const String _tokenKey = 'auth_token';
@@ -14,20 +16,17 @@ class AuthRepository {
   AuthRepository({ApiService? apiService})
     : _apiService = apiService ?? ApiService();
 
-  /// Sign in with username or email and password
-  Future<ApiResponse<AuthResponse>> signIn(
+  /// Authenticates credentials and automatically caches structural tokens on success.
+  Future<ApiResponse<AuthResponse>> login(
     String usernameOrEmail,
     String password,
   ) async {
     final response = await _apiService.post<ApiResponse<AuthResponse>>(
       '/auth/login',
       data: {'usernameOrEmail': usernameOrEmail, 'password': password},
-      parser: (response) {
-        return ApiResponse<AuthResponse>.fromJson(response, (data) {
-          final authResponse = AuthResponse.fromJson(
-            data as Map<String, dynamic>,
-          );
-          return authResponse;
+      parser: (json) {
+        return ApiResponse<AuthResponse>.fromJson(json, (data) {
+          return AuthResponse.fromJson(data as Map<String, dynamic>);
         });
       },
     );
@@ -39,8 +38,8 @@ class AuthRepository {
     return response;
   }
 
-  /// Register a new user
-  Future<ApiResponse<AuthResponse>> signUp({
+  /// Registers a new user account profile and caches session entities.
+  Future<ApiResponse<AuthResponse>> register({
     required String username,
     required String email,
     required String name,
@@ -54,12 +53,9 @@ class AuthRepository {
         'name': name,
         'password': password,
       },
-      parser: (response) {
-        return ApiResponse<AuthResponse>.fromJson(response, (data) {
-          final authResponse = AuthResponse.fromJson(
-            data as Map<String, dynamic>,
-          );
-          return authResponse;
+      parser: (json) {
+        return ApiResponse<AuthResponse>.fromJson(json, (data) {
+          return AuthResponse.fromJson(data as Map<String, dynamic>);
         });
       },
     );
@@ -71,43 +67,58 @@ class AuthRepository {
     return response;
   }
 
-  /// Request password reset
+  /// Dispatches a standard password adjustment email distribution request link.
   Future<ApiResponse> forgotPassword(String email) async {
     return await _apiService.post<ApiResponse>(
       '/auth/forgot-password',
       data: {'email': email},
-      parser: (response) => ApiResponse.fromJson(response, null),
+      parser: (json) => ApiResponse.fromJson(json, null),
     );
   }
 
-  /// Reset password
+  /// Submits updated token credentials alongside new password constraints.
   Future<ApiResponse> resetPassword(String token, String newPassword) async {
     return await _apiService.post<ApiResponse>(
       '/auth/reset-password',
       data: {'token': token, 'newPassword': newPassword},
-      parser: (response) => ApiResponse.fromJson(response, null),
+      parser: (json) => ApiResponse.fromJson(json, null),
     );
   }
 
-  /// Sign out the current user
+  /// Purges local stored session keys and invalidates structural persistence.
   Future<void> signOut() async {
-    // Clear stored token and user data
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_tokenKey);
-    await prefs.remove(_userKey);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_tokenKey);
+      await prefs.remove(_userKey);
+      developer.log(
+        'AuthRepository: Auth data successfully cleared from storage.',
+        name: 'AuthRepository',
+      );
+    } catch (e) {
+      developer.log(
+        'AuthRepository: Failed to clear auth data: $e',
+        name: 'AuthRepository',
+      );
+      rethrow;
+    }
   }
 
-  /// Get the current authentication token
+  /// Reads the active authorization token sequence string from local disks.
   Future<String?> getToken() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getString(_tokenKey);
     } catch (e) {
+      developer.log(
+        'AuthRepository: Error reading token: $e',
+        name: 'AuthRepository',
+      );
       return null;
     }
   }
 
-  /// Get the current user data
+  /// Decodes and returns structural current user model schemas from device memory.
   Future<UserModel?> getCurrentUser() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -117,20 +128,36 @@ class AuthRepository {
       final Map<String, dynamic> decoded =
           jsonDecode(userJsonStr) as Map<String, dynamic>;
       return UserModel.fromJson(decoded);
-    } catch (_) {
+    } catch (e) {
+      developer.log(
+        'AuthRepository: Error reading user model: $e',
+        name: 'AuthRepository',
+      );
       return null;
     }
   }
 
+  /// Internally writes token packets and mapped JSON parameters to hardware devices securely.
   Future<void> _saveAuthData(AuthResponse authResponse) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_tokenKey, authResponse.token);
-    await prefs.setString(_userKey, jsonEncode(authResponse.user.toJson()));
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_tokenKey, authResponse.token);
+      await prefs.setString(_userKey, jsonEncode(authResponse.user.toJson()));
+      developer.log(
+        'AuthRepository: Token and user data encrypted & stored.',
+        name: 'AuthRepository',
+      );
+    } catch (e) {
+      developer.log(
+        'AuthRepository: Critical failure saving auth tokens: $e',
+        name: 'AuthRepository',
+      );
+    }
   }
 
-  /// Check if the user is authenticated
+  /// Verifies if an operational token exists locally inside the preference layers.
   Future<bool> isAuthenticated() async {
     final token = await getToken();
-    return token != null;
+    return token != null && token.isNotEmpty;
   }
 }

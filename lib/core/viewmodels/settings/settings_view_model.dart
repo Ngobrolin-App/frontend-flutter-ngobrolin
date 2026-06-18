@@ -3,6 +3,8 @@ import '../../repositories/settings_repository.dart';
 import '../base_view_model.dart';
 import 'dart:developer' as developer;
 
+/// ViewModel responsible for managing application configuration preferences,
+/// localizing language assets, and mutating private security boundaries.
 class SettingsViewModel extends BaseViewModel {
   final SettingsRepository _settingsRepository;
 
@@ -17,17 +19,19 @@ class SettingsViewModel extends BaseViewModel {
     initSettings();
   }
 
-  /// Initializes settings from storage
+  /// Initializes system properties and security flags from device disk or remote networks.
   Future<void> initSettings() async {
     setLoading(true);
     try {
-      // Load locale
+      // Synchronizes localization language elements
       _locale = await _settingsRepository.getLocale();
 
-      // Load private account setting
+      // Synchronizes core structural privacy options
       final result = await _settingsRepository.getPrivateAccountSetting();
       final user = result.data;
       _privateAccount = user?.isPrivate ?? false;
+
+      notifyListeners();
     } catch (e) {
       developer.log(
         'SettingsViewModel - initSettings() error: $e',
@@ -39,7 +43,7 @@ class SettingsViewModel extends BaseViewModel {
     }
   }
 
-  /// Sets the application locale
+  /// Persists and updates the context locale language identifier across app states.
   void setLocale(Locale locale) async {
     try {
       await _settingsRepository.setLocale(locale);
@@ -54,13 +58,12 @@ class SettingsViewModel extends BaseViewModel {
     }
   }
 
-  /// Toggles private account setting
+  /// Toggles visibility profiles by mutating the core account status flags.
   Future<bool> togglePrivateAccount(bool value) async {
     return await runBusyFuture(() async {
           try {
             final result = await _settingsRepository
                 .updatePrivateAccountSetting(value);
-
             final updatedUser = result.data;
 
             _privateAccount = updatedUser?.isPrivate ?? value;
@@ -79,15 +82,14 @@ class SettingsViewModel extends BaseViewModel {
         false;
   }
 
-  /// Blocks a user account
-  Future<bool> blockAccount(String userId, String username, String name) async {
+  /// Registers a restriction block sequence target against a user profile ID registry index.
+  Future<bool> blockAccount(String userId) async {
     return await runBusyFuture(() async {
           try {
             final result = await _settingsRepository.blockUser(userId);
             final success = result.isSuccess;
 
             setSuccess(result.message);
-
             return success;
           } catch (e) {
             developer.log(
@@ -101,7 +103,7 @@ class SettingsViewModel extends BaseViewModel {
         false;
   }
 
-  /// Unblocks a user account
+  /// Dismantles relationship restrictions by purging targeted user credentials from local registries.
   Future<bool> unblockAccount(String userId) async {
     return await runBusyFuture(() async {
           try {
@@ -109,7 +111,6 @@ class SettingsViewModel extends BaseViewModel {
             final success = result.isSuccess;
 
             setSuccess(result.message);
-
             return success;
           } catch (e) {
             developer.log(
@@ -123,10 +124,9 @@ class SettingsViewModel extends BaseViewModel {
         false;
   }
 
-  /// Checks if a user is blocked
+  /// Inspects targeted network or cache systems to confirm structural block policies.
   Future<bool> isUserBlocked(String userId) async {
     try {
-      // If not in cache, check with API
       return await _settingsRepository.isUserBlocked(userId);
     } catch (e) {
       developer.log(

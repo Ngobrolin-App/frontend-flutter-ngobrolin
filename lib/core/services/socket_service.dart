@@ -7,15 +7,15 @@ class SocketService {
   bool get isConnected => _socket?.connected ?? false;
 
   void connect({required String url, String? token}) {
-    developer.log(
-      'SocketService: connecting to $url with token: ${token != null ? 'present' : 'null'}',
-      name: 'SocketService',
-    );
+    developer.log('SocketService: connecting to $url', name: 'SocketService');
+
+    // Konfigurasi opsi socket
     final opts = IO.OptionBuilder()
         .setTransports(['websocket'])
         .setPath('/socket.io')
         .enableAutoConnect()
         .setTimeout(10000)
+        // Menggunakan setExtraHeaders sangat bagus untuk autentikasi awal (handshake)
         .setExtraHeaders(
           token != null ? {'Authorization': 'Bearer $token'} : {},
         )
@@ -49,17 +49,6 @@ class SocketService {
       (attempt) =>
           developer.log('Socket reconnect: $attempt', name: 'SocketService'),
     );
-    _socket?.on(
-      'reconnect_attempt',
-      (attempt) => developer.log(
-        'Socket reconnect_attempt: $attempt',
-        name: 'SocketService',
-      ),
-    );
-    _socket?.on(
-      'reconnect_failed',
-      (_) => developer.log('Socket reconnect_failed', name: 'SocketService'),
-    );
   }
 
   void on(String event, void Function(dynamic data) handler) {
@@ -70,12 +59,15 @@ class SocketService {
     _socket?.emit(event, data);
   }
 
-  // Lepas listener event tertentu
   void off(String event, [dynamic handler]) {
     _socket?.off(event, handler);
   }
 
-  // Join/leave conversation rooms
+  // Bersihkan semua core event listener untuk mencegah duplikasi/kebocoran
+  void clearListeners() {
+    _socket?.clearListeners();
+  }
+
   void joinConversation(String conversationId) {
     _socket?.emit('join_conversation', {'conversationId': conversationId});
   }

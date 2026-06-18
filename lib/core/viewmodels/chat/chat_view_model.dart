@@ -1,10 +1,10 @@
-import 'package:ngobrolin_app/core/models/paginated_result.dart';
-
 import '../../models/message_model.dart';
 import '../../repositories/chat_repository.dart';
 import '../base_view_model.dart';
 import 'dart:developer' as developer;
 
+/// ViewModel managing active single or group chat interactions, pagination logs,
+/// attachment deliveries, and incoming stream normalization.
 class ChatViewModel extends BaseViewModel {
   final ChatRepository _chatRepository;
 
@@ -26,7 +26,6 @@ class ChatViewModel extends BaseViewModel {
   String _partnerStatus = 'offline';
   String get partnerStatus => _partnerStatus;
 
-  // Conversation ID for joining/leaving realtime rooms
   String? _conversationId;
   String? get conversationId => _conversationId;
 
@@ -39,7 +38,7 @@ class ChatViewModel extends BaseViewModel {
   String? _conversationGroupImage;
   String? get conversationGroupImage => _conversationGroupImage;
 
-  // Pagination state
+  // Pagination states
   int _page = 1;
   final int _limit = 20;
   bool _isLoadingMore = false;
@@ -50,38 +49,50 @@ class ChatViewModel extends BaseViewModel {
   ChatViewModel({ChatRepository? chatRepository})
     : _chatRepository = chatRepository ?? ChatRepository();
 
-  /// Initializes the chat with a specific user
-  void initChat(
+  /// Synchronously initializes basic UI meta placeholders before executing background fetches.
+  void initChat({
     String? userId,
     String? name,
     String? avatarUrl,
     String? conversationId,
-  ) async {
+  }) {
     _partnerId = userId ?? '';
     _partnerName = name ?? '';
     _partnerAvatarUrl = avatarUrl ?? '';
     _messages = [];
     _isPartnerTyping = false;
-    _partnerStatus = 'offline'; // Default, bisa diupdate via socket nanti
-
+    _partnerStatus = 'offline';
     _conversationId = conversationId;
+    _page = 1;
+    _hasMore = true;
+
+    // Triggers network channels on a separated routine thread to prevent execution freezes
+    _setupChatRoomContext();
+  }
+
+  /// Internal asynchronous runner orchestration to load chat histories sequentially.
+  Future<void> _setupChatRoomContext() async {
     if (_conversationId == null || _conversationId!.isEmpty) {
       await _getPrivateConversationIdByParticipantId();
     }
-    await _getConversationDataOnly();
-    _loadParticipant();
-    _loadMessages();
+
+    if (_conversationId != null && _conversationId!.isNotEmpty) {
+      await _getConversationDataOnly();
+      await _loadParticipant();
+      await _loadMessages();
+    }
   }
 
-  /// Gets private conversation ID by participant ID from the API
+  /// Fetches private single room session mappings linked to a user profile ID.
   Future<bool> _getPrivateConversationIdByParticipantId() async {
     return await runBusyFuture(() async {
           try {
             final result = await _chatRepository
                 .getPrivateConversationByPartnerId(_partnerId);
-
             final conversation = result.data;
             _conversationId = conversation?.id;
+
+            notifyListeners();
             return true;
           } catch (e) {
             developer.log(
@@ -110,14 +121,12 @@ class ChatViewModel extends BaseViewModel {
     notifyListeners();
   }
 
-  /// Gets conversation details from the API
+  /// Extracts conversation attributes directly from the server index database.
   Future<bool> _getConversationDataOnly() async {
+    if (_conversationId == null) return false;
+
     return await runBusyFuture(() async {
           try {
-            if (_conversationId == null) {
-              return false;
-            }
-
             final result = await _chatRepository.getConversationById(
               conversationId: _conversationId!,
               isShowParticipants: true,
@@ -142,14 +151,12 @@ class ChatViewModel extends BaseViewModel {
         false;
   }
 
-  /// Loads conversation participants from the API
+  /// Fetches participants metadata linked inside the room roster array.
   Future<bool> _loadParticipant() async {
+    if (_conversationId == null) return false;
+
     return await runBusyFuture(() async {
           try {
-            if (_conversationId == null) {
-              return false;
-            }
-
             final result = await _chatRepository.getConversationParticipants(
               conversationId: _conversationId!,
               isIncludeMe: _conversationType != 'private',
@@ -157,7 +164,7 @@ class ChatViewModel extends BaseViewModel {
 
             final participants = result.data ?? [];
 
-            if (_conversationType == 'private') {
+            if (_conversationType == 'private' && participants.isNotEmpty) {
               _partnerName = participants.first.name;
               _partnerAvatarUrl = participants.first.avatarUrl;
             }
@@ -176,35 +183,35 @@ class ChatViewModel extends BaseViewModel {
         false;
   }
 
-  /// Loads chat messages from the API
+  /// Requests modern messages logs belonging to the active room.
   Future<bool> _loadMessages() async {
+    if (_conversationId == null) return false;
+
     return await runBusyFuture(() async {
           try {
-            if (_conversationId == null) {
-              return false;
-            }
-
             final result = await _chatRepository.getMessagesByConversationId(
               conversationId: _conversationId!,
               page: _page,
               limit: _limit,
             );
             final paginatedResult = result.data;
-            final messages = paginatedResult?.items ?? [];
-            _messages = messages;
+            final fetchedMessages = paginatedResult?.items ?? [];
+
+            _messages = fetchedMessages;
             _hasMore =
                 (paginatedResult?.page ?? 0) <
                 (paginatedResult?.totalPages ?? 0);
             notifyListeners();
 
-            final lastMessage = _messages.isNotEmpty ? _messages.last : null;
-            if (lastMessage != null &&
-                !lastMessage.isRead &&
-                lastMessage.senderId == _partnerId) {
-              await _chatRepository.markAsRead(
-                conversationId: _conversationId!,
-                messageId: lastMessage.id,
-              );
+            // Auto-acknowledge unread elements sent by the partner peer upon entering viewport
+            if (_messages.isNotEmpty) {
+              final lastMessage = _messages.last;
+              if (!lastMessage.isRead && lastMessage.senderId == _partnerId) {
+                await _chatRepository.markAsRead(
+                  conversationId: _conversationId!,
+                  messageId: lastMessage.id,
+                );
+              }
             }
 
             return true;
@@ -220,8 +227,9 @@ class ChatViewModel extends BaseViewModel {
         false;
   }
 
+  /// Appends older historical conversations via endless tracking triggers.
   Future<void> _loadMoreMessages() async {
-    if (_isLoadingMore || !_hasMore) return;
+    if (_isLoadingMore || !_hasMore || _conversationId == null) return;
     _isLoadingMore = true;
     notifyListeners();
 
@@ -235,9 +243,10 @@ class ChatViewModel extends BaseViewModel {
       );
 
       final paginatedResult = result.data;
+      final olderMessages = paginatedResult?.items ?? [];
 
-      final messages = paginatedResult?.items ?? [];
-      _messages.addAll(messages);
+      // Prepends chronological legacy message data elements to the tail end of the viewport
+      _messages.addAll(olderMessages);
       _hasMore =
           (paginatedResult?.page ?? 0) < (paginatedResult?.totalPages ?? 0);
     } catch (e) {
@@ -254,20 +263,16 @@ class ChatViewModel extends BaseViewModel {
     }
   }
 
-  /// Sends a new message
+  /// Submits text strings to remote endpoints.
   Future<bool> sendMessage(String content, {String type = 'text'}) async {
     if (content.trim().isEmpty) return false;
 
-    // Optimistic update (opsional, tapi lebih baik tunggu server response untuk id yang valid)
-    // Tapi karena kita butuh ID dari server, kita tunggu saja.
-
-    if (_conversationId == null) {
+    if (_conversationId == null || _conversationId!.isEmpty) {
       final result = await _chatRepository.getOrCreatePrivateConversationId(
         _partnerId,
       );
       final conversation = result.data;
-      final convId = conversation?.id;
-      setConversationId(convId);
+      setConversationId(conversation?.id);
     }
 
     return await runBusyFuture(() async {
@@ -280,13 +285,14 @@ class ChatViewModel extends BaseViewModel {
 
             final newMessage = result.data;
 
-            final exists = _messages.any((m) => m.id == newMessage?.id);
-            if (!exists && (newMessage != null)) {
-              _messages.add(newMessage);
-              notifyListeners();
+            if (newMessage != null) {
+              final exists = _messages.any((m) => m.id == newMessage.id);
+              if (!exists) {
+                // Adds to index position 0 if list configuration displays inverted streams
+                _messages.add(newMessage);
+                notifyListeners();
+              }
             }
-            // _messages.add(newMessage);
-            // notifyListeners();
             return true;
           } catch (e) {
             developer.log(
@@ -300,15 +306,16 @@ class ChatViewModel extends BaseViewModel {
         false;
   }
 
+  /// Submits binary media files through a repository upload tunnel.
   Future<bool> sendAttachment(String filePath, String type) async {
-    if (_conversationId == null) {
+    if (_conversationId == null || _conversationId!.isEmpty) {
       final result = await _chatRepository.getOrCreatePrivateConversationId(
         _partnerId,
       );
       final conversation = result.data;
-      final convId = conversation?.id;
-      setConversationId(convId);
+      setConversationId(conversation?.id);
     }
+
     return await runBusyFuture(() async {
           try {
             final result = await _chatRepository.uploadAttachment(
@@ -317,7 +324,6 @@ class ChatViewModel extends BaseViewModel {
             );
 
             final url = result.data ?? '';
-            // sendMessage akan menambahkan pesan ke list
             return await sendMessage(url, type: type);
           } catch (e) {
             developer.log(
@@ -331,15 +337,14 @@ class ChatViewModel extends BaseViewModel {
         false;
   }
 
-  /// Handles incoming messages (e.g., from WebSocket)
+  /// Receives message entries broadcasted via real-time WebSocket infrastructure layers.
   void handleIncomingMessage(dynamic messageData) {
     try {
       MessageModel message;
       if (messageData is MessageModel) {
         message = messageData;
       } else if (messageData is Map<String, dynamic>) {
-        // Handle kemungkinan snake_case dari socket
-        // Jika struktur sama dengan API response (snake_case), kita mapping manual
+        // Safe mapping configuration processing for database backend snake_case variants
         if (messageData.containsKey('created_at') ||
             messageData.containsKey('sender_id')) {
           final senderId =
@@ -359,19 +364,14 @@ class ChatViewModel extends BaseViewModel {
             createdAt: DateTime.parse(createdAtStr),
           );
         } else {
-          // Asumsi camelCase (Message.fromJson)
           message = MessageModel.fromJson(messageData);
         }
       } else {
         return;
       }
 
-      // Ensure message belongs to current conversation
-      if (message.conversationId != _conversationId) {
-        return;
-      }
+      if (message.conversationId != _conversationId) return;
 
-      // Cek duplikasi
       final exists = _messages.any((m) => m.id == message.id);
       if (!exists) {
         _messages.add(message);
@@ -386,7 +386,7 @@ class ChatViewModel extends BaseViewModel {
     }
   }
 
-  /// Update read status for a batch of messages
+  /// Synchronizes unread messages flags immediately on the user interface viewport list.
   void updateMessagesReadStatus(List<String> messageIds) {
     if (messageIds.isEmpty) return;
 
@@ -403,7 +403,7 @@ class ChatViewModel extends BaseViewModel {
     }
   }
 
-  /// Marks a specific message as read immediately (used for realtime incoming messages)
+  /// Explicitly marks single remote entries as read across API and real-time states.
   Future<void> markMessageAsRead(String messageId) async {
     if (_conversationId == null) return;
     try {
@@ -412,7 +412,6 @@ class ChatViewModel extends BaseViewModel {
         messageId: messageId,
       );
 
-      // Update local state
       updateMessagesReadStatus([messageId]);
     } catch (e) {
       developer.log(
@@ -423,7 +422,7 @@ class ChatViewModel extends BaseViewModel {
     }
   }
 
-  /// Clears the chat history
+  /// Purges local buffer list values.
   void clearChat() {
     _messages = [];
     notifyListeners();

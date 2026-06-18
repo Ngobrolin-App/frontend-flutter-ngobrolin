@@ -23,83 +23,120 @@ class ChatListScreen extends StatefulWidget {
 class _ChatListScreenState extends State<ChatListScreen> {
   late final ScrollController _scrollController;
 
-  // Socket Handlers
-  late Function(dynamic) _conversationUpdatedHandler;
-  late Function(dynamic) _conversationCreatedHandler;
-  late Function(dynamic) _conversationReadHandler;
+  // Socket Handlers disederhanakan tanpa late init ambigu
+  Function(dynamic)? _conversationUpdatedHandler;
+  Function(dynamic)? _conversationCreatedHandler;
+  Function(dynamic)? _conversationReadHandler;
 
-  late SocketProvider _socketProvider;
+  // Diubah menjadi nullable untuk mengantisipasi eksekusi dispose dini
+  SocketProvider? _socketProvider;
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
+
+    // Pendaftaran listener scroll dipindah & dioptimasi langsung
+    _scrollController.addListener(_onScroll);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final chatListViewModel = Provider.of<ChatListViewModel>(
-        context,
-        listen: false,
+      if (!mounted) return;
+      _initChatListAndSockets();
+    });
+  }
+
+  void _initChatListAndSockets() {
+    final chatListViewModel = Provider.of<ChatListViewModel>(
+      context,
+      listen: false,
+    );
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+
+    // SOLUSI: Ambil instansiasi di post-frame secara aman
+    _socketProvider = Provider.of<SocketProvider>(context, listen: false);
+
+    chatListViewModel.fetchChatList();
+
+    // Definisikan Handlers
+    _conversationUpdatedHandler = (data) {
+      developer.log(
+        '-------- conversation_updated: $data',
+        name: 'ChatListScreen',
       );
-      _socketProvider = Provider.of<SocketProvider>(context, listen: false);
-      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+      final currentUserId = authViewModel.user?.id;
+      chatListViewModel.handleSocketConversationUpdate(data, currentUserId);
+    };
 
+    _conversationCreatedHandler = (data) {
+      developer.log(
+        '-------- conversation_created: $data',
+        name: 'ChatListScreen',
+      );
       chatListViewModel.fetchChatList();
+    };
 
-      // Define Handlers
-      _conversationUpdatedHandler = (data) {
+    _conversationReadHandler = (data) {
+      try {
+        final convId = data['conversationId'] as String?;
+        if (convId != null) {
+          chatListViewModel.handleConversationReadByMe(convId);
+        }
+      } catch (e) {
         developer.log(
-          '-------- conversation_updated on chat list screen: $data',
-          name: 'ChatListScreen,',
+          'Error conversation read handler: $e',
+          name: 'ChatListScreen',
         );
-        final currentUserId = authViewModel.user?.id;
-        chatListViewModel.handleSocketConversationUpdate(data, currentUserId);
-      };
-
-      _conversationCreatedHandler = (data) {
-        developer.log(
-          '-------- conversation_created on chat list screen: $data',
-          name: 'ChatListScreen,',
-        );
-        chatListViewModel.fetchChatList();
-      };
-
-      _conversationReadHandler = (data) {
-        try {
-          final convId = data['conversationId'] as String?;
-          if (convId != null) {
-            chatListViewModel.handleConversationReadByMe(convId);
-          }
-        } catch (_) {}
-      };
-
-      // Register Handlers
-      _socketProvider.on('conversation_updated', _conversationUpdatedHandler);
-      _socketProvider.on('conversation_created', _conversationCreatedHandler);
-      _socketProvider.on('conversation_read_by_me', _conversationReadHandler);
-    });
-
-    _scrollController.addListener(() {
-      final vm = Provider.of<ChatListViewModel>(context, listen: false);
-      if (_scrollController.position.pixels >=
-          _scrollController.position.maxScrollExtent - 200) {
-        vm.loadMoreChatList();
       }
-    });
+    };
+
+    // Daftarkan Handlers ke Socket
+    _socketProvider?.on('conversation_updated', _conversationUpdatedHandler!);
+    _socketProvider?.on('conversation_created', _conversationCreatedHandler!);
+    _socketProvider?.on('conversation_read_by_me', _conversationReadHandler!);
+  }
+
+  void _onScroll() {
+    final vm = Provider.of<ChatListViewModel>(context, listen: false);
+    // OPTIMASI: Cegah double fetch jika view model sedang dalam keadaan loading
+    if (!vm.isLoading &&
+        _scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 200) {
+      vm.loadMoreChatList();
+    }
   }
 
   @override
   void dispose() {
+    _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
 
-    // Remove specific handlers
-    try {
-      _socketProvider.off('conversation_updated', _conversationUpdatedHandler);
-      _socketProvider.off('conversation_created', _conversationCreatedHandler);
-      _socketProvider.off('conversation_read_by_me', _conversationReadHandler);
-    } catch (e) {
-      developer.log(
-        'Error removing socket listeners in chat list: $e',
-        name: 'ChatListScreen,',
-      );
+    // SOLUSI: Gunakan null-safe handling saat membersihkan socket listener
+    if (_socketProvider != null) {
+      try {
+        if (_conversationUpdatedHandler != null) {
+          _socketProvider!.off(
+            'conversation_updated',
+            _conversationUpdatedHandler,
+          );
+        }
+        if (_conversationCreatedHandler != null) {
+          _socketProvider!.off(
+            'conversation_created',
+            _conversationCreatedHandler,
+          );
+        }
+        if (_conversationReadHandler != null) {
+          _socketProvider!.off(
+            'conversation_read_by_me',
+            _conversationReadHandler,
+          );
+        }
+      } catch (e) {
+        developer.log(
+          'Error removing socket listeners: $e',
+          name: 'ChatListScreen',
+        );
+      }
     }
 
     super.dispose();
@@ -107,9 +144,6 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final chatListViewModel = Provider.of<ChatListViewModel>(context);
-    final chatList = chatListViewModel.chatList;
-
     return Scaffold(
       appBar: AppBar(
         title: Text(context.tr('chats')),
@@ -125,10 +159,17 @@ class _ChatListScreenState extends State<ChatListScreen> {
           ),
         ],
       ),
-      body: chatListViewModel.isLoading && chatList.isEmpty
-          ? const Center(child: CircularProgressIndicator())
-          : chatList.isEmpty
-          ? EmptyState(
+      // OPTIMASI: Gunakan Consumer secara spesifik hanya pada area list data yang reaktif
+      body: Consumer<ChatListViewModel>(
+        builder: (context, chatListViewModel, _) {
+          final chatList = chatListViewModel.chatList;
+
+          if (chatListViewModel.isLoading && chatList.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (chatList.isEmpty) {
+            return EmptyState(
               title: context.tr('no_chats'),
               showButton: true,
               buttonText: context.tr('start_new_chat'),
@@ -137,40 +178,45 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   context,
                 ).pushNamed(AppRoutes.main, arguments: {'tabIndex': 1});
               },
-            )
-          : ListView.separated(
-              controller: _scrollController,
-              itemCount: chatList.length,
-              separatorBuilder: (context, index) =>
-                  const Divider(height: 1, indent: 72),
-              itemBuilder: (context, index) {
-                final chat = chatList[index];
-                return ChatListItem(
-                  chat: chat,
-                  onTap: () {
-                    chatListViewModel.markChatAsRead(chat.id);
-                    Navigator.of(context).pushNamed(
-                      AppRoutes.chat,
-                      arguments: {
-                        'userId': chat.userId,
-                        'name': chat.name,
-                        'avatarUrl': chat.avatarUrl,
-                        'chatId': chat.id,
-                      },
-                    );
-                  },
-                );
-              },
-            ),
+            );
+          }
+
+          return ListView.separated(
+            controller: _scrollController,
+            itemCount: chatList.length,
+            separatorBuilder: (context, index) =>
+                const Divider(height: 1, indent: 72),
+            itemBuilder: (context, index) {
+              final chat = chatList[index];
+              return ChatListItem(
+                chat: chat,
+                onTap: () {
+                  chatListViewModel.markChatAsRead(chat.id);
+                  Navigator.of(context).pushNamed(
+                    AppRoutes.chat,
+                    arguments: {
+                      'userId': chat.userId,
+                      'name': chat.name,
+                      'avatarUrl': chat.avatarUrl,
+                      'chatId': chat.id,
+                    },
+                  );
+                },
+              );
+            },
+          );
+        },
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Navigate to search users screen with the intent to start a new chat
-          Navigator.of(
-            context,
-          ).pushNamed(AppRoutes.main, arguments: {'tabIndex': 1});
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            AppRoutes.main,
+            (route) => false,
+            arguments: {'tabIndex': 1},
+          );
         },
         backgroundColor: AppColors.accent,
-        shape: CircleBorder(),
+        shape: const CircleBorder(),
         child: Iconify(Mdi.message_plus, color: AppColors.white),
       ),
     );

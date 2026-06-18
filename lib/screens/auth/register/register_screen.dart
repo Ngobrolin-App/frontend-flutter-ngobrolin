@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/localization/app_localizations.dart';
-import '../../../core/providers/auth_provider.dart';
 import '../../../core/viewmodels/auth/auth_view_model.dart';
 import '../../../core/widgets/buttons/primary_button.dart';
 import '../../../core/widgets/inputs/custom_text_field.dart';
@@ -9,6 +8,8 @@ import '../../../core/widgets/inputs/password_field.dart';
 import '../../../routes/app_routes.dart';
 import '../../../theme/app_colors.dart';
 
+/// Screen responsible for capturing new user registration details
+/// and dispatching signup requests to the AuthViewModel.
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -34,74 +35,64 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
+  /// Validates the registration form and executes the sign-up transaction via ViewModel.
   Future<void> _register() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      // Get the AuthViewModel
-      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
-      // Also get the legacy AuthProvider for backward compatibility
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
 
-      try {
-        // Use the new ViewModel for registration
-        final success = await authViewModel.signUp(
-          username: _usernameController.text,
-          email: _emailController.text,
-          name: _nameController.text,
-          password: _passwordController.text,
-        );
+    try {
+      final inputName = _nameController.text.trim();
+      final inputEmail = _emailController.text.trim();
+      final inputUsername = _usernameController.text.trim();
+      final inputPassword = _passwordController.text;
 
-        // Also update the legacy provider (sinkronisasi state)
-        await authProvider.signUp(
-          _usernameController.text,
-          _passwordController.text,
-        );
+      // 1. Executes the registration process exclusively through the ViewModel
+      final success = await authViewModel.signUp(
+        username: inputUsername,
+        email: inputEmail,
+        name: inputName,
+        password: inputPassword,
+      );
 
-        if (!mounted) return;
+      if (!mounted) return;
 
-        if (success) {
-          // Navigate to login screen on successful registration
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                context.tr(
-                  authViewModel.successMessage ?? 'registration_success',
-                ),
-              ),
-              backgroundColor: Colors.green,
-            ),
-          );
-
-          Navigator.of(
-            context,
-          ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
-        } else {
-          // Show error message if registration failed
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                authViewModel.errorMessage ?? context.tr('registration_failed'),
-              ),
-              backgroundColor: AppColors.warning,
-            ),
-          );
-        }
-      } catch (e) {
-        // Show error message
-        if (!mounted) return;
+      if (success) {
+        final successMsg =
+            authViewModel.successMessage ?? 'registration_success';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: AppColors.warning,
+            content: Text(context.tr(successMsg)),
+            backgroundColor: Colors.green,
           ),
         );
+
+        // Redirects to login screen after successful registration
+        Navigator.of(
+          context,
+        ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
+      } else {
+        final errorMsg =
+            authViewModel.errorMessage ?? context.tr('registration_failed');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMsg), backgroundColor: AppColors.warning),
+        );
       }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString()),
+          backgroundColor: AppColors.warning,
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final authViewModel = Provider.of<AuthViewModel>(context);
+    // Selects the loading state specifically to minimize widget rebuilds
+    final isLoading = context.select<AuthViewModel, bool>((vm) => vm.isLoading);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -116,15 +107,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 children: [
                   const SizedBox(height: 32),
 
-                  // Logo
+                  // App Logo
                   Image.asset(
                     'assets/apps_logo/app-icon-ngobrolin-enhanced-transparent.png',
                     width: 200,
                     height: 200,
+                    errorBuilder: (context, error, stackTrace) => const Icon(
+                      Icons.image_not_supported,
+                      size: 100,
+                      color: Colors.grey,
+                    ),
                   ),
                   const SizedBox(height: 16),
 
-                  // Title
+                  // Title Text
                   Text(
                     context.tr('sign_up'),
                     style: const TextStyle(
@@ -133,19 +129,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       color: AppColors.primary,
                     ),
                   ),
-
                   const SizedBox(height: 32),
 
-                  // Name field
+                  // Name Input Field
                   CustomTextField(
                     controller: _nameController,
                     hintText: context.tr('enter_name'),
                     labelText: context.tr('name'),
                     prefixIcon: const Icon(Icons.person_outline),
                     textCapitalization: TextCapitalization.words,
+                    enabled: !isLoading,
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your name';
+                      if (value == null || value.trim().isEmpty) {
+                        return context.tr('please_enter_name');
                       }
                       return null;
                     },
@@ -153,20 +149,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Email field
+                  // Email Input Field
                   CustomTextField(
                     controller: _emailController,
                     hintText: context.tr('enter_email'),
                     labelText: context.tr('email'),
                     prefixIcon: const Icon(Icons.email_outlined),
                     keyboardType: TextInputType.emailAddress,
+                    enabled: !isLoading,
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
+                      if (value == null || value.trim().isEmpty) {
                         return context.tr('please_enter_email');
                       }
                       if (!RegExp(
                         r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                      ).hasMatch(value)) {
+                      ).hasMatch(value.trim())) {
                         return context.tr('invalid_email');
                       }
                       return null;
@@ -175,17 +172,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Username field
+                  // Username Input Field
                   CustomTextField(
                     controller: _usernameController,
                     hintText: context.tr('enter_username'),
                     labelText: context.tr('username'),
                     prefixIcon: const Icon(Icons.alternate_email),
+                    enabled: !isLoading,
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
+                      if (value == null || value.trim().isEmpty) {
                         return context.tr('please_enter_username');
                       }
-                      if (value.contains(' ')) {
+                      if (value.trim().contains(' ')) {
                         return context.tr('username_cannot_contain_spaces');
                       }
                       return null;
@@ -194,11 +192,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Password field
+                  // Password Input Field
                   PasswordField(
                     controller: _passwordController,
                     hintText: context.tr('enter_password'),
                     labelText: context.tr('password'),
+                    enabled: !isLoading,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return context.tr('please_enter_password');
@@ -214,11 +213,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Confirm password field
+                  // Confirm Password Input Field
                   PasswordField(
                     controller: _confirmPasswordController,
                     hintText: context.tr('enter_password'),
                     labelText: context.tr('confirm_password'),
+                    enabled: !isLoading,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return context.tr('please_confirm_your_password');
@@ -229,31 +229,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       return null;
                     },
                     textInputAction: TextInputAction.done,
-                    onSubmitted: (_) => _register(),
+                    onSubmitted: isLoading ? null : (_) => _register(),
                   ),
                   const SizedBox(height: 32),
 
-                  // Register button
+                  // Registration Action Button
                   PrimaryButton(
                     text: context.tr('sign_up'),
-                    onPressed: authViewModel.isLoading
-                        ? null
-                        : () {
-                            _register();
-                          },
-                    isLoading: authViewModel.isLoading,
+                    onPressed: isLoading ? null : _register,
+                    isLoading: isLoading,
                   ),
                   const SizedBox(height: 24),
 
-                  // Login link
+                  // Login Redirection Link
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(context.tr('already_have_account')),
                       TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
+                        onPressed: isLoading
+                            ? null
+                            : () {
+                                Navigator.of(context).pop();
+                              },
                         child: Text(
                           context.tr('login'),
                           style: const TextStyle(

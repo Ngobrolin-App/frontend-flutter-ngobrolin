@@ -18,16 +18,16 @@ import '../../theme/app_colors.dart';
 import 'dart:developer' as developer;
 
 class ChatScreen extends StatefulWidget {
+  final String? chatId;
   final String userId;
   final String name;
   final String? avatarUrl;
-  final String? chatId;
 
   const ChatScreen({
     super.key,
+    this.chatId,
     required this.userId,
     required this.name,
-    this.chatId,
     this.avatarUrl,
   });
 
@@ -39,7 +39,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   bool _joinedRoom = false;
-  VoidCallback? _vmListener;
+  bool _isInit = false;
   int _lastMessageCount = 0;
   Timer? _typingTimer;
 
@@ -51,26 +51,62 @@ class _ChatScreenState extends State<ChatScreen> {
   late Function(dynamic) _stopTypingHandler;
   late Function(dynamic) _statusHandler;
 
+  late ChatViewModel _chatViewModel;
+  late AuthViewModel _authViewModel;
+  late SettingsViewModel _settingsViewModel;
+  late SocketProvider _socketProvider;
+
   @override
   void initState() {
     super.initState();
     _messageController.addListener(_onTextChanged);
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final chatViewModel = Provider.of<ChatViewModel>(context, listen: false);
-      final settingsViewModel = Provider.of<SettingsViewModel>(
-        context,
-        listen: false,
-      );
-      final socketProvider = Provider.of<SocketProvider>(
-        context,
-        listen: false,
-      );
-      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
 
-      // Cek blokir (dua arah). Jika diblokir, jangan mulai chat.
-      final isBlocked = await settingsViewModel.isUserBlocked(widget.userId);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkBlockStatusAndInitChat();
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    if (!_isInit) {
+      _chatViewModel = Provider.of<ChatViewModel>(context, listen: false);
+      _settingsViewModel = Provider.of<SettingsViewModel>(
+        context,
+        listen: false,
+      );
+      _socketProvider = Provider.of<SocketProvider>(context, listen: false);
+      _authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+
+      _setupSocketHandlers();
+      _isInit = true;
+    }
+  }
+
+  // OPTIMASI: Ekstraksi listener anonim menjadi method terstruktur untuk mencegah leak
+  void _onChatViewModelChanged() {
+    if (!mounted) return;
+
+    if (!_joinedRoom && _chatViewModel.conversationId != null) {
+      _socketProvider.joinConversation(_chatViewModel.conversationId!);
+      _joinedRoom = true;
+    }
+
+    final count = _chatViewModel.messages.length;
+    if (count != _lastMessageCount) {
+      _lastMessageCount = count;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+    }
+  }
+
+  Future<void> _checkBlockStatusAndInitChat() async {
+    try {
+      final isBlocked = await _settingsViewModel.isUserBlocked(widget.userId);
+      if (!mounted)
+        return; // Pelindung utama jika user keburu menekan tombol back
+
       if (isBlocked) {
-        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(context.tr('user_is_blocked_cannot_start_chat')),
@@ -81,207 +117,166 @@ class _ChatScreenState extends State<ChatScreen> {
         return;
       }
 
-      chatViewModel.initChat(
-        widget.userId,
-        widget.name,
-        widget.avatarUrl,
-        widget.chatId,
+      _chatViewModel.initChat(
+        conversationId: widget.chatId,
+        userId: widget.userId,
+        name: widget.name,
+        avatarUrl: widget.avatarUrl,
       );
 
-      // Pasang listener: join room sekali dan auto-scroll saat jumlah pesan berubah
-      _vmListener = () {
-        if (!_joinedRoom && chatViewModel.conversationId != null) {
-          socketProvider.joinConversation(chatViewModel.conversationId!);
-          _joinedRoom = true;
-        }
+      _chatViewModel.addListener(_onChatViewModelChanged);
 
-        final count = chatViewModel.messages.length;
-        if (count != _lastMessageCount) {
-          _lastMessageCount = count;
-          WidgetsBinding.instance.addPostFrameCallback(
-            (_) => _scrollToBottom(),
-          );
-        }
-      };
-      chatViewModel.addListener(_vmListener!);
-
-      // Jika sudah ada conversationId sejak awal, join langsung
-      if (chatViewModel.conversationId != null && !_joinedRoom) {
-        socketProvider.joinConversation(chatViewModel.conversationId!);
+      if (_chatViewModel.conversationId != null && !_joinedRoom) {
+        _socketProvider.joinConversation(_chatViewModel.conversationId!);
         _joinedRoom = true;
       }
 
-      // Scroll awal (akan diulang lagi saat pesan selesai dimuat)
       _scrollToBottom();
+    } catch (e) {
+      developer.log('Error initializing chat: $e', name: 'ChatScreen');
+    }
+  }
 
-      // Join conversation room for realtime updates
-      // (Note: duplicate join removed)
+  void _setupSocketHandlers() {
+    _newMessageHandler = (data) {
+      try {
+        final msgMap = data['message'] as Map<String, dynamic>;
+        final convId = msgMap['conversation_id'] as String?;
 
-      // Define Handlers
-      _newMessageHandler = (data) {
-        developer.log('-------- new_message on chat screen: $data');
-        try {
-          final msgMap = data['message'] as Map<String, dynamic>;
-          final convId = msgMap['conversation_id'] as String?;
+        if (convId != null && convId == _chatViewModel.conversationId) {
+          _chatViewModel.handleIncomingMessage(msgMap);
 
-          if (convId != null && convId == chatViewModel.conversationId) {
-            // Use ViewModel to handle parsing and state update
-            chatViewModel.handleIncomingMessage(msgMap);
+          final senderId = msgMap['senderId']?.toString();
+          final msgId = msgMap['id']?.toString();
 
-            // Note: Scrolling is handled by _vmListener when messages list updates
-
-            // Jika pesan dari partner, tandai sebagai terbaca karena user sedang membuka chat ini
-            // final senderId = msgMap['sender_id']?.toString();
-            // final msgId = msgMap['id']?.toString();
-
-            // if (senderId != authViewModel.user?.id && msgId != null) {
-            //   chatViewModel.markMessageAsRead(msgId);
-            // }
+          if (senderId != _authViewModel.user?.id && msgId != null) {
+            _chatViewModel.markMessageAsRead(msgId);
           }
-        } catch (_) {}
-      };
+        }
+      } catch (_) {}
+    };
 
-      _readStatusHandler = (data) {
-        developer.log(
-          '-------- messages_read_status_updated on chat screen: $data',
-          name: 'ChatScreen',
-        );
-        try {
-          final convId = data['conversationId'] as String?;
-          if (convId != null && convId == chatViewModel.conversationId) {
-            final ids = (data['messageIds'] as List<dynamic>? ?? [])
-                .map((e) => e.toString())
-                .toList();
-            chatViewModel.updateMessagesReadStatus(ids);
-          }
-        } catch (_) {}
-      };
-
-      _conversationCreatedHandler = (data) {
-        developer.log(
-          '-------- conversation_created on chat screen: $data',
-          name: 'ChatScreen',
-        );
-        try {
-          final conv = data['conversation'] as Map<String, dynamic>?;
-          if (conv == null) return;
-
-          final participantsRaw = (conv['participants'] as List<dynamic>? ?? [])
-              .map((e) => e as Map<String, dynamic>)
+    _readStatusHandler = (data) {
+      try {
+        final convId = data['conversationId'] as String?;
+        if (convId != null && convId == _chatViewModel.conversationId) {
+          final ids = (data['messageIds'] as List<dynamic>? ?? [])
+              .map((e) => e.toString())
               .toList();
-          final myId = authViewModel.user?.id;
-          final isMeIncluded = participantsRaw.any(
-            (p) => (p['id']?.toString() ?? '') == myId,
-          );
-          final isPartnerIncluded = participantsRaw.any(
-            (p) => (p['id']?.toString() ?? '') == widget.userId,
-          );
+          _chatViewModel.updateMessagesReadStatus(ids);
+        }
+      } catch (_) {}
+    };
 
-          if (isMeIncluded && isPartnerIncluded) {
-            final convId = conv['id'] as String?;
-            if (convId != null) {
-              chatViewModel.setConversationId(convId);
-              socketProvider.joinConversation(convId);
-            }
+    _conversationCreatedHandler = (data) {
+      try {
+        final conv = data['conversation'] as Map<String, dynamic>?;
+        if (conv == null) return;
+
+        final participantsRaw = (conv['participants'] as List<dynamic>? ?? [])
+            .map((e) => e as Map<String, dynamic>)
+            .toList();
+        final myId = _authViewModel.user?.id;
+        final isMeIncluded = participantsRaw.any(
+          (p) => (p['id']?.toString() ?? '') == myId,
+        );
+        final isPartnerIncluded = participantsRaw.any(
+          (p) => (p['id']?.toString() ?? '') == widget.userId,
+        );
+
+        if (isMeIncluded && isPartnerIncluded) {
+          final convId = conv['id'] as String?;
+          if (convId != null) {
+            _chatViewModel.setConversationId(convId);
+            _socketProvider.joinConversation(convId);
+            _joinedRoom = true;
           }
-        } catch (_) {}
-      };
+        }
+      } catch (_) {}
+    };
 
-      _typingHandler = (data) {
-        try {
-          final convId = data['conversationId'] as String?;
-          final userId = data['userId'] as String?;
-          if (convId == chatViewModel.conversationId &&
-              userId == widget.userId) {
-            chatViewModel.setPartnerTyping(true);
-          }
-        } catch (_) {}
-      };
+    _typingHandler = (data) {
+      try {
+        if (data['conversationId'] == _chatViewModel.conversationId &&
+            data['userId'] == widget.userId) {
+          _chatViewModel.setPartnerTyping(true);
+        }
+      } catch (_) {}
+    };
 
-      _stopTypingHandler = (data) {
-        try {
-          final convId = data['conversationId'] as String?;
-          final userId = data['userId'] as String?;
-          if (convId == chatViewModel.conversationId &&
-              userId == widget.userId) {
-            chatViewModel.setPartnerTyping(false);
-          }
-        } catch (_) {}
-      };
+    _stopTypingHandler = (data) {
+      try {
+        if (data['conversationId'] == _chatViewModel.conversationId &&
+            data['userId'] == widget.userId) {
+          _chatViewModel.setPartnerTyping(false);
+        }
+      } catch (_) {}
+    };
 
-      _statusHandler = (data) {
-        try {
-          final userId = data['userId'] as String?;
-          final status = data['status'] as String?;
-          if (userId == widget.userId && status != null) {
-            chatViewModel.setPartnerStatus(status);
-          }
-        } catch (_) {}
-      };
+    _statusHandler = (data) {
+      try {
+        final userId = data['userId'] as String?;
+        final status = data['status'] as String?;
+        if (userId == widget.userId && status != null) {
+          _chatViewModel.setPartnerStatus(status);
+        }
+      } catch (_) {}
+    };
 
-      // Register Handlers
-      socketProvider.on('new_message', _newMessageHandler);
-      socketProvider.on('messages_read_status_updated', _readStatusHandler);
-      socketProvider.on('conversation_created', _conversationCreatedHandler);
-      socketProvider.on('user_typing', _typingHandler);
-      socketProvider.on('user_stopped_typing', _stopTypingHandler);
-      socketProvider.on('user_status_changed', _statusHandler);
-
-      _scrollToBottom();
-    });
+    _socketProvider.on('new_message', _newMessageHandler);
+    _socketProvider.on('messages_read_status_updated', _readStatusHandler);
+    _socketProvider.on('conversation_created', _conversationCreatedHandler);
+    _socketProvider.on('user_typing', _typingHandler);
+    _socketProvider.on('user_stopped_typing', _stopTypingHandler);
+    _socketProvider.on('user_status_changed', _statusHandler);
   }
 
   @override
   void dispose() {
-    developer.log('-------- ChatScreen dispose called', name: 'ChatScreen');
     _typingTimer?.cancel();
     _messageController.removeListener(_onTextChanged);
     _messageController.dispose();
     _scrollController.dispose();
 
-    // Tinggalkan room dan lepas listener untuk menghindari duplikasi
-    final chatViewModel = Provider.of<ChatViewModel>(context, listen: false);
-    final socketProvider = Provider.of<SocketProvider>(context, listen: false);
-    if (chatViewModel.conversationId != null) {
-      socketProvider.leaveConversation(chatViewModel.conversationId!);
-    }
+    if (_isInit) {
+      if (_chatViewModel.conversationId != null) {
+        _socketProvider.leaveConversation(_chatViewModel.conversationId!);
+      }
 
-    // Remove specific handlers
-    try {
-      socketProvider.off('new_message', _newMessageHandler);
-      socketProvider.off('messages_read_status_updated', _readStatusHandler);
-      socketProvider.off('conversation_created', _conversationCreatedHandler);
-      socketProvider.off('user_typing', _typingHandler);
-      socketProvider.off('user_stopped_typing', _stopTypingHandler);
-      socketProvider.off('user_status_changed', _statusHandler);
-    } catch (e) {
-      developer.log('ChatScreen - dispose() error: $e', name: 'ChatScreen');
-    }
+      try {
+        _socketProvider.off('new_message', _newMessageHandler);
+        _socketProvider.off('messages_read_status_updated', _readStatusHandler);
+        _socketProvider.off(
+          'conversation_created',
+          _conversationCreatedHandler,
+        );
+        _socketProvider.off('user_typing', _typingHandler);
+        _socketProvider.off('user_stopped_typing', _stopTypingHandler);
+        _socketProvider.off('user_status_changed', _statusHandler);
+      } catch (e) {
+        developer.log(
+          'ChatScreen - Error unregistering socket: $e',
+          name: 'ChatScreen',
+        );
+      }
 
-    // Lepas listener ViewModel agar tidak bocor
-    if (_vmListener != null) {
-      chatViewModel.removeListener(_vmListener!);
-      _vmListener = null;
+      _chatViewModel.removeListener(_onChatViewModelChanged);
     }
 
     super.dispose();
   }
 
   void _onTextChanged() {
-    final chatViewModel = Provider.of<ChatViewModel>(context, listen: false);
-    final socketProvider = Provider.of<SocketProvider>(context, listen: false);
+    if (_chatViewModel.conversationId == null) return;
 
-    if (chatViewModel.conversationId == null) return;
-
-    // Reset timer jika masih mengetik
     if (_typingTimer?.isActive ?? false) _typingTimer!.cancel();
 
-    // Emit typing start
-    socketProvider.sendTypingStart(chatViewModel.conversationId!);
+    _socketProvider.sendTypingStart(_chatViewModel.conversationId!);
 
-    // Set timer untuk emit stop typing setelah 2 detik diam
     _typingTimer = Timer(const Duration(seconds: 2), () {
-      socketProvider.sendTypingStop(chatViewModel.conversationId!);
+      if (mounted && _chatViewModel.conversationId != null) {
+        _socketProvider.sendTypingStop(_chatViewModel.conversationId!);
+      }
     });
   }
 
@@ -300,31 +295,16 @@ class _ChatScreenState extends State<ChatScreen> {
     if (message.isEmpty) return;
 
     try {
-      // Get the ChatViewModel
-      final chatViewModel = Provider.of<ChatViewModel>(context, listen: false);
-
-      // Kirim pesan via API (backend akan broadcast via socket)
-      final success = await chatViewModel.sendMessage(message);
-
+      final success = await _chatViewModel.sendMessage(message);
       if (success) {
         _messageController.clear();
-
-        // Hapus emit via socket untuk mencegah duplikasi di backend
-        // socketProvider.sendMessage(conversationId: chatViewModel.conversationId!, content: message);
       }
-
-      // Scroll to bottom after sending message
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _scrollToBottom();
-      });
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     } catch (e) {
-      // Show error
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            '${context.tr('failed_to_send_message')}: ${e.toString()}',
-          ),
+          content: Text('${context.tr('failed_to_send_message')}: $e'),
           backgroundColor: AppColors.warning,
         ),
       );
@@ -333,61 +313,77 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final chatViewModel = Provider.of<ChatViewModel>(context);
-    final messages = chatViewModel.messages;
-    // Ambil myId dari AuthViewModel untuk menentukan posisi bubble
-    final authViewModel = Provider.of<AuthViewModel>(context);
-    final myId = authViewModel.user?.id;
-
     return Scaffold(
       appBar: AppBar(
         title: GestureDetector(
           onTap: () {
             Navigator.of(context).pushNamed(
               AppRoutes.userProfile,
-              arguments: {'userId': chatViewModel.partnerId},
+              arguments: {'userId': context.read<ChatViewModel>().partnerId},
             );
           },
           child: Row(
             children: [
-              CircleAvatar(
-                radius: 16,
-                backgroundColor: AppColors.lightGrey,
-                backgroundImage: chatViewModel.partnerAvatarUrl != null
-                    ? NetworkImage(chatViewModel.partnerAvatarUrl!)
-                    : null,
-                child: chatViewModel.partnerAvatarUrl == null
-                    ? Text(
-                        chatViewModel.partnerName,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
-                        ),
-                      )
-                    : null,
+              // OPTIMASI: Ambil avatar menggunakan Selector agar tidak rebuild jika isi chat bertambah
+              Selector<ChatViewModel, String?>(
+                selector: (_, vm) => vm.partnerAvatarUrl,
+                builder: (context, avatarUrl, _) {
+                  return CircleAvatar(
+                    radius: 16,
+                    backgroundColor: AppColors.lightGrey,
+                    backgroundImage: avatarUrl != null
+                        ? NetworkImage(avatarUrl)
+                        : null,
+                    child: avatarUrl == null
+                        ? Selector<ChatViewModel, String>(
+                            selector: (_, vm) => vm.partnerName,
+                            builder: (context, name, _) => Text(
+                              name.isNotEmpty ? name[0].toUpperCase() : '?',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          )
+                        : null,
+                  );
+                },
               ),
               const SizedBox(width: 8),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(chatViewModel.partnerName),
-                  if (chatViewModel.isPartnerTyping)
-                    Text(
-                      '${context.tr('typing')}...',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    )
-                  else if (chatViewModel.partnerStatus == 'online')
-                    Text(
-                      context.tr('online'),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.greenAccent,
-                      ),
-                    ),
+                  Selector<ChatViewModel, String>(
+                    selector: (_, vm) => vm.partnerName,
+                    builder: (context, name, _) => Text(name),
+                  ),
+                  // OPTIMASI: Lokalisasi rebuild sub-komponen status/typing via Selector
+                  Selector<ChatViewModel, (bool, String)>(
+                    selector: (_, vm) => (vm.isPartnerTyping, vm.partnerStatus),
+                    builder: (context, state, _) {
+                      final isTyping = state.$1;
+                      final status = state.$2;
+                      if (isTyping) {
+                        return Text(
+                          '${context.tr('typing')}...',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        );
+                      } else if (status == 'online') {
+                        return Text(
+                          context.tr('online'),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.greenAccent,
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
                 ],
               ),
             ],
@@ -396,9 +392,7 @@ class _ChatScreenState extends State<ChatScreen> {
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) {
-              if (value == 'block') {
-                _showBlockDialog(context);
-              }
+              if (value == 'block') _showBlockDialog(context);
             },
             itemBuilder: (context) => [
               PopupMenuItem(
@@ -417,38 +411,46 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       body: Column(
         children: [
-          // Chat messages
-          // in build() -> Expanded(child: ...)
           Expanded(
-            child: (chatViewModel.isLoading && messages.isEmpty)
-                ? const Center(child: CircularProgressIndicator())
-                : messages.isEmpty
-                ? EmptyState(
-                    title: context.tr('no_messages'),
-                    subtitle: context.tr('start_new_chat'),
-                  )
-                : ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.all(16),
-                    itemCount: messages.length,
-                    itemBuilder: (context, index) {
-                      final message = messages[index];
-                      // Posisi kanan bila pengirim adalah user saat ini
-                      final isMe = myId != null && message.senderId == myId;
+            child: Selector<ChatViewModel, bool>(
+              selector: (_, vm) => vm.isLoading,
+              builder: (context, isLoading, _) {
+                return Consumer<ChatViewModel>(
+                  builder: (context, chatVM, _) {
+                    final messages = chatVM.messages;
+                    final myId = _authViewModel.user?.id;
 
-                      return ChatBubble(message: message, isMe: isMe);
-                    },
-                  ),
+                    if (isLoading && messages.isEmpty) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (messages.isEmpty) {
+                      return EmptyState(
+                        title: context.tr('no_messages'),
+                        subtitle: context.tr('start_new_chat'),
+                      );
+                    }
+                    return ListView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.all(16),
+                      itemCount: messages.length,
+                      itemBuilder: (context, index) {
+                        final message = messages[index];
+                        final isMe = myId != null && message.senderId == myId;
+                        return ChatBubble(message: message, isMe: isMe);
+                      },
+                    );
+                  },
+                );
+              },
+            ),
           ),
-
-          // Message input
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             decoration: BoxDecoration(
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
+                  color: Colors.black.withOpacity(0.05),
                   blurRadius: 4,
                   offset: const Offset(0, -2),
                 ),
@@ -456,84 +458,13 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             child: Row(
               children: [
-                // Attachment button
                 IconButton(
                   icon: Iconify(
                     MaterialSymbols.attach_file,
                     color: AppColors.grey,
                   ),
-                  onPressed: () async {
-                    final choice = await showModalBottomSheet<String>(
-                      context: context,
-                      builder: (ctx) => SafeArea(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 24,
-                            horizontal: 24,
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              GestureDetector(
-                                onTap: () => Navigator.pop(ctx, 'image'),
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.image),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Text(context.tr('choose_image')),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              GestureDetector(
-                                onTap: () => Navigator.pop(ctx, 'file'),
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.insert_drive_file),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Text(context.tr('choose_file')),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                    if (choice == 'image') {
-                      final picker = ImagePicker();
-                      final picked = await picker.pickImage(
-                        source: ImageSource.gallery,
-                        imageQuality: 80,
-                      );
-                      if (picked != null) {
-                        await Provider.of<ChatViewModel>(
-                          context,
-                          listen: false,
-                        ).sendAttachment(picked.path, 'image');
-                        _scrollToBottom();
-                      }
-                    } else if (choice == 'file') {
-                      final result = await FilePicker.platform.pickFiles(
-                        type: FileType.any,
-                      );
-                      final path = result?.files.first.path;
-                      if (path != null) {
-                        await Provider.of<ChatViewModel>(
-                          context,
-                          listen: false,
-                        ).sendAttachment(path, 'file');
-                        _scrollToBottom();
-                      }
-                    }
-                  },
+                  onPressed: () => _handleAttachment(context),
                 ),
-
-                // Text input
                 Expanded(
                   child: TextField(
                     controller: _messageController,
@@ -555,23 +486,26 @@ class _ChatScreenState extends State<ChatScreen> {
                     maxLines: null,
                   ),
                 ),
-
-                // Send button
-                IconButton(
-                  icon: chatViewModel.isLoading
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.accent,
-                          ),
-                        )
-                      : Iconify(
-                          MaterialSymbols.send_rounded,
-                          color: AppColors.accent,
-                        ),
-                  onPressed: chatViewModel.isLoading ? null : _sendMessage,
+                Selector<ChatViewModel, bool>(
+                  selector: (_, vm) => vm.isLoading,
+                  builder: (context, isLoading, _) {
+                    return IconButton(
+                      icon: isLoading
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.accent,
+                              ),
+                            )
+                          : Iconify(
+                              MaterialSymbols.send_rounded,
+                              color: AppColors.accent,
+                            ),
+                      onPressed: isLoading ? null : _sendMessage,
+                    );
+                  },
                 ),
               ],
             ),
@@ -581,20 +515,80 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  void _handleAttachment(BuildContext context) async {
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              GestureDetector(
+                onTap: () => Navigator.pop(ctx, 'image'),
+                child: Row(
+                  children: [
+                    const Icon(Icons.image),
+                    const SizedBox(width: 12),
+                    Expanded(child: Text(context.tr('choose_image'))),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              GestureDetector(
+                onTap: () => Navigator.pop(ctx, 'file'),
+                child: Row(
+                  children: [
+                    const Icon(Icons.insert_drive_file),
+                    const SizedBox(width: 12),
+                    Expanded(child: Text(context.tr('choose_file'))),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (!mounted || choice == null) return;
+
+    final chatVM = Provider.of<ChatViewModel>(context, listen: false);
+
+    if (choice == 'image') {
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+      );
+      if (picked != null && mounted) {
+        await chatVM.sendAttachment(picked.path, 'image');
+        _scrollToBottom();
+      }
+    } else if (choice == 'file') {
+      final result = await FilePicker.platform.pickFiles(type: FileType.any);
+      final path = result?.files.first.path;
+      if (path != null && mounted) {
+        await chatVM.sendAttachment(path, 'file');
+        _scrollToBottom();
+      }
+    }
+  }
+
   void _showBlockDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (ctx) => AlertDialog(
         title: Text(context.tr('block_account')),
         content: Text(context.tr('are_you_sure_block')),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => Navigator.of(ctx).pop(),
             child: Text(context.tr('no')),
           ),
           TextButton(
             onPressed: () {
-              Navigator.of(context).pop();
+              Navigator.of(ctx).pop();
               _blockUser(context);
             },
             child: Text(
@@ -608,40 +602,33 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _blockUser(BuildContext context) {
-    final settingsViewModel = Provider.of<SettingsViewModel>(
-      context,
-      listen: false,
-    );
-
-    // Block user using SettingsViewModel
-    settingsViewModel
-        .blockAccount(widget.userId, widget.name, widget.name)
-        .then((success) {
-          if (success) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  context.tr(
-                    settingsViewModel.successMessage ??
-                        'user_blocked_successfully',
-                  ),
-                ),
-                backgroundColor: Colors.green,
+    _settingsViewModel.blockAccount(widget.userId).then((success) {
+      if (!mounted) return;
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              context.tr(
+                _settingsViewModel.successMessage ??
+                    'user_blocked_successfully',
               ),
-            );
-            Navigator.of(context).pop();
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  context.tr(
-                    settingsViewModel.errorMessage ?? 'failed_to_block_user',
-                  ),
-                ),
-                backgroundColor: AppColors.warning,
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.of(context).pop();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              context.tr(
+                _settingsViewModel.errorMessage ?? 'failed_to_block_user',
               ),
-            );
-          }
-        });
+            ),
+            backgroundColor: AppColors.warning,
+          ),
+        );
+      }
+    });
   }
 }

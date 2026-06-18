@@ -3,6 +3,8 @@ import '../../repositories/user_repository.dart';
 import '../base_view_model.dart';
 import 'dart:developer' as developer;
 
+/// ViewModel responsible for retrieving and updating user profile data,
+/// including textual records and avatar media uploads.
 class ProfileViewModel extends BaseViewModel {
   final UserRepository _userRepository;
 
@@ -12,13 +14,13 @@ class ProfileViewModel extends BaseViewModel {
   ProfileViewModel({UserRepository? userRepository})
     : _userRepository = userRepository ?? UserRepository();
 
-  /// Initializes the profile view model with user data
+  /// Statically updates the local user model reference instance from external components.
   void setUser(UserModel user) {
     _user = user;
     notifyListeners();
   }
 
-  /// Fetches user profile data from the API
+  /// Fetches the latest authenticated user profile metrics from the network API.
   Future<bool> fetchCurrentProfile() async {
     developer.log(
       'ProfileViewModel - fetchCurrentProfile',
@@ -28,6 +30,7 @@ class ProfileViewModel extends BaseViewModel {
           try {
             final response = await _userRepository.getCurrentProfile();
             _user = response.data;
+            notifyListeners();
             return true;
           } catch (e) {
             setError(e.toString());
@@ -37,6 +40,7 @@ class ProfileViewModel extends BaseViewModel {
         false;
   }
 
+  /// Updates profile information text values and/or triggers binary avatar media uploads sequentially.
   Future<bool> updateProfile({
     String? name,
     String? email,
@@ -50,7 +54,8 @@ class ProfileViewModel extends BaseViewModel {
     return await runBusyFuture(() async {
           try {
             var success = true;
-            // Update profile information
+
+            // Section A: Evaluates and updates textual parameters or password credentials
             if (name != null ||
                 bio != null ||
                 email != null ||
@@ -65,32 +70,29 @@ class ProfileViewModel extends BaseViewModel {
                 newPassword: newPassword,
               );
 
-              final updatedUser = result.data;
-              _user = updatedUser;
-
-              setSuccess(result.message);
-
+              _user = result.data;
               success = result.isSuccess;
+              setSuccess(result.message);
             }
 
-            // Update profile picture if provided (via updateProfile param which seems redundant with updateProfilePicture method, keeping for backward compat)
+            // Section B: Processes direct profile image upload transactions if a valid file path is passed
             if (avatarUrl != null) {
-              // Assuming avatarUrl passed here is a path to upload, or a URL?
-              // If it's a URL, we just update user?
-              // The original code called uploadProfilePicture with this.
-              // Let's assume it's a file path for upload.
               final result = await _userRepository.uploadProfilePicture(
                 _user!.id,
                 avatarUrl,
               );
+
               final updatedUser = result.data;
               final newAvatarUrl = updatedUser?.avatarUrl;
-              if (newAvatarUrl != null) {
+
+              if (newAvatarUrl != null && _user != null) {
                 _user = _user!.copyWith(avatarUrl: newAvatarUrl);
+              } else if (updatedUser != null) {
+                _user = updatedUser;
               }
-              setSuccess(result.message);
 
               success = result.isSuccess;
+              setSuccess(result.message);
             }
 
             notifyListeners();

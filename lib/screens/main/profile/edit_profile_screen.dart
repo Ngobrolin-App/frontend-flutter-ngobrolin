@@ -23,12 +23,12 @@ class EditProfileScreen extends StatefulWidget {
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _nameController;
-  late TextEditingController _emailController;
-  late TextEditingController _bioController;
-  late TextEditingController _passwordController;
-  late TextEditingController _confirmPasswordController;
-  late TextEditingController _currentPasswordController;
+  late final TextEditingController _nameController;
+  late final TextEditingController _emailController;
+  late final TextEditingController _bioController;
+  late final TextEditingController _passwordController;
+  late final TextEditingController _confirmPasswordController;
+  late final TextEditingController _currentPasswordController;
 
   File? _imageFile;
   bool _isLoading = false;
@@ -58,13 +58,40 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    // OPTIMASI: Bungkus dengan try-catch untuk mengantisipasi penolakan permission storage oleh user
+    try {
+      final pickedFile = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth:
+            512, // Batasi resolusi gambar sebelum di-upload untuk menghemat bandwidth
+        imageQuality: 85,
+      );
 
-    if (pickedFile != null) {
-      setState(() {
-        _imageFile = File(pickedFile.path);
-      });
+      if (pickedFile != null) {
+        setState(() {
+          _imageFile = File(pickedFile.path);
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.tr('failed_to_pick_image'))),
+      );
     }
+  }
+
+  // OPTIMASI: Bersihkan input password saat form password disembunyikan
+  void _toggleChangePassword(bool value) {
+    setState(() {
+      _changePassword = value;
+      if (!_changePassword) {
+        _currentPasswordController.clear();
+        _passwordController.clear();
+        _confirmPasswordController.clear();
+      }
+    });
+    // Validasi ulang form agar sisa error validasi password hilang seketika
+    _formKey.currentState?.validate();
   }
 
   Future<void> _saveProfile() async {
@@ -96,12 +123,26 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               backgroundColor: Colors.green,
             ),
           );
+          Navigator.of(
+            context,
+          ).pop(); // Kembalikan ke halaman profil setelah berhasil update
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                context.tr(
+                  profileVM.errorMessage ?? 'failed_to_update_profile',
+                ),
+              ),
+              backgroundColor: AppColors.warning,
+            ),
+          );
         }
       } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString()),
+            content: Text(context.tr(e.toString())),
             backgroundColor: AppColors.warning,
           ),
         );
@@ -126,7 +167,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             key: _formKey,
             child: Column(
               children: [
-                // Profile picture
+                // Profile picture section
                 Center(
                   child: Stack(
                     children: [
@@ -158,13 +199,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         right: 0,
                         child: InkWell(
                           onTap: _pickImage,
+                          borderRadius: BorderRadius.circular(20),
                           child: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: const BoxDecoration(
                               color: AppColors.accent,
                               shape: BoxShape.circle,
                             ),
-                            child: Iconify(
+                            child: const Iconify(
                               MaterialSymbols.android_camera,
                               color: AppColors.white,
                               size: 20,
@@ -182,8 +224,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   controller: _nameController,
                   labelText: context.tr('name'),
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your name';
+                    if (value == null || value.trim().isEmpty) {
+                      return context.tr('please_enter_name');
                     }
                     return null;
                   },
@@ -196,12 +238,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   labelText: context.tr('email'),
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
+                    if (value == null || value.trim().isEmpty) {
                       return context.tr('please_enter_email');
                     }
                     if (!RegExp(
                       r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                    ).hasMatch(value)) {
+                    ).hasMatch(value.trim())) {
                       return context.tr('invalid_email');
                     }
                     return null;
@@ -215,32 +257,27 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   labelText: context.tr('bio'),
                   maxLines: 3,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
 
                 // Change password option
                 CheckboxListTile(
                   title: Text(context.tr('change_password')),
                   value: _changePassword,
-                  onChanged: (value) {
-                    setState(() {
-                      _changePassword = value ?? false;
-                    });
-                  },
+                  onChanged: (value) => _toggleChangePassword(value ?? false),
                   controlAffinity: ListTileControlAffinity.leading,
                   contentPadding: EdgeInsets.zero,
+                  activeColor: AppColors.primary,
                 ),
 
-                // Password fields (only shown if change password is selected)
+                // Password fields with Dynamic Visibility Switching
                 if (_changePassword) ...[
                   const SizedBox(height: 16),
                   PasswordField(
                     controller: _currentPasswordController,
                     labelText: context.tr('current_password'),
                     validator: (value) {
-                      if (_changePassword) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your current password';
-                        }
+                      if (_changePassword && (value == null || value.isEmpty)) {
+                        return context.tr('please_enter_current_password');
                       }
                       return null;
                     },
@@ -252,10 +289,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     validator: (value) {
                       if (_changePassword) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter a new password';
+                          return context.tr('please_enter_new_password');
                         }
                         if (value.length < 6) {
-                          return 'Password must be at least 6 characters';
+                          return context.tr('password_too_short');
                         }
                       }
                       return null;
@@ -268,10 +305,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     validator: (value) {
                       if (_changePassword) {
                         if (value == null || value.isEmpty) {
-                          return 'Please confirm your password';
+                          return context.tr('please_confirm_password');
                         }
                         if (value != _passwordController.text) {
-                          return 'Passwords do not match';
+                          return context.tr('passwords_do_not_match');
                         }
                       }
                       return null;

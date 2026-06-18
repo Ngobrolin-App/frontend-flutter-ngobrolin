@@ -25,57 +25,55 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   Future<void> _submit() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
-      try {
-        final success = await authViewModel.forgotPassword(
-          _emailController.text,
-        );
+    // Ambil dengan listen: false karena berada di dalam fungsi/event handler
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
 
-        if (!mounted) return;
+    try {
+      final success = await authViewModel.forgotPassword(
+        _emailController.text
+            .trim(), // Tambahkan .trim() untuk menghindari spasi tak sengaja
+      );
 
-        if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                context.tr(
-                  authViewModel.successMessage ??
-                      'reset_password_email_sent_success',
-                ),
-              ),
-              backgroundColor: AppColors.accent,
-            ),
-          );
-          setState(() {
-            _isSuccess = true;
-          });
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                authViewModel.errorMessage ??
-                    context.tr('forgot_password_failed'),
-              ),
-              backgroundColor: AppColors.warning,
-            ),
-          );
-        }
-      } catch (e) {
-        if (!mounted) return;
+      if (!mounted) return;
+
+      if (success) {
+        // Ambil key translasi terlebih dahulu
+        final msgKey =
+            authViewModel.successMessage ?? 'reset_password_email_sent_success';
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: AppColors.warning,
+            content: Text(context.tr(msgKey)),
+            backgroundColor: AppColors.accent,
           ),
         );
+        setState(() {
+          _isSuccess = true;
+        });
+      } else {
+        final errorMsg =
+            authViewModel.errorMessage ?? context.tr('forgot_password_failed');
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMsg), backgroundColor: AppColors.warning),
+        );
       }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString()),
+          backgroundColor: AppColors.warning,
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final authViewModel = Provider.of<AuthViewModel>(context);
+    final isLoading = context.select<AuthViewModel, bool>((vm) => vm.isLoading);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -90,14 +88,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             padding: const EdgeInsets.all(24.0),
             child: _isSuccess
                 ? _buildSuccessState(context)
-                : _buildFormState(context, authViewModel),
+                : _buildFormState(context, isLoading),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildFormState(BuildContext context, AuthViewModel authViewModel) {
+  Widget _buildFormState(BuildContext context, bool isLoading) {
     return Form(
       key: _formKey,
       child: Column(
@@ -109,6 +107,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             'assets/apps_logo/app-icon-ngobrolin-enhanced-transparent.png',
             width: 150,
             height: 150,
+            errorBuilder: (context, error, stackTrace) {
+              // Fallback jika asset logo gagal dimuat/tidak ditemukan saat testing
+              return const Icon(
+                Icons.image_not_supported,
+                size: 100,
+                color: AppColors.grey,
+              );
+            },
           ),
           const SizedBox(height: 16),
 
@@ -135,26 +141,28 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             labelText: context.tr('email'),
             prefixIcon: const Icon(Icons.email_outlined),
             keyboardType: TextInputType.emailAddress,
+            enabled:
+                !isLoading, // Cegah user mengubah input saat sedang loading
             validator: (value) {
-              if (value == null || value.isEmpty) {
+              if (value == null || value.trim().isEmpty) {
                 return context.tr('please_enter_email');
               }
               if (!RegExp(
                 r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-              ).hasMatch(value)) {
+              ).hasMatch(value.trim())) {
                 return context.tr('invalid_email');
               }
               return null;
             },
             textInputAction: TextInputAction.done,
-            onSubmitted: (_) => _submit(),
+            onSubmitted: isLoading ? null : (_) => _submit(),
           ),
           const SizedBox(height: 32),
 
           PrimaryButton(
             text: context.tr('send_reset_link'),
-            onPressed: authViewModel.isLoading ? null : _submit,
-            isLoading: authViewModel.isLoading,
+            onPressed: isLoading ? null : _submit,
+            isLoading: isLoading,
           ),
         ],
       ),
