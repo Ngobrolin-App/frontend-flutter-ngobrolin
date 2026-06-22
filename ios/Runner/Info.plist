@@ -28,6 +28,8 @@
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>Izinkan notifikasi agar Anda tidak ketinggalan pesan dari teman Anda di Ngobrolin.</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

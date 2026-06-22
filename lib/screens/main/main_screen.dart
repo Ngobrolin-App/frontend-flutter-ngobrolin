@@ -3,6 +3,7 @@ import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/ph.dart';
 import 'package:iconify_flutter/icons/ri.dart';
 import 'package:iconify_flutter/icons/material_symbols.dart';
+import 'package:ngobrolin_app/core/services/notification_service.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import 'chat_list/chat_list_screen.dart';
@@ -43,6 +44,47 @@ class _MainScreenState extends State<MainScreen> {
       }
       _initializedFromArgs = true;
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkNotificationPermission();
+    });
+  }
+
+  Future<void> _checkNotificationPermission() async {
+    if (await NotificationService.shouldShowPermissionDialog()) {
+      // Tampilkan Dialog Kustom (Pre-permission)
+      _showNotificationPermissionDialog();
+    }
+  }
+
+  void _showNotificationPermissionDialog() {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(dialogContext.tr('notification_permission_request')),
+        content: Text(dialogContext.tr('notification_permission_request_desc')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(dialogContext.tr('later')),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              NotificationService.requestPermission(); // Menggunakan instance context utama widget
+            },
+            child: Text(
+              dialogContext.tr('enable'),
+              style: const TextStyle(color: AppColors.warning),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

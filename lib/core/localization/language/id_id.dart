@@ -234,4 +234,12 @@ const Map<String, String> idID = {
   'server_temporarily_overloaded_or_down':
       'Layanan tidak tersedia, server mungkin sibuk atau mati',
   'upstream_server_timeout': 'Waktu permintaan habis pada gerbang hulu',
+
+  // PERMISSION
+  'permission_request': 'Permintaan Izin',
+  'notification_permission_request': 'Permintaan izin notifikasi',
+  'notification_permission_request_desc':
+      'Agar tidak ketinggalan chat penting dari teman-teman, izinkan Ngobrolin untuk mengirimkan notifikasi ke HP Anda.',
+  'later': 'Nanti saja',
+  'enable': 'Aktifkan',
 };

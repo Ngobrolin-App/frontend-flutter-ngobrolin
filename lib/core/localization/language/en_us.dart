@@ -225,4 +225,12 @@ const Map<String, String> enUS = {
   'server_temporarily_overloaded_or_down':
       'Service unavailable, server temporarily overloaded or down',
   'upstream_server_timeout': 'Gateway timeout, upstream server timed out',
+
+  // PERMISSION
+  'permission_request': 'Permission Request',
+  'notification_permission_request': 'Notification Permission Request',
+  'notification_permission_request_desc':
+      'To make sure you don’t miss any important chats from your friends, allow Ngobrolin to send notifications to your phone.',
+  'later': 'Nanti saja',
+  'enable': 'Aktifkan',
 };
