@@ -10,28 +10,38 @@ ChatListItemModel _$ChatListItemModelFromJson(Map<String, dynamic> json) =>
     ChatListItemModel(
       id: json['id'] as String,
       type: json['type'] as String,
-      userId: json['userId'] as String,
-      name: json['name'] as String,
-      username: json['username'] as String,
-      avatarUrl: json['avatarUrl'] as String?,
-      lastMessage: json['lastMessage'] as String,
-      lastMessageId: json['lastMessageId'] as String?,
-      lastMessageType: json['lastMessageType'] as String? ?? 'text',
-      timestamp: DateTime.parse(json['timestamp'] as String),
-      unreadCount: (json['unreadCount'] as num?)?.toInt() ?? 0,
+      name: json['name'] as String?,
+      groupImage: json['groupImage'] as String?,
+      createdAt: json['createdAt'] == null
+          ? null
+          : DateTime.parse(json['createdAt'] as String),
+      privatePartnerUser: json['privatePartnerUser'] == null
+          ? null
+          : UserModel.fromJson(
+              json['privatePartnerUser'] as Map<String, dynamic>,
+            ),
+      lastMessage: json['lastMessage'] == null
+          ? null
+          : MessageModel.fromJson(json['lastMessage'] as Map<String, dynamic>),
+      participants: (json['participants'] as List<dynamic>?)
+          ?.map((e) => UserModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      joinedAt: json['joinedAt'] == null
+          ? null
+          : DateTime.parse(json['joinedAt'] as String),
+      unreadCount: (json['unreadCount'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$ChatListItemModelToJson(ChatListItemModel instance) =>
     <String, dynamic>{
       'id': instance.id,
       'type': instance.type,
-      'userId': instance.userId,
       'name': instance.name,
-      'username': instance.username,
-      'avatarUrl': instance.avatarUrl,
+      'groupImage': instance.groupImage,
+      'createdAt': instance.createdAt?.toIso8601String(),
+      'privatePartnerUser': instance.privatePartnerUser,
       'lastMessage': instance.lastMessage,
-      'lastMessageId': instance.lastMessageId,
-      'lastMessageType': instance.lastMessageType,
-      'timestamp': instance.timestamp.toIso8601String(),
+      'participants': instance.participants,
+      'joinedAt': instance.joinedAt?.toIso8601String(),
       'unreadCount': instance.unreadCount,
     };

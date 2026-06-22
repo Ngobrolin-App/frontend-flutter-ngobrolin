@@ -1,3 +1,5 @@
+import 'package:ngobrolin_app/core/models/message_model.dart';
+
 import '../../models/chat_list_item_model.dart';
 import '../../repositories/chat_repository.dart';
 import '../base_view_model.dart';
@@ -92,46 +94,93 @@ class ChatListViewModel extends BaseViewModel {
         false;
   }
 
+  /// Implements optimistic updates to clear unread counts instantly and synchronization over the API network.
+  void markChatAsRead(String conversationId) async {
+    try {
+      final index = _chatList.indexWhere((chat) => chat.id == conversationId);
+      if (index == -1) return;
+
+      final chat = _chatList[index];
+
+      // Optimistic UI update for swift interface feedback loops
+      _chatList[index] = chat.copyWith(unreadCount: 0);
+      notifyListeners();
+
+      final lastMessage = chat.lastMessage;
+      if (lastMessage != null) {
+        if (lastMessage.id.isNotEmpty) {
+          await _chatRepository.markAsRead(
+            conversationId: conversationId,
+            messageId: lastMessage.id,
+          );
+        }
+      }
+    } catch (e) {
+      developer.log(
+        'ChatListViewModel - markChatAsRead() error: $e',
+        name: 'ChatListViewModel',
+      );
+      setError(e.toString());
+    }
+  }
+
+  /// Event listener proxy callback bound to socket event pipelines for 'conversation_updated'.
+  void handleSocketConversationUpdate(dynamic data, String? currentUserId) {
+    try {
+      final conversationId = data['conversationId'] as String?;
+      final rawLastMessage = data['lastMessage'] as Map<String, dynamic>? ?? {};
+
+      final lastMessage = MessageModel.fromJson(rawLastMessage);
+      if (conversationId != null) {
+        final unreadCount = data['unreadCount'] as int;
+
+        updateWithNewMessage(
+          conversationId,
+          currentUserId: currentUserId,
+          lastMessage: lastMessage,
+          unreadCount: unreadCount,
+        );
+      }
+    } catch (e) {
+      developer.log(
+        'ChatListViewModel - handleSocketConversationUpdate() error: $e',
+        name: 'ChatListViewModel',
+      );
+      setError(e.toString());
+    }
+  }
+
   /// Updates or realigns a conversation block within the inbox layout upon receiving a new message payload.
   Future<void> updateWithNewMessage(
-    String chatId,
-    String message,
-    String timestamp, {
-    String? senderId,
+    String chatId, {
     String? currentUserId,
-    String? lastMessageId,
-    String? type,
+    MessageModel? lastMessage,
+    int? unreadCount,
   }) async {
     try {
       final index = _chatList.indexWhere((chat) => chat.id == chatId);
       if (index != -1) {
         final oldChat = _chatList[index];
 
-        // Deduplicate events based on the last message unique identifier
-        if (lastMessageId != null && oldChat.lastMessageId == lastMessageId) {
-          return;
-        }
-
-        // Increment unread tally counter only if the incoming message belongs to another remote peer
-        final shouldIncrementUnread =
-            senderId == null ||
-            currentUserId == null ||
-            senderId != currentUserId;
-
-        final newUnreadCount = shouldIncrementUnread
-            ? oldChat.unreadCount + 1
-            : oldChat.unreadCount;
-
         _chatList[index] = oldChat.copyWith(
-          lastMessage: message,
-          lastMessageId: lastMessageId,
-          lastMessageType: type ?? 'text',
-          timestamp: DateTime.parse(timestamp),
-          unreadCount: newUnreadCount,
+          lastMessage: lastMessage,
+          unreadCount: unreadCount,
         );
 
         // Re-sort current lists so that the freshest interaction rises to the top layout
-        _chatList.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+        _chatList.sort((a, b) {
+          final lastMessageA = a.lastMessage;
+          final timestampA = lastMessageA?.createdAt;
+          final lastMessageB = b.lastMessage;
+          final timestampB = lastMessageB?.createdAt;
+
+          // Jika salah satu atau keduanya null, anggap urutan tidak berubah (return 0)
+          if (timestampA == null || timestampB == null) {
+            return 0;
+          }
+
+          return timestampB.compareTo(timestampA);
+        });
 
         notifyListeners();
         return;
@@ -148,69 +197,8 @@ class ChatListViewModel extends BaseViewModel {
     }
   }
 
-  /// Implements optimistic updates to clear unread counts instantly and synchronization over the API network.
-  void markChatAsRead(String conversationId) async {
-    try {
-      final index = _chatList.indexWhere((chat) => chat.id == conversationId);
-      if (index == -1) return;
-
-      final chat = _chatList[index];
-
-      // Optimistic UI update for swift interface feedback loops
-      _chatList[index] = chat.copyWith(unreadCount: 0);
-      notifyListeners();
-
-      if (chat.lastMessageId != null) {
-        await _chatRepository.markAsRead(
-          conversationId: conversationId,
-          messageId: chat.lastMessageId!,
-        );
-      }
-    } catch (e) {
-      developer.log(
-        'ChatListViewModel - markChatAsRead() error: $e',
-        name: 'ChatListViewModel',
-      );
-      setError(e.toString());
-    }
-  }
-
-  /// Event listener proxy callback bound to socket event pipelines for 'conversation_updated'.
-  void handleSocketConversationUpdate(dynamic data, String? currentUserId) {
-    try {
-      final conversationId = data['conversationId'] as String?;
-      final lastMessage = data['lastMessage'] as Map<String, dynamic>?;
-
-      if (conversationId != null && lastMessage != null) {
-        final content = lastMessage['content'] as String? ?? '';
-        final createdAt =
-            lastMessage['created_at'] as String? ??
-            DateTime.now().toIso8601String();
-        final senderId = lastMessage['sender_id']?.toString();
-        final lastMessageId = lastMessage['id']?.toString();
-        final type = lastMessage['type'] as String?;
-
-        updateWithNewMessage(
-          conversationId,
-          content,
-          createdAt,
-          senderId: senderId,
-          currentUserId: currentUserId,
-          lastMessageId: lastMessageId,
-          type: type,
-        );
-      }
-    } catch (e) {
-      developer.log(
-        'ChatListViewModel - handleSocketConversationUpdate() error: $e',
-        name: 'ChatListViewModel',
-      );
-      setError(e.toString());
-    }
-  }
-
   /// Event listener proxy callback bound to socket event pipelines for 'conversation_read_by_me'.
-  void handleConversationReadByMe(String conversationId) {
+  void handleSocketConversationReadByMe(String conversationId) {
     try {
       final index = _chatList.indexWhere((chat) => chat.id == conversationId);
       if (index != -1) {
@@ -219,7 +207,7 @@ class ChatListViewModel extends BaseViewModel {
       }
     } catch (e) {
       developer.log(
-        'ChatListViewModel - handleConversationReadByMe() error: $e',
+        'ChatListViewModel - handleSocketConversationReadByMe() error: $e',
         name: 'ChatListViewModel',
       );
       setError(e.toString());

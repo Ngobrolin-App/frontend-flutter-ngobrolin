@@ -22,101 +22,39 @@ class ChatRepository {
       '/conversations/list',
       queryParameters: {'page': page, 'limit': limit},
       parser: (response) {
-        developer.log(
-          'ChatRepository - getConversationList response: $response',
-          name: 'ChatRepository',
-        );
         return ApiResponse<PaginatedResult<ChatListItemModel>>.fromJson(
           response,
-          (data) => _parseConversationList(data),
+          (data) {
+            final mappedData =
+                data as Map<String, dynamic>? ?? <String, dynamic>{};
+            final pagination =
+                mappedData['pagination'] as Map<String, dynamic>? ?? {};
+            final chatListItems =
+                mappedData['conversations'] as List<dynamic>? ?? [];
+
+            final items = chatListItems
+                .map(
+                  (item) => ChatListItemModel.fromJson(
+                    item is Map<String, dynamic> ? item : <String, dynamic>{},
+                  ),
+                )
+                .toList();
+
+            return PaginatedResult(
+              items: items,
+              total: (pagination['total'] as int?) ?? 0,
+              page: (pagination['page'] as int?) ?? 1,
+              limit: (pagination['limit'] as int?) ?? 20,
+              totalPages: (pagination['totalPages'] as int?) ?? 1,
+            );
+          },
         );
       },
-    );
-  }
-
-  PaginatedResult<ChatListItemModel> _parseConversationList(dynamic response) {
-    developer.log(
-      'ChatRepository - _parseConversationList response: $response',
-      name: 'ChatRepository',
-    );
-    if (response == null) {
-      return PaginatedResult<ChatListItemModel>(
-        items: [],
-        total: 0,
-        page: 1,
-        limit: 20,
-        totalPages: 1,
-      );
-    }
-
-    final conversations = (response['conversations'] as List<dynamic>? ?? []);
-    final pagination = (response['pagination'] as Map<String, dynamic>? ?? {});
-
-    final chats = conversations.map((convRaw) {
-      final conv = convRaw as Map<String, dynamic>? ?? <String, dynamic>{};
-      final type = conv['type'] as String?;
-
-      final participants = (conv['participants'] as List<dynamic>? ?? [])
-          .map((p) => p as Map<String, dynamic>? ?? <String, dynamic>{})
-          .toList();
-
-      final partner = participants.isNotEmpty ? participants.first : null;
-
-      final lastMessage = conv['lastMessage'] as Map<String, dynamic>?;
-      final lastContent = lastMessage != null
-          ? (lastMessage['content'] as String? ?? '')
-          : '';
-      final lastMessageId = lastMessage != null
-          ? (lastMessage['id'] as String?)
-          : null;
-      final lastMessageType = lastMessage != null
-          ? (lastMessage['type'] as String? ?? 'text')
-          : 'text';
-
-      final lastCreatedAtStr = lastMessage != null
-          ? (lastMessage['createdAt'] as String?)
-          : (conv['joined_at'] as String?);
-
-      final timestamp = lastCreatedAtStr != null
-          ? DateTime.tryParse(lastCreatedAtStr) ?? DateTime.now()
-          : DateTime.now();
-      final unreadCount = (conv['unreadCount'] as int?) ?? 0;
-
-      final isGroup = type == 'group';
-      final name = isGroup
-          ? (conv['name'] as String? ?? 'Group')
-          : (partner?['name'] as String? ?? '');
-      final username = isGroup
-          ? (conv['name'] as String? ?? 'Group')
-          : (partner?['username'] as String? ?? '');
-      final avatarUrl = isGroup
-          ? (conv['groupImage'] as String?)
-          : (partner?['avatarUrl'] as String?);
-
-      final convId = (conv['id'] as String? ?? '');
-      final userId = !isGroup ? (partner?['id'] as String? ?? convId) : convId;
-
-      return ChatListItemModel(
-        id: convId,
-        type: type ?? '',
-        userId: userId,
-        name: name,
-        username: username,
-        avatarUrl: avatarUrl,
-        lastMessage: lastContent,
-        lastMessageId: lastMessageId,
-        lastMessageType: lastMessageType,
-        timestamp: timestamp,
-        unreadCount: unreadCount,
-      );
-    }).toList();
-
-    return PaginatedResult<ChatListItemModel>(
-      items: chats,
-      page: (pagination['page'] as int?) ?? 1,
-      limit: (pagination['limit'] as int?) ?? 20,
-      total: (pagination['total'] as int?) ?? 0,
-      totalPages: (pagination['totalPages'] as int?) ?? 1,
+      //   return ApiResponse<PaginatedResult<ChatListItemModel>>.fromJson(
+      //     response,
+      //     (data) => _parseConversationList(data),
+      //   );
+      // },
     );
   }
 

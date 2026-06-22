@@ -35,11 +35,6 @@ class AppLocalizations {
   }
 
   String formatTime(DateTime time) {
-    developer.log(
-      'AppLocalizations - formatTime - time: $time',
-      name: 'AppLocalizations',
-    );
-
     final DateTime localTime = time.toLocal();
     final DateFormat formatter = DateFormat.Hm(locale.toString());
     return formatter.format(localTime);

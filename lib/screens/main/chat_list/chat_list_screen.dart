@@ -79,7 +79,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
       try {
         final convId = data['conversationId'] as String?;
         if (convId != null) {
-          chatListViewModel.handleConversationReadByMe(convId);
+          chatListViewModel.handleSocketConversationReadByMe(convId);
         }
       } catch (e) {
         developer.log(
@@ -192,15 +192,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
                 chat: chat,
                 onTap: () {
                   chatListViewModel.markChatAsRead(chat.id);
-                  Navigator.of(context).pushNamed(
-                    AppRoutes.chat,
-                    arguments: {
-                      'userId': chat.userId,
-                      'name': chat.name,
-                      'avatarUrl': chat.avatarUrl,
-                      'chatId': chat.id,
-                    },
-                  );
+                  Navigator.of(
+                    context,
+                  ).pushNamed(AppRoutes.chat, arguments: {'chatId': chat.id});
                 },
               );
             },

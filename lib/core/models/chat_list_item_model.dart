@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:ngobrolin_app/core/models/message_model.dart';
+import 'package:ngobrolin_app/core/models/user_model.dart';
 
 part 'chat_list_item_model.g.dart';
 
@@ -7,28 +9,26 @@ part 'chat_list_item_model.g.dart';
 class ChatListItemModel extends Equatable {
   final String id;
   final String type;
-  final String userId;
-  final String name;
-  final String username;
-  final String? avatarUrl;
-  final String lastMessage;
-  final String? lastMessageId;
-  final String lastMessageType;
-  final DateTime timestamp;
-  final int unreadCount;
+  final String? name;
+  final String? groupImage;
+  final DateTime? createdAt;
+  final UserModel? privatePartnerUser;
+  final MessageModel? lastMessage;
+  final List<UserModel>? participants;
+  final DateTime? joinedAt;
+  final int? unreadCount;
 
   const ChatListItemModel({
     required this.id,
     required this.type,
-    required this.userId,
-    required this.name,
-    required this.username,
-    this.avatarUrl,
-    required this.lastMessage,
-    this.lastMessageId,
-    this.lastMessageType = 'text',
-    required this.timestamp,
-    this.unreadCount = 0,
+    this.name,
+    this.groupImage,
+    this.createdAt,
+    this.privatePartnerUser,
+    this.lastMessage,
+    this.participants,
+    this.joinedAt,
+    this.unreadCount,
   });
 
   /// Creates a ChatListItemModel from JSON data
@@ -42,27 +42,25 @@ class ChatListItemModel extends Equatable {
   ChatListItemModel copyWith({
     String? id,
     String? type,
-    String? userId,
     String? name,
-    String? username,
-    String? avatarUrl,
-    String? lastMessage,
-    String? lastMessageId,
-    String? lastMessageType,
-    DateTime? timestamp,
+    String? groupImage,
+    DateTime? createdAt,
+    UserModel? privatePartnerUser,
+    MessageModel? lastMessage,
+    List<UserModel>? participants,
+    DateTime? joinedAt,
     int? unreadCount,
   }) {
     return ChatListItemModel(
       id: id ?? this.id,
       type: type ?? this.type,
-      userId: userId ?? this.userId,
       name: name ?? this.name,
-      username: username ?? this.username,
-      avatarUrl: avatarUrl ?? this.avatarUrl,
+      groupImage: groupImage ?? this.groupImage,
+      createdAt: createdAt ?? this.createdAt,
+      privatePartnerUser: privatePartnerUser ?? this.privatePartnerUser,
       lastMessage: lastMessage ?? this.lastMessage,
-      lastMessageId: lastMessageId ?? this.lastMessageId,
-      lastMessageType: lastMessageType ?? this.lastMessageType,
-      timestamp: timestamp ?? this.timestamp,
+      participants: participants ?? this.participants,
+      joinedAt: joinedAt ?? this.joinedAt,
       unreadCount: unreadCount ?? this.unreadCount,
     );
   }
@@ -71,14 +69,13 @@ class ChatListItemModel extends Equatable {
   List<Object?> get props => [
     id,
     type,
-    userId,
     name,
-    username,
-    avatarUrl,
+    groupImage,
+    createdAt,
+    privatePartnerUser,
     lastMessage,
-    lastMessageId,
-    lastMessageType,
-    timestamp,
+    participants,
+    joinedAt,
     unreadCount,
   ];
 }

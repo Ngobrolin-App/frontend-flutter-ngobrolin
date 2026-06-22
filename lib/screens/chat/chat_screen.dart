@@ -139,9 +139,13 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _setupSocketHandlers() {
     _newMessageHandler = (data) {
+      developer.log(
+        'ChatScreen - _setupSocketHandlers - _newMessageHandler data: $data',
+        name: 'ChatScreen',
+      );
       try {
         final msgMap = data['message'] as Map<String, dynamic>;
-        final convId = msgMap['conversation_id'] as String?;
+        final convId = msgMap['conversationId'] as String?;
 
         if (convId != null && convId == _chatViewModel.conversationId) {
           _chatViewModel.handleIncomingMessage(msgMap);

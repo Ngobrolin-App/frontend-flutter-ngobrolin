@@ -284,6 +284,7 @@ class ChatViewModel extends BaseViewModel {
             );
 
             final newMessage = result.data;
+            final newMessageId = newMessage?.id ?? '';
 
             if (newMessage != null) {
               final exists = _messages.any((m) => m.id == newMessage.id);
@@ -293,6 +294,7 @@ class ChatViewModel extends BaseViewModel {
                 notifyListeners();
               }
             }
+            if (newMessageId.isNotEmpty) markMessageAsRead(newMessageId);
             return true;
           } catch (e) {
             developer.log(
@@ -344,28 +346,7 @@ class ChatViewModel extends BaseViewModel {
       if (messageData is MessageModel) {
         message = messageData;
       } else if (messageData is Map<String, dynamic>) {
-        // Safe mapping configuration processing for database backend snake_case variants
-        if (messageData.containsKey('created_at') ||
-            messageData.containsKey('sender_id')) {
-          final senderId =
-              (messageData['sender_id']?.toString()) ??
-              (messageData['sender']?['id']?.toString() ?? '');
-          final createdAtStr =
-              (messageData['created_at'] as String?) ??
-              DateTime.now().toIso8601String();
-
-          message = MessageModel(
-            id: messageData['id']?.toString() ?? '',
-            senderId: senderId,
-            conversationId: _conversationId ?? '',
-            content: messageData['content']?.toString() ?? '',
-            type: messageData['type']?.toString() ?? 'text',
-            isRead: messageData['is_read'] as bool? ?? false,
-            createdAt: DateTime.parse(createdAtStr),
-          );
-        } else {
-          message = MessageModel.fromJson(messageData);
-        }
+        message = MessageModel.fromJson(messageData);
       } else {
         return;
       }
@@ -411,8 +392,6 @@ class ChatViewModel extends BaseViewModel {
         conversationId: _conversationId!,
         messageId: messageId,
       );
-
-      updateMessagesReadStatus([messageId]);
     } catch (e) {
       developer.log(
         "ChatViewModel - markMessageAsRead() error $e",
