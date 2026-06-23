@@ -112,8 +112,10 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
               // Tampilkan notifikasi tunggal secara bersih
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(message),
-                  backgroundColor: success ? Colors.green : Colors.red,
+                  content: Text(context.tr(message)),
+                  backgroundColor: success
+                      ? AppColors.accent
+                      : AppColors.warning,
                   behavior: SnackBarBehavior.floating,
                 ),
               );

@@ -67,6 +67,7 @@ const Map<String, String> idID = {
   'users': 'Pengguna',
   'profile': 'Profil',
   'settings': 'Pengaturan',
+  'route_not_found': 'Rute tidak ditemukan',
 
   // Search
   'search_chat_friends': 'Cari teman obrolan',

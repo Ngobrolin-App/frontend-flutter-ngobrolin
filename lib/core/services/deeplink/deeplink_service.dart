@@ -4,6 +4,7 @@ import 'package:app_links/app_links.dart';
 
 import '../../../bootstrap.dart';
 import 'deeplink_handler.dart';
+import 'dart:developer' as developer;
 
 class DeeplinkService {
   final AppLinks _appLinks = AppLinks();
@@ -24,6 +25,16 @@ class DeeplinkService {
     });
   }
 
+  void handleNotification(Map<String, dynamic> data) {
+    final deeplink = DeeplinkHandler.parseFromNotification(data);
+    if (deeplink != null) {
+      navigatorKey.currentState?.pushNamed(
+        deeplink.route,
+        arguments: deeplink.arguments,
+      );
+    }
+  }
+
   void handleDeepLink(String link) {
     final uri = Uri.parse(link);
 
@@ -31,13 +42,27 @@ class DeeplinkService {
   }
 
   void _handleUri(Uri uri) {
-    final deeplink = DeeplinkHandler.parse(uri);
+    if (uri.pathSegments.isEmpty) return;
+
+    // developer.log(
+    //   'DeeplinkService - _handleUri - uri: $uri',
+    //   name: 'DeeplinkService',
+    // );
+    final deeplink = DeeplinkHandler.parseFromUri(uri);
 
     if (deeplink == null) {
       return;
     }
 
-    navigatorKey.currentState?.pushNamed(deeplink.route, arguments: deeplink.arguments);
+    // developer.log(
+    //   'DeeplinkService - _handleUri - deeplinkdata: $deeplink - deeplink.route: ${deeplink.route} - deeplink.arguments: ${deeplink.arguments}',
+    //   name: 'DeeplinkService',
+    // );
+
+    navigatorKey.currentState?.pushNamed(
+      deeplink.route,
+      arguments: deeplink.arguments,
+    );
   }
 
   void dispose() {

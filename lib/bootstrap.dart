@@ -38,6 +38,8 @@ import 'core/repositories/user_repository.dart';
 
 import 'flavors/flavor_config.dart';
 
+import 'dart:developer' as developer;
+
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 const String kNotificationChannelId = 'ngobrolin_default_channel';
@@ -144,13 +146,8 @@ Future<void> bootstrap() async {
 
   // Notification tap
   FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-    final deepLink = message.data['deepLink'];
-
-    if (deepLink == null || deepLink.isEmpty) {
-      return;
-    }
-
-    serviceLocator<DeeplinkService>().handleDeepLink(deepLink);
+    // developer.log('Bootstrap - onMessageOpenedApp - message: ${message.data}');
+    serviceLocator<DeeplinkService>().handleNotification(message.data);
   });
 
   // =======================

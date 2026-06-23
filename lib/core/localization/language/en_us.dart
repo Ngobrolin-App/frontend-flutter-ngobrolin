@@ -64,6 +64,7 @@ const Map<String, String> enUS = {
   'users': 'Users',
   'profile': 'Profile',
   'settings': 'Settings',
+  'route_not_found': 'Route not found',
 
   // Search
   'search_chat_friends': 'Search chat friends',

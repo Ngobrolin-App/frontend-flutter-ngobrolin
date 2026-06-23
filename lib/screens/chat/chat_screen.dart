@@ -110,7 +110,7 @@ class _ChatScreenState extends State<ChatScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(context.tr('user_is_blocked_cannot_start_chat')),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.warning,
           ),
         );
         Navigator.of(context).pop();
@@ -617,7 +617,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     'user_blocked_successfully',
               ),
             ),
-            backgroundColor: Colors.green,
+            backgroundColor: AppColors.accent,
           ),
         );
         Navigator.of(context).pop();

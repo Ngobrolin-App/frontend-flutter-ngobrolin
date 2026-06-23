@@ -81,7 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(e.toString()),
+          content: Text(context.tr(e.toString())),
           backgroundColor: AppColors.warning,
         ),
       );

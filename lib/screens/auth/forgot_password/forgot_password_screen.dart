@@ -57,14 +57,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             authViewModel.errorMessage ?? context.tr('forgot_password_failed');
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMsg), backgroundColor: AppColors.warning),
+          SnackBar(
+            content: Text(context.tr(errorMsg)),
+            backgroundColor: AppColors.warning,
+          ),
         );
       }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(e.toString()),
+          content: Text(context.tr(e.toString())),
           backgroundColor: AppColors.warning,
         ),
       );

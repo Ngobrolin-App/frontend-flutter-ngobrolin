@@ -45,6 +45,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               userProfileViewModel.errorMessage ?? 'failed_to_load_profile',
             ),
           ),
+          backgroundColor: AppColors.warning,
         ),
       );
     }
@@ -92,7 +93,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     'user_unblocked_successfully',
               ),
             ),
-            backgroundColor: Colors.green,
+            backgroundColor: AppColors.accent,
           ),
         );
       } else {
@@ -103,7 +104,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 userProfileViewModel.errorMessage ?? 'failed_to_unblock_user',
               ),
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.warning,
           ),
         );
       }
@@ -139,7 +140,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         viewModel.successMessage ?? 'user_blocked_successfully',
                       ),
                     ),
-                    backgroundColor: Colors.green,
+                    backgroundColor: AppColors.accent,
                   ),
                 );
               } else {
@@ -150,7 +151,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         viewModel.errorMessage ?? 'failed_to_block_user',
                       ),
                     ),
-                    backgroundColor: Colors.red,
+                    backgroundColor: AppColors.warning,
                   ),
                 );
               }

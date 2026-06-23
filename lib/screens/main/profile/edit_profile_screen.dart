@@ -75,7 +75,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('failed_to_pick_image'))),
+        SnackBar(
+          content: Text(context.tr('failed_to_pick_image')),
+          backgroundColor: AppColors.warning,
+        ),
       );
     }
   }
@@ -120,7 +123,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(context.tr('profile_updated')),
-              backgroundColor: Colors.green,
+              backgroundColor: AppColors.accent,
             ),
           );
           Navigator.of(
