@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:ngobrolin_app/core/localization/language_constants.dart';
+import 'package:ngobrolin_app/core/models/language_model.dart';
 import 'package:provider/provider.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/fa.dart';
@@ -9,6 +11,7 @@ import '../../core/localization/app_localizations.dart';
 import '../../core/viewmodels/settings/settings_view_model.dart';
 import '../../routes/app_routes.dart';
 import '../../theme/app_colors.dart';
+import 'dart:developer' as developer;
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -54,7 +57,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   return ListTile(
                     title: Text(context.tr('app_language')),
                     subtitle: Text(
-                      locale.languageCode == 'en' ? 'English' : 'Indonesia',
+                      settingsViewModel.getLanguageName(locale.languageCode),
                     ),
                     leading: const Iconify(Fa.language, color: AppColors.text),
                     trailing: const Iconify(
@@ -130,31 +133,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context,
       listen: false,
     );
+
     final currentLanguageCode = settingsViewModel.locale.languageCode;
+    final currentCountryCode = settingsViewModel.locale.countryCode;
+
+    final currentLanguage = supportedLanguages.firstWhere(
+      (lang) =>
+          ((lang.languageCode == currentLanguageCode) ||
+          (lang.countryCode == currentCountryCode)),
+    );
 
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(dialogContext.tr('app_language')),
-        content: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            RadioListTile<String>(
-              title: Text(dialogContext.tr('English')),
-              value: 'en',
-              groupValue: currentLanguageCode,
-              onChanged: (value) =>
-                  _changeLanguage(dialogContext, value, settingsViewModel),
+        content: SingleChildScrollView(
+          child: RadioGroup<LanguageModel>(
+            groupValue: currentLanguage,
+            onChanged: (value) {
+              _changeLanguage(dialogContext, value, settingsViewModel);
+            },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: supportedLanguages.map((lang) {
+                return RadioListTile<LanguageModel>(
+                  title: Text(lang.name),
+                  value: lang,
+                );
+              }).toList(),
             ),
-            RadioListTile<String>(
-              title: Text(dialogContext.tr('Indonesia')),
-              value: 'id',
-              groupValue: currentLanguageCode,
-              onChanged: (value) =>
-                  _changeLanguage(dialogContext, value, settingsViewModel),
-            ),
-          ],
+          ),
         ),
         actions: [
           TextButton(
@@ -168,11 +176,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _changeLanguage(
     BuildContext dialogContext,
-    String? value,
+    LanguageModel? newValue,
     SettingsViewModel viewModel,
   ) {
-    if (value != null) {
-      final newLocale = Locale(value);
+    developer.log(
+      'SettingsScreen - _changeLanguage - newValue: $newValue',
+      name: 'SettingsScreen',
+    );
+    if (newValue != null) {
+      final newLocale = Locale(newValue.languageCode, newValue.countryCode);
       viewModel.setLocale(newLocale);
       Navigator.of(dialogContext).pop();
     }

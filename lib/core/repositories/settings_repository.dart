@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ngobrolin_app/core/localization/app_localizations.dart';
 import 'package:ngobrolin_app/core/models/api_response.dart';
 import 'package:ngobrolin_app/core/models/paginated_result.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,7 +9,8 @@ import '../services/api/api_service.dart';
 
 class SettingsRepository {
   final ApiService _apiService;
-  static const String _localeKey = 'app_locale';
+  static const String _localeLanguageCodeKey = 'app_locale_language_code';
+  static const String _localeCountryCodeKey = 'app_locale_country_code';
 
   SettingsRepository({ApiService? apiService})
     : _apiService = apiService ?? ApiService();
@@ -16,20 +18,25 @@ class SettingsRepository {
   Future<Locale> getLocale() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final localeString = prefs.getString(_localeKey);
-      if (localeString == null || localeString.isEmpty) {
-        return const Locale('id'); // Default locale
+      final localeLanguageCodeString = prefs.getString(_localeLanguageCodeKey);
+      final localeCountryCodeString = prefs.getString(_localeCountryCodeKey);
+      if (localeLanguageCodeString == null ||
+          localeLanguageCodeString.isEmpty ||
+          localeCountryCodeString == null ||
+          localeCountryCodeString.isEmpty) {
+        return AppLocalizations.defaultLocale; // Default locale
       }
-      return Locale(localeString);
+      return Locale(localeLanguageCodeString, localeCountryCodeString);
     } catch (_) {
-      return const Locale('id');
+      return AppLocalizations.defaultLocale;
     }
   }
 
   Future<void> setLocale(Locale locale) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_localeKey, locale.languageCode);
+      await prefs.setString(_localeLanguageCodeKey, locale.languageCode);
+      await prefs.setString(_localeCountryCodeKey, locale.countryCode ?? '');
     } catch (e) {
       throw ApiException(message: e.toString());
     }

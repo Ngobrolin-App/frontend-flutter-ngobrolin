@@ -15,6 +15,9 @@ const Map<String, String> enUS = {
   'sign_up': 'Sign Up',
   'username': 'Username',
   'enter_username': 'Enter username',
+  'username_or_email': 'Username or Email',
+  'enter_username_or_email': 'Enter username or email',
+  'please_enter_username_or_email': 'Please enter your username or email',
   'password': 'Password',
   'confirm_password': 'Confirm Password',
   'enter_password': 'Enter password',
@@ -231,7 +234,7 @@ const Map<String, String> enUS = {
   'permission_request': 'Permission Request',
   'notification_permission_request': 'Notification Permission Request',
   'notification_permission_request_desc':
-      'To make sure you don’t miss any important chats from your friends, allow Ngobrolin to send notifications to your phone.',
-  'later': 'Nanti saja',
-  'enable': 'Aktifkan',
+      'To make sure you don\'t miss any important chats from your friends, allow Ngobrolin to send notifications to your phone.',
+  'later': 'Later',
+  'enable': 'Enable',
 };

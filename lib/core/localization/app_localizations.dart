@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'language/en_us.dart';
-import 'language/id_id.dart';
-import 'dart:developer' as developer;
+import 'package:ngobrolin_app/core/localization/language_constants.dart';
+import 'package:ngobrolin_app/core/models/language_model.dart';
 
 class AppLocalizations {
   final Locale locale;
@@ -16,13 +15,29 @@ class AppLocalizations {
   static const LocalizationsDelegate<AppLocalizations> delegate =
       _AppLocalizationsDelegate();
 
-  static final Map<String, Map<String, String>> _localizedValues = {
-    'en': enUS,
-    'id': idID,
+  static final Locale defaultLocale = Locale(
+    defaultLanguage.languageCode,
+    defaultLanguage.countryCode,
+  );
+
+  static final List<Locale> supportedLocales = supportedLanguages
+      .map((l) => Locale(l.languageCode, l.countryCode))
+      .toList();
+
+  static final Set<String> supportedCodes = supportedLanguages
+      .map((l) => l.languageCode)
+      .toSet();
+
+  static bool isSupported(Locale locale) =>
+      supportedCodes.contains(locale.languageCode);
+
+  static final Map<String, LanguageModel> _languageMap = {
+    for (var lang in supportedLanguages) lang.languageCode: lang,
   };
 
   String translate(String key) {
-    return _localizedValues[locale.languageCode]?[key] ?? key;
+    final language = _languageMap[locale.languageCode] ?? _languageMap['en'];
+    return language?.translations[key] ?? key;
   }
 
   String formatDate(DateTime? date) {
@@ -47,7 +62,8 @@ class _AppLocalizationsDelegate
 
   @override
   bool isSupported(Locale locale) {
-    return ['en', 'id'].contains(locale.languageCode);
+    // Panggil method static yang baru Anda buat
+    return AppLocalizations.isSupported(locale);
   }
 
   @override

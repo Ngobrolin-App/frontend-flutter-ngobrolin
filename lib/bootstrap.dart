@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:ngobrolin_app/core/localization/language_constants.dart';
 import 'package:ngobrolin_app/core/services/deeplink/deeplink_service.dart';
 import 'package:provider/provider.dart';
 
@@ -253,7 +254,7 @@ class _MyAppState extends State<MyApp> {
       navigatorKey: navigatorKey,
       title: FlavorConfig.instance.appName,
       debugShowCheckedModeBanner: false,
-      supportedLocales: const [Locale('en'), Locale('id')],
+      supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,

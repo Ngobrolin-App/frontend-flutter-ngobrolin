@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:ngobrolin_app/core/localization/app_localizations.dart';
+import 'package:ngobrolin_app/core/localization/language/en_us.dart';
+import 'package:ngobrolin_app/core/localization/language_constants.dart';
+import 'package:ngobrolin_app/core/models/language_model.dart';
 import '../../repositories/settings_repository.dart';
 import '../base_view_model.dart';
 import 'dart:developer' as developer;
@@ -8,11 +12,24 @@ import 'dart:developer' as developer;
 class SettingsViewModel extends BaseViewModel {
   final SettingsRepository _settingsRepository;
 
-  Locale _locale = const Locale('id');
+  Locale _locale = AppLocalizations.defaultLocale;
   Locale get locale => _locale;
 
   bool _privateAccount = false;
   bool get privateAccount => _privateAccount;
+
+  String getLanguageName(String code) {
+    final lang = supportedLanguages.firstWhere(
+      (lang) => lang.languageCode == code,
+      orElse: () => LanguageModel(
+        languageCode: 'en',
+        countryCode: 'US',
+        name: 'English',
+        translations: enUS,
+      ),
+    );
+    return lang.name;
+  }
 
   SettingsViewModel({SettingsRepository? settingsRepository})
     : _settingsRepository = settingsRepository ?? SettingsRepository() {
