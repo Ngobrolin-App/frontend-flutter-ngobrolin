@@ -165,6 +165,7 @@ class ChatViewModel extends BaseViewModel {
             final participants = result.data ?? [];
 
             if (_conversationType == 'private' && participants.isNotEmpty) {
+              _partnerId = participants.first.id;
               _partnerName = participants.first.name;
               _partnerAvatarUrl = participants.first.avatarUrl;
             }
@@ -228,7 +229,7 @@ class ChatViewModel extends BaseViewModel {
   }
 
   /// Appends older historical conversations via endless tracking triggers.
-  Future<void> _loadMoreMessages() async {
+  Future<void> loadMoreMessages() async {
     if (_isLoadingMore || !_hasMore || _conversationId == null) return;
     _isLoadingMore = true;
     notifyListeners();
@@ -285,12 +286,13 @@ class ChatViewModel extends BaseViewModel {
 
             final newMessage = result.data;
             final newMessageId = newMessage?.id ?? '';
+            developer.log('nlohhashdioasdlohjjhjjjj ahhhh $newMessageId');
 
             if (newMessage != null) {
               final exists = _messages.any((m) => m.id == newMessage.id);
               if (!exists) {
                 // Adds to index position 0 if list configuration displays inverted streams
-                _messages.add(newMessage);
+                _messages.insert(0, newMessage);
                 notifyListeners();
               }
             }
@@ -355,7 +357,7 @@ class ChatViewModel extends BaseViewModel {
 
       final exists = _messages.any((m) => m.id == message.id);
       if (!exists) {
-        _messages.add(message);
+        _messages.insert(0, message);
         notifyListeners();
       }
     } catch (e) {

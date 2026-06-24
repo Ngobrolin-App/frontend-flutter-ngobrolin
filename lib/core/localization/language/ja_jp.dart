@@ -118,6 +118,7 @@ const Map<String, String> jaJP = {
   'image': '画像',
   'typing': '入力中',
   'online': 'オンライン',
+  'copied_to_clipboard': 'クリップボードにコピーしました',
 
   // Errors
   'error_occurred': 'エラーが発生しました',

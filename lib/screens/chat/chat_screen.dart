@@ -40,8 +40,8 @@ class _ChatScreenState extends State<ChatScreen> {
   final ScrollController _scrollController = ScrollController();
   bool _joinedRoom = false;
   bool _isInit = false;
-  int _lastMessageCount = 0;
   Timer? _typingTimer;
+  final GlobalKey _textBoxKey = GlobalKey();
 
   // Socket Handlers
   late Function(dynamic) _newMessageHandler;
@@ -60,10 +60,24 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     _messageController.addListener(_onTextChanged);
+    _scrollController.addListener(_onScroll);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkBlockStatusAndInitChat();
     });
+  }
+
+  void _onScroll() {
+    // Jika mencapai hampir ke atas (ingat: reverse=true, bawah = index 0)
+    // maka sisa scroll akan berada di posisi maxScrollExtent
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      final vm = Provider.of<ChatViewModel>(context, listen: false);
+      if (!vm.isLoadingMore && vm.hasMore) {
+        _chatViewModel
+            .loadMoreMessages(); // Panggil method yang sudah Anda buat
+      }
+    }
   }
 
   @override
@@ -91,12 +105,6 @@ class _ChatScreenState extends State<ChatScreen> {
     if (!_joinedRoom && _chatViewModel.conversationId != null) {
       _socketProvider.joinConversation(_chatViewModel.conversationId!);
       _joinedRoom = true;
-    }
-
-    final count = _chatViewModel.messages.length;
-    if (count != _lastMessageCount) {
-      _lastMessageCount = count;
-      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     }
   }
 
@@ -157,6 +165,8 @@ class _ChatScreenState extends State<ChatScreen> {
             _chatViewModel.markMessageAsRead(msgId);
           }
         }
+
+        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
       } catch (_) {}
     };
 
@@ -238,8 +248,11 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void dispose() {
     _typingTimer?.cancel();
+
     _messageController.removeListener(_onTextChanged);
     _messageController.dispose();
+
+    _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
 
     if (_isInit) {
@@ -287,7 +300,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
       _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
+        _scrollController.position.minScrollExtent,
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOut,
       );
@@ -435,9 +448,16 @@ class _ChatScreenState extends State<ChatScreen> {
                     }
                     return ListView.builder(
                       controller: _scrollController,
+                      reverse: true,
                       padding: const EdgeInsets.all(16),
                       itemCount: messages.length,
                       itemBuilder: (context, index) {
+                        if (index == _chatViewModel.messages.length) {
+                          // Tampilkan loading spinner di atas jika sedang memuat
+                          return _chatViewModel.isLoadingMore
+                              ? const Center(child: CircularProgressIndicator())
+                              : const SizedBox.shrink();
+                        }
                         final message = messages[index];
                         final isMe = myId != null && message.senderId == myId;
                         return ChatBubble(message: message, isMe: isMe);
@@ -448,7 +468,9 @@ class _ChatScreenState extends State<ChatScreen> {
               },
             ),
           ),
+          // TEXT BOX
           Container(
+            key: _textBoxKey,
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             decoration: BoxDecoration(
               color: Colors.white,
@@ -472,6 +494,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 Expanded(
                   child: TextField(
                     controller: _messageController,
+                    keyboardType: TextInputType.multiline,
                     decoration: InputDecoration(
                       hintText: context.tr('type_message'),
                       border: OutlineInputBorder(
@@ -485,7 +508,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         vertical: 8,
                       ),
                     ),
-                    textInputAction: TextInputAction.send,
+                    textInputAction: TextInputAction.newline,
                     onSubmitted: (_) => _sendMessage(),
                     maxLines: null,
                   ),

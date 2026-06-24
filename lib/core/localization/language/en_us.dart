@@ -123,6 +123,7 @@ const Map<String, String> enUS = {
   'image': 'Image',
   'typing': 'Typing',
   'online': 'Online',
+  'copied_to_clipboard': 'Copied to clipboard',
 
   // Errors
   'error_occurred': 'An error occurred',

@@ -16,9 +16,13 @@ class BlockedUsersScreen extends StatefulWidget {
 }
 
 class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       Provider.of<BlockedUsersViewModel>(
@@ -26,6 +30,24 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
         listen: false,
       ).fetchBlockedUsers();
     });
+  }
+
+  void _onScroll() {
+    final vm = Provider.of<BlockedUsersViewModel>(context, listen: false);
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 200 &&
+        vm.hasMore &&
+        !vm.isLoadingMore &&
+        !vm.isLoading) {
+      vm.loadMoreBlockedUsers();
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -54,6 +76,7 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
           }
 
           return ListView.separated(
+            controller: _scrollController,
             itemCount: blockedUsers.length,
             separatorBuilder: (context, index) => const Divider(height: 1),
             itemBuilder: (context, index) {
