@@ -6,6 +6,7 @@ import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/material_symbols.dart';
 import 'package:iconify_flutter/icons/mdi.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:ngobrolin_app/core/widgets/cards/reply_message.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:provider/provider.dart';
 
@@ -113,7 +114,7 @@ class ChatBubble extends StatelessWidget {
             maxWidth: MediaQuery.of(context).size.width * 0.75,
           ),
           margin: const EdgeInsets.symmetric(vertical: 4),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
           decoration: BoxDecoration(
             color: isMe ? AppColors.chatBubbleUser : AppColors.chatBubbleOther,
             borderRadius: BorderRadius.circular(16).copyWith(
@@ -128,18 +129,30 @@ class ChatBubble extends StatelessWidget {
               ),
             ],
           ),
-          // Menggunakan IntrinsicWidth agar lebar bubble membungkus konten secara pas
           child: IntrinsicWidth(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (message.repliedMessage != null)
+                if (message.repliedMessage != null) ...[
                   _buildRepliedMessage(context),
-                if (message.repliedMessage != null) const SizedBox(height: 4),
-                _buildMainContent(context),
-                const SizedBox(height: 6),
-                _buildMessageMetadata(context),
+                  const SizedBox(height: 4),
+                ],
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    vertical: message.repliedMessage != null ? 4 : 8,
+                    horizontal: 8,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildMainContent(context),
+                      const SizedBox(height: 4),
+                      _buildMessageMetadata(context),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -151,110 +164,14 @@ class ChatBubble extends StatelessWidget {
   // --- SUB-WIDGET BUILDERS ---
 
   Widget _buildRepliedMessage(BuildContext context) {
-    final replied = message.repliedMessage!;
-    final isImage = replied.type == 'image';
-
-    return GestureDetector(
+    return ReplyMessageWidget(
+      message: message.repliedMessage!,
       onTap: () {
-        if (replied.id != null) {
-          onReplyTap?.call(replied.id);
+        if (message.repliedMessage!.id != null) {
+          onReplyTap?.call(message.repliedMessage!.id);
         }
       },
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.lightGrey.withOpacity(0.5),
-          border: const Border(
-            left: BorderSide(color: AppColors.primary, width: 4),
-          ),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      replied.sender?.name ?? '-',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    _buildRepliedPreviewText(context, replied),
-                  ],
-                ),
-              ),
-            ),
-            if (isImage)
-              ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  topRight: Radius.circular(8),
-                  bottomRight: Radius.circular(8),
-                ),
-                child: CachedNetworkImage(
-                  imageUrl: replied.content,
-                  width: 70,
-                  height: 70,
-                  fit: BoxFit.cover,
-                ),
-              ),
-          ],
-        ),
-      ),
     );
-  }
-
-  Widget _buildRepliedPreviewText(BuildContext context, MessageModel replied) {
-    switch (replied.type) {
-      case 'file':
-        return Row(
-          children: [
-            const Iconify(
-              Mdi.file_document_outline,
-              size: 18,
-              color: AppColors.text,
-            ),
-            const SizedBox(width: 4),
-            Flexible(
-              child: Text(
-                _extractFileName(replied.content, context.tr('file')),
-                style: const TextStyle(fontSize: 12, color: AppColors.text),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        );
-      case 'image':
-        return Row(
-          children: [
-            const Iconify(
-              MaterialSymbols.image_outline_rounded,
-              size: 18,
-              color: AppColors.text,
-            ),
-            const SizedBox(width: 4),
-            Text(
-              context.tr('image'),
-              style: const TextStyle(fontSize: 12, color: AppColors.text),
-            ),
-          ],
-        );
-      default:
-        return Text(
-          replied.content,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 12, color: AppColors.text),
-        );
-    }
   }
 
   Widget _buildMainContent(BuildContext context) {
@@ -273,8 +190,7 @@ class ChatBubble extends StatelessWidget {
 
   Widget _buildImageMessage(BuildContext context) {
     return Align(
-      alignment: Alignment
-          .centerLeft, // Mencegah gambar terdistorsi jika bubble melebar karena reply teks panjang
+      alignment: Alignment.centerLeft,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 2),
         child: GestureDetector(
@@ -336,7 +252,6 @@ class ChatBubble extends StatelessWidget {
   }
 
   Widget _buildMessageMetadata(BuildContext context) {
-    // Menghapus Align untuk mencegah pemaksaan maxWidth secara horizontal
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       mainAxisSize: MainAxisSize.min,

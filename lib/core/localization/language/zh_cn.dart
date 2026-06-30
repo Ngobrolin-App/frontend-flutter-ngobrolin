@@ -119,6 +119,9 @@ const Map<String, String> zhCN = {
   'replying_to': '回复:',
   'copy': '复制',
   'reply': '回复',
+  'take_photo': '拍照',
+  'preview_image': '预览图片',
+  'add_caption': '添加说明',
 
   // Errors
   'error_occurred': '发生错误',

@@ -127,6 +127,9 @@ const Map<String, String> enUS = {
   'replying_to': 'Replying to',
   'copy': 'copy',
   'reply': 'reply',
+  'take_photo': 'Take Photo',
+  'preview_image': 'Preview Image',
+  'add_caption': 'Add caption',
 
   // Errors
   'error_occurred': 'An error occurred',

@@ -1,7 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:ngobrolin_app/core/enums/reply_message_layout.dart';
 import 'package:ngobrolin_app/core/models/message_model.dart';
 import 'package:ngobrolin_app/core/viewmodels/auth/auth_view_model.dart';
+import 'package:ngobrolin_app/core/widgets/cards/reply_message.dart';
+import 'package:ngobrolin_app/core/widgets/inputs/chat_input_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/ic.dart';
@@ -17,6 +21,7 @@ import '../../core/widgets/cards/chat_bubble.dart';
 import '../../routes/app_routes.dart';
 import '../../theme/app_colors.dart';
 import 'dart:developer' as developer;
+import 'image_preview_edit_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   final String? chatId;
@@ -492,135 +497,31 @@ class _ChatScreenState extends State<ChatScreen> {
               },
             ),
           ),
+          Selector<ChatViewModel, (MessageModel?, bool)>(
+            selector: (_, vm) => (vm.replyingToMessage, vm.isLoading),
+            builder: (context, state, _) {
+              final replyingTo = state.$1;
+              final isLoading = state.$2;
 
-          // TEXT BOX
-          Container(
-            key: _textBoxKey,
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 4,
-                  offset: const Offset(0, -2),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Selector<ChatViewModel, MessageModel?>(
-                  selector: (_, vm) => vm.replyingToMessage,
-                  builder: (context, replyingTo, _) {
-                    if (replyingTo == null) return const SizedBox.shrink();
-                    return GestureDetector(
-                      onTap: () {
-                        _scrollToRepliedMessage(replyingTo.id);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.lightGrey.withOpacity(0.5),
-                          border: Border(
-                            left: BorderSide(
-                              color: AppColors.primary,
-                              width: 4,
-                            ),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    replyingTo.sender?.name ?? '',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Text(
-                                    replyingTo.content,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.close),
-                              onPressed: () => context
-                                  .read<ChatViewModel>()
-                                  .setReplyingTo(null),
-                            ),
-                          ],
-                        ),
+              return ChatInputBar(
+                controller: _messageController,
+                hintText: context.tr("type_message"),
+                isSending: isLoading,
+                onSend: _sendMessage,
+                onAttachment: () => _handleAttachment(context),
+                onSubmitted: (_) => _sendMessage(),
+                top: replyingTo == null
+                    ? null
+                    : ReplyMessageWidget(
+                        message: replyingTo,
+                        layout: ReplyMessageLayout.composer,
+                        onTap: () => _scrollToRepliedMessage(replyingTo.id),
+                        onClose: () {
+                          context.read<ChatViewModel>().setReplyingTo(null);
+                        },
                       ),
-                    );
-                  },
-                ),
-                SizedBox(height: 12),
-                Row(
-                  children: [
-                    IconButton(
-                      icon: Iconify(
-                        MaterialSymbols.attach_file,
-                        color: AppColors.grey,
-                      ),
-                      onPressed: () => _handleAttachment(context),
-                    ),
-                    Expanded(
-                      child: TextField(
-                        controller: _messageController,
-                        keyboardType: TextInputType.multiline,
-                        decoration: InputDecoration(
-                          hintText: context.tr('type_message'),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(24),
-                            borderSide: BorderSide.none,
-                          ),
-                          filled: true,
-                          fillColor: AppColors.lightGrey.withOpacity(0.3),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                        ),
-                        textInputAction: TextInputAction.newline,
-                        onSubmitted: (_) => _sendMessage(),
-                        minLines: 1,
-                        maxLines: 3,
-                      ),
-                    ),
-                    Selector<ChatViewModel, bool>(
-                      selector: (_, vm) => vm.isLoading,
-                      builder: (context, isLoading, _) {
-                        return IconButton(
-                          icon: isLoading
-                              ? const SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: AppColors.accent,
-                                  ),
-                                )
-                              : Iconify(
-                                  MaterialSymbols.send_rounded,
-                                  color: AppColors.accent,
-                                ),
-                          onPressed: isLoading ? null : _sendMessage,
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
+              );
+            },
           ),
         ],
       ),
@@ -636,22 +537,44 @@ class _ChatScreenState extends State<ChatScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // OPSI 1: KAMERA
+              GestureDetector(
+                onTap: () => Navigator.pop(ctx, 'camera'),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.camera_alt_rounded,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(context.tr('take_photo') ?? 'Ambil Foto'),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              // OPSI 2: GALERI
               GestureDetector(
                 onTap: () => Navigator.pop(ctx, 'image'),
                 child: Row(
                   children: [
-                    const Icon(Icons.image),
+                    const Icon(Icons.image, color: AppColors.primary),
                     const SizedBox(width: 12),
                     Expanded(child: Text(context.tr('choose_image'))),
                   ],
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
+              // OPSI 3: FILE
               GestureDetector(
                 onTap: () => Navigator.pop(ctx, 'file'),
                 child: Row(
                   children: [
-                    const Icon(Icons.insert_drive_file),
+                    const Icon(
+                      Icons.insert_drive_file,
+                      color: AppColors.primary,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(child: Text(context.tr('choose_file'))),
                   ],
@@ -666,17 +589,21 @@ class _ChatScreenState extends State<ChatScreen> {
     if (!mounted || choice == null) return;
 
     final chatVM = Provider.of<ChatViewModel>(context, listen: false);
+    final picker = ImagePicker();
+    String? pickedPath;
 
-    if (choice == 'image') {
-      final picker = ImagePicker();
+    if (choice == 'camera') {
+      final picked = await picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 80,
+      );
+      pickedPath = picked?.path;
+    } else if (choice == 'image') {
       final picked = await picker.pickImage(
         source: ImageSource.gallery,
         imageQuality: 80,
       );
-      if (picked != null && mounted) {
-        await chatVM.sendAttachment(picked.path, 'image');
-        _scrollToBottom();
-      }
+      pickedPath = picked?.path;
     } else if (choice == 'file') {
       final result = await FilePicker.platform.pickFiles(type: FileType.any);
       final path = result?.files.first.path;
@@ -684,6 +611,35 @@ class _ChatScreenState extends State<ChatScreen> {
         await chatVM.sendAttachment(path, 'file');
         _scrollToBottom();
       }
+      return; // Stop process di sini khusus file biasa
+    }
+
+    // JIKA GAMBAR BERHASIL DIAMBIL (DARI GALERI ATAU KAMERA)
+    if (pickedPath != null && mounted) {
+      // Arahkan ke halaman edit/preview simple terlebih dahulu
+      final result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ImagePreviewEditScreen(imagePath: pickedPath!),
+        ),
+      );
+      if (result != null && result is Map) {
+        final File editedFile = result['file'];
+        final String caption = result['caption'];
+
+        if (editedFile != null && mounted) {
+          await chatVM.sendAttachment(editedFile.path, 'image');
+          _scrollToBottom();
+        }
+      }
+      // final File? editedFile = await Navigator.push<File?>(
+      //   context,
+      //   MaterialPageRoute(
+      //     builder: (context) => ImagePreviewEditScreen(imagePath: pickedPath!),
+      //   ),
+      // );
+
+      // Jika user menekan tombol kirim di halaman preview
     }
   }
 

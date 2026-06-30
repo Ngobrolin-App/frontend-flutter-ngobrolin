@@ -122,6 +122,9 @@ const Map<String, String> jaJP = {
   'replying_to': '返信先:',
   'copy': 'コピー',
   'reply': '返信',
+  'take_photo': '写真を撮る',
+  'preview_image': '画像をプレビュー',
+  'add_caption': 'キャプションを追加',
 
   // Errors
   'error_occurred': 'エラーが発生しました',

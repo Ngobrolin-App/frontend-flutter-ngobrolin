@@ -128,6 +128,9 @@ const Map<String, String> idID = {
   'replying_to': 'Membalas pesan',
   'copy': 'Salin',
   'reply': 'Balas',
+  'take_photo': 'Ambil Foto',
+  'preview_image': 'Pratinjau Gambar',
+  'add_caption': 'Tambahkan keterangan',
 
   // Errors
   'error_occurred': 'Terjadi kesalahan',
