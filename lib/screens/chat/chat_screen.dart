@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:ngobrolin_app/core/models/message_model.dart';
 import 'package:ngobrolin_app/core/viewmodels/auth/auth_view_model.dart';
 import 'package:provider/provider.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
@@ -42,6 +43,7 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _isInit = false;
   Timer? _typingTimer;
   final GlobalKey _textBoxKey = GlobalKey();
+  Map<String, GlobalKey> _messageKeys = {};
 
   // Socket Handlers
   late Function(dynamic) _newMessageHandler;
@@ -328,6 +330,18 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  void _scrollToRepliedMessage(String messageId) {
+    final key = _messageKeys[messageId];
+    if (key?.currentContext != null) {
+      Scrollable.ensureVisible(
+        key!.currentContext!,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+        alignment: 0.5, // Menempatkan pesan di tengah layar
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -460,7 +474,17 @@ class _ChatScreenState extends State<ChatScreen> {
                         }
                         final message = messages[index];
                         final isMe = myId != null && message.senderId == myId;
-                        return ChatBubble(message: message, isMe: isMe);
+                        final key = _messageKeys.putIfAbsent(
+                          message.id,
+                          () => GlobalKey(),
+                        );
+                        return ChatBubble(
+                          key: key,
+                          message: message,
+                          isMe: isMe,
+                          onReplyTap: (repliedMessageId) =>
+                              _scrollToRepliedMessage(repliedMessageId),
+                        );
                       },
                     );
                   },
@@ -468,6 +492,7 @@ class _ChatScreenState extends State<ChatScreen> {
               },
             ),
           ),
+
           // TEXT BOX
           Container(
             key: _textBoxKey,
@@ -482,57 +507,117 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
               ],
             ),
-            child: Row(
+            child: Column(
               children: [
-                IconButton(
-                  icon: Iconify(
-                    MaterialSymbols.attach_file,
-                    color: AppColors.grey,
-                  ),
-                  onPressed: () => _handleAttachment(context),
-                ),
-                Expanded(
-                  child: TextField(
-                    controller: _messageController,
-                    keyboardType: TextInputType.multiline,
-                    decoration: InputDecoration(
-                      hintText: context.tr('type_message'),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
-                        borderSide: BorderSide.none,
-                      ),
-                      filled: true,
-                      fillColor: AppColors.lightGrey.withOpacity(0.3),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                    ),
-                    textInputAction: TextInputAction.newline,
-                    onSubmitted: (_) => _sendMessage(),
-                    maxLines: null,
-                  ),
-                ),
-                Selector<ChatViewModel, bool>(
-                  selector: (_, vm) => vm.isLoading,
-                  builder: (context, isLoading, _) {
-                    return IconButton(
-                      icon: isLoading
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: AppColors.accent,
-                              ),
-                            )
-                          : Iconify(
-                              MaterialSymbols.send_rounded,
-                              color: AppColors.accent,
+                Selector<ChatViewModel, MessageModel?>(
+                  selector: (_, vm) => vm.replyingToMessage,
+                  builder: (context, replyingTo, _) {
+                    if (replyingTo == null) return const SizedBox.shrink();
+                    return GestureDetector(
+                      onTap: () {
+                        _scrollToRepliedMessage(replyingTo.id);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.lightGrey.withOpacity(0.5),
+                          border: Border(
+                            left: BorderSide(
+                              color: AppColors.primary,
+                              width: 4,
                             ),
-                      onPressed: isLoading ? null : _sendMessage,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    replyingTo.sender?.name ?? '',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(
+                                    replyingTo.content,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.close),
+                              onPressed: () => context
+                                  .read<ChatViewModel>()
+                                  .setReplyingTo(null),
+                            ),
+                          ],
+                        ),
+                      ),
                     );
                   },
+                ),
+                SizedBox(height: 12),
+                Row(
+                  children: [
+                    IconButton(
+                      icon: Iconify(
+                        MaterialSymbols.attach_file,
+                        color: AppColors.grey,
+                      ),
+                      onPressed: () => _handleAttachment(context),
+                    ),
+                    Expanded(
+                      child: TextField(
+                        controller: _messageController,
+                        keyboardType: TextInputType.multiline,
+                        decoration: InputDecoration(
+                          hintText: context.tr('type_message'),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(24),
+                            borderSide: BorderSide.none,
+                          ),
+                          filled: true,
+                          fillColor: AppColors.lightGrey.withOpacity(0.3),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                        ),
+                        textInputAction: TextInputAction.newline,
+                        onSubmitted: (_) => _sendMessage(),
+                        minLines: 1,
+                        maxLines: 3,
+                      ),
+                    ),
+                    Selector<ChatViewModel, bool>(
+                      selector: (_, vm) => vm.isLoading,
+                      builder: (context, isLoading, _) {
+                        return IconButton(
+                          icon: isLoading
+                              ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: AppColors.accent,
+                                  ),
+                                )
+                              : Iconify(
+                                  MaterialSymbols.send_rounded,
+                                  color: AppColors.accent,
+                                ),
+                          onPressed: isLoading ? null : _sendMessage,
+                        );
+                      },
+                    ),
+                  ],
                 ),
               ],
             ),

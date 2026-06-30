@@ -125,6 +125,9 @@ const Map<String, String> idID = {
   'typing': 'Sedang mengetik',
   'online': 'Online',
   'copied_to_clipboard': 'Disalin ke papan klip',
+  'replying_to': 'Membalas pesan',
+  'copy': 'Salin',
+  'reply': 'Balas',
 
   // Errors
   'error_occurred': 'Terjadi kesalahan',

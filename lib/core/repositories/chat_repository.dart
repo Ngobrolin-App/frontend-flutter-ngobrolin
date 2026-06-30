@@ -190,14 +190,21 @@ class ChatRepository {
     required String conversationId,
     required String content,
     String type = 'text',
+    String? repliedMessageId,
   }) async {
+    final Map<String, dynamic> data = {
+      'conversationId': conversationId,
+      'content': content,
+      'type': type,
+    };
+
+    if (repliedMessageId != null) {
+      data['repliedMessageId'] = repliedMessageId;
+    }
+
     return _apiService.post<ApiResponse<MessageModel>>(
       '/messages/send',
-      data: {
-        'conversationId': conversationId,
-        'content': content,
-        'type': type,
-      },
+      data: data,
       parser: (response) {
         return ApiResponse<MessageModel>.fromJson(
           response,

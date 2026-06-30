@@ -38,6 +38,9 @@ class ChatViewModel extends BaseViewModel {
   String? _conversationGroupImage;
   String? get conversationGroupImage => _conversationGroupImage;
 
+  MessageModel? _replyingToMessage;
+  MessageModel? get replyingToMessage => _replyingToMessage;
+
   // Pagination states
   int _page = 1;
   final int _limit = 20;
@@ -264,6 +267,11 @@ class ChatViewModel extends BaseViewModel {
     }
   }
 
+  void setReplyingTo(MessageModel? message) {
+    _replyingToMessage = message;
+    notifyListeners();
+  }
+
   /// Submits text strings to remote endpoints.
   Future<bool> sendMessage(String content, {String type = 'text'}) async {
     if (content.trim().isEmpty) return false;
@@ -282,11 +290,16 @@ class ChatViewModel extends BaseViewModel {
               conversationId: _conversationId!,
               content: content,
               type: type,
+              repliedMessageId: _replyingToMessage?.id,
             );
+
+            if (result.isSuccess) {
+              _replyingToMessage = null;
+              notifyListeners();
+            }
 
             final newMessage = result.data;
             final newMessageId = newMessage?.id ?? '';
-            developer.log('nlohhashdioasdlohjjhjjjj ahhhh $newMessageId');
 
             if (newMessage != null) {
               final exists = _messages.any((m) => m.id == newMessage.id);

@@ -116,6 +116,9 @@ const Map<String, String> zhCN = {
   'typing': '正在输入...',
   'online': '在线',
   'copied_to_clipboard': '已复制到剪贴板',
+  'replying_to': '回复:',
+  'copy': '复制',
+  'reply': '回复',
 
   // Errors
   'error_occurred': '发生错误',

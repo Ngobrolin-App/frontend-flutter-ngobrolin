@@ -124,6 +124,9 @@ const Map<String, String> enUS = {
   'typing': 'Typing',
   'online': 'Online',
   'copied_to_clipboard': 'Copied to clipboard',
+  'replying_to': 'Replying to',
+  'copy': 'copy',
+  'reply': 'reply',
 
   // Errors
   'error_occurred': 'An error occurred',

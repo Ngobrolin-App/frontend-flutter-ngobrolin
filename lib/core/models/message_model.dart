@@ -15,6 +15,7 @@ class MessageModel extends Equatable {
   final DateTime createdAt;
   final UserModel? sender;
   final bool? isSendByMe;
+  final MessageModel? repliedMessage;
 
   const MessageModel({
     required this.id,
@@ -26,6 +27,7 @@ class MessageModel extends Equatable {
     required this.createdAt,
     this.sender,
     this.isSendByMe,
+    this.repliedMessage,
   });
 
   /// Creates a MessageModel from JSON data
@@ -46,6 +48,7 @@ class MessageModel extends Equatable {
     DateTime? createdAt,
     UserModel? sender,
     bool? isSendByMe,
+    MessageModel? repliedMessage,
   }) {
     return MessageModel(
       id: id ?? this.id,
@@ -57,6 +60,7 @@ class MessageModel extends Equatable {
       createdAt: createdAt ?? this.createdAt,
       sender: sender ?? this.sender,
       isSendByMe: isSendByMe ?? this.isSendByMe,
+      repliedMessage: repliedMessage ?? this.repliedMessage,
     );
   }
 
@@ -73,5 +77,6 @@ class MessageModel extends Equatable {
     isRead,
     createdAt,
     sender,
+    repliedMessage,
   ];
 }

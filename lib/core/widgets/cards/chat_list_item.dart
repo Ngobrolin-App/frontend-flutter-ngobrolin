@@ -11,8 +11,7 @@ class ChatListItem extends StatelessWidget {
   final ChatListItemModel chat;
   final VoidCallback onTap;
 
-  const ChatListItem({Key? key, required this.chat, required this.onTap})
-    : super(key: key);
+  const ChatListItem({super.key, required this.chat, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -56,11 +55,6 @@ class ChatListItem extends StatelessWidget {
         : chat.groupImage;
 
     final bool hasImage = imageUrl != null && imageUrl.isNotEmpty;
-
-    developer.log(
-      'ChatListItem - hasImage: $hasImage - imageUrl: $imageUrl',
-      name: 'ChatListItem',
-    );
 
     return CircleAvatar(
       radius: 24,

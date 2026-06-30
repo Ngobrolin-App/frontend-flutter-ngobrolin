@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:ngobrolin_app/core/utils/general_utils.dart';
 import 'package:ngobrolin_app/core/viewmodels/auth/auth_view_model.dart';
+import 'package:photo_view/photo_view.dart';
 import 'package:provider/provider.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/mdi.dart';
@@ -195,24 +197,48 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               color: AppColors.primary,
               child: Column(
                 children: [
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundColor: Colors.white,
-                    backgroundImage: user.avatarUrl != null
-                        ? NetworkImage(user.avatarUrl!)
+                  GestureDetector(
+                    onTap: user.avatarUrl != null
+                        ? () {
+                            showDialog(
+                              context: context,
+                              builder: (_) => Dialog(
+                                insetPadding: const EdgeInsets.all(16),
+                                child: PhotoView(
+                                  imageProvider: NetworkImage(user.avatarUrl!),
+                                  initialScale:
+                                      PhotoViewComputedScale.contained,
+                                ),
+                              ),
+                            );
+                          }
                         : null,
-                    child: user.avatarUrl == null
-                        ? Text(
-                            (user.name.trim().isNotEmpty)
-                                ? (user.name.trim()[0].toUpperCase())
-                                : '?',
-                            style: const TextStyle(
-                              fontSize: 40,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
-                            ),
+                    onLongPress: user.avatarUrl != null
+                        ? () => GeneralUtils.downloadAndOpen(
+                            context,
+                            user.avatarUrl!,
                           )
                         : null,
+
+                    child: CircleAvatar(
+                      radius: 50,
+                      backgroundColor: Colors.white,
+                      backgroundImage: user.avatarUrl != null
+                          ? NetworkImage(user.avatarUrl!)
+                          : null,
+                      child: user.avatarUrl == null
+                          ? Text(
+                              (user.name.trim().isNotEmpty)
+                                  ? (user.name.trim()[0].toUpperCase())
+                                  : '?',
+                              style: const TextStyle(
+                                fontSize: 40,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primary,
+                              ),
+                            )
+                          : null,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Text(

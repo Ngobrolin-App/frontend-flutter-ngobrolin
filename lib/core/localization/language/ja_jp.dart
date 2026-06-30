@@ -119,6 +119,9 @@ const Map<String, String> jaJP = {
   'typing': '入力中',
   'online': 'オンライン',
   'copied_to_clipboard': 'クリップボードにコピーしました',
+  'replying_to': '返信先:',
+  'copy': 'コピー',
+  'reply': '返信',
 
   // Errors
   'error_occurred': 'エラーが発生しました',
