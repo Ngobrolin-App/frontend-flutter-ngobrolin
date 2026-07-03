@@ -6,49 +6,25 @@ import '../../models/user_model.dart';
 class UserListItem extends StatelessWidget {
   final UserModel user;
   final VoidCallback onTap;
-  final VoidCallback? onActionTap;
-  final IconData? actionIcon;
   final Widget? actionWidget;
-  final String? actionText;
 
   const UserListItem({
     super.key,
     required this.user,
     required this.onTap,
-    this.onActionTap,
-    this.actionIcon,
     this.actionWidget,
-    this.actionText,
   });
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Row(
           children: [
-            // Avatar
-            CircleAvatar(
-              radius: 24,
-              backgroundColor: AppColors.lightGrey,
-              backgroundImage: user.avatarUrl != null
-                  ? CachedNetworkImageProvider(user.avatarUrl!)
-                  : null,
-              child: user.avatarUrl == null
-                  ? Text(
-                      user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
-                      ),
-                    )
-                  : null,
-            ),
-            const SizedBox(width: 12),
-            // User info
+            _buildAvatar(),
+            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -64,58 +40,50 @@ class UserListItem extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     '@${user.username}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
-                      color: AppColors.timestamp,
+                      color: AppColors.text.withOpacity(0.7),
                     ),
                   ),
+                  if (user.bio != null && user.bio!.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      user.bio!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.timestamp,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
-            // Action button
-            if (onActionTap != null &&
-                (actionIcon != null ||
-                    actionWidget != null ||
-                    actionText != null) &&
-                !(user.isPrivate))
-              InkWell(
-                onTap: onActionTap,
-                borderRadius: BorderRadius.circular(20),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.accent,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (actionWidget != null) ...[
-                        actionWidget!,
-                        if (actionText != null) const SizedBox(width: 4),
-                      ] else if (actionIcon != null) ...[
-                        Icon(actionIcon, color: Colors.white, size: 16),
-                        if (actionText != null) const SizedBox(width: 4),
-                      ],
-                      if (actionText != null)
-                        Text(
-                          actionText!,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
+            if (actionWidget != null) actionWidget!,
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildAvatar() {
+    return CircleAvatar(
+      radius: 24,
+      backgroundColor: AppColors.lightGrey,
+      backgroundImage: user.avatarUrl != null
+          ? CachedNetworkImageProvider(user.avatarUrl!)
+          : null,
+      child: user.avatarUrl == null
+          ? Text(
+              user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.primary,
+              ),
+            )
+          : null,
     );
   }
 }

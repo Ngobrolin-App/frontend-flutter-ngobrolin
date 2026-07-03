@@ -131,6 +131,18 @@ const Map<String, String> idID = {
   'take_photo': 'Ambil Foto',
   'preview_image': 'Pratinjau Gambar',
   'add_caption': 'Tambahkan keterangan',
+  "new_group": "Grup Baru",
+  "groups": "Grup",
+  "group": "Grup",
+  "select_members": "Pilih Anggota",
+  "new_community": "Komunitas Baru",
+  "community": "Komunitas",
+  "communities": "Komunitas",
+  "leave_group": "Keluar Grup",
+  "add_members": "Tambah Anggota",
+  "leave_community": "Keluar Komunitas",
+  "continue": "Lanjutkan",
+  "select_new_group_members": "Pilih anggota grup baru",
 
   // Errors
   'error_occurred': 'Terjadi kesalahan',

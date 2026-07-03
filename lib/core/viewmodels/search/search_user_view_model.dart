@@ -22,6 +22,12 @@ class SearchUserViewModel extends BaseViewModel {
   bool get isLoadingMore => _isLoadingMore;
   bool get hasMore => _hasMore;
 
+  bool _isSelectingGroupMembers = false;
+  bool get isSelectingGroupMembers => _isSelectingGroupMembers;
+
+  List<UserModel> _selectedGroupMembers = [];
+  List<UserModel> get selectedGroupMembers => _selectedGroupMembers;
+
   SearchUserViewModel({UserRepository? userRepository})
     : _userRepository = userRepository ?? UserRepository();
 
@@ -102,5 +108,20 @@ class SearchUserViewModel extends BaseViewModel {
       _isLoadingMore = false;
       notifyListeners();
     }
+  }
+
+  void setSelectingGroupMembers(bool value) {
+    _isSelectingGroupMembers = value;
+    if (!value) _selectedGroupMembers.clear();
+    notifyListeners();
+  }
+
+  void toggleUserSelection(UserModel user) {
+    if (_selectedGroupMembers.any((u) => u.id == user.id)) {
+      _selectedGroupMembers.removeWhere((u) => u.id == user.id);
+    } else {
+      _selectedGroupMembers.add(user);
+    }
+    notifyListeners();
   }
 }

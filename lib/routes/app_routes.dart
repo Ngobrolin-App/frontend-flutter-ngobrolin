@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ngobrolin_app/bootstrap.dart';
 import 'package:ngobrolin_app/core/localization/app_localizations.dart';
+import 'package:ngobrolin_app/screens/chat/create_chat_group.dart';
 import 'package:ngobrolin_app/theme/app_colors.dart';
 
 // Screens
@@ -26,6 +27,7 @@ class AppRoutes {
   static const String resetPassword = '/reset-password';
   static const String main = '/main';
   static const String chat = '/chat';
+  static const String createChatGroup = '/create-chat-group';
   static const String settingsRoute = '/settings';
   static const String blockedUsers = '/settings/blocked-users';
   static const String userProfile = '/user-profile';
@@ -66,6 +68,8 @@ class AppRoutes {
             chatId: args?['chatId'] as String? ?? '',
           ),
         );
+      case createChatGroup:
+        return MaterialPageRoute(builder: (_) => const CreateChatGroupScreen());
       case settingsRoute:
         return MaterialPageRoute(builder: (_) => const SettingsScreen());
       case blockedUsers:

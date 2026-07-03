@@ -125,6 +125,18 @@ const Map<String, String> jaJP = {
   'take_photo': '写真を撮る',
   'preview_image': '画像をプレビュー',
   'add_caption': 'キャプションを追加',
+  "new_group": "新しいグループ",
+  "groups": "グループ",
+  "group": "グループ",
+  "select_members": "メンバーを選択",
+  "new_community": "新しいコミュニティ",
+  "community": "コミュニティ",
+  "communities": "コミュニティ",
+  "leave_group": "グループを退出",
+  "add_members": "メンバーを追加",
+  "leave_community": "コミュニティを退出",
+  "continue": "続ける",
+  "select_new_group_members": "新しいグループのメンバーを選択",
 
   // Errors
   'error_occurred': 'エラーが発生しました',

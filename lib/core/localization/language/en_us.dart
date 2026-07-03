@@ -130,6 +130,18 @@ const Map<String, String> enUS = {
   'take_photo': 'Take Photo',
   'preview_image': 'Preview Image',
   'add_caption': 'Add caption',
+  "new_group": "New Group",
+  "groups": "Groups",
+  "group": "Group",
+  "select_members": "Select Members",
+  "new_community": "New Community",
+  "community": "Community",
+  "communities": "Communities",
+  "leave_group": "Leave Group",
+  "add_members": "Add Members",
+  "leave_community": "Leave Community",
+  "continue": "Continue",
+  "select_new_group_members": "Select New Group Members",
 
   // Errors
   'error_occurred': 'An error occurred',

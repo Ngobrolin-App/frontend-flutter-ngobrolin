@@ -122,6 +122,18 @@ const Map<String, String> zhCN = {
   'take_photo': '拍照',
   'preview_image': '预览图片',
   'add_caption': '添加说明',
+  "new_group": "新建群组",
+  "groups": "群组",
+  "group": "群组",
+  "select_members": "选择成员",
+  "new_community": "新建社区",
+  "community": "社区",
+  "communities": "社区",
+  "leave_group": "退出群组",
+  "add_members": "添加成员",
+  "leave_community": "退出社区",
+  "continue": "继续",
+  "select_new_group_members": "选择新群组成员",
 
   // Errors
   'error_occurred': '发生错误',

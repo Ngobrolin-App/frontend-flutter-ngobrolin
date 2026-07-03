@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:ngobrolin_app/routes/app_routes.dart';
 import 'package:provider/provider.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/ic.dart';
 import 'package:ngobrolin_app/core/widgets/states/empty_state.dart';
+import 'package:ngobrolin_app/core/widgets/buttons/mini_icon_text_button.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/viewmodels/settings/blocked_users_view_model.dart';
 import '../../theme/app_colors.dart';
 import '../../core/widgets/cards/user_list_item.dart';
+import 'package:iconify_flutter/icons/material_symbols.dart';
 
 class BlockedUsersScreen extends StatefulWidget {
   const BlockedUsersScreen({super.key});
@@ -84,13 +87,18 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
 
               return UserListItem(
                 user: user,
-                onTap: () {},
-                onActionTap: () => _unblockUser(user.id, blockedUsersViewModel),
-                actionText: context.tr('unblock'),
-                actionWidget: const Icon(
-                  Icons.lock_open,
-                  color: Colors.white,
-                  size: 16,
+                onTap: () => Navigator.of(context).pushNamed(
+                  AppRoutes.userProfile,
+                  arguments: {'userId': user.id},
+                ),
+                actionWidget: MiniIconTextButton(
+                  onTap: () => _unblockUser(user.id, blockedUsersViewModel),
+                  icon: const Iconify(
+                    MaterialSymbols.unblock_flipped,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                  text: context.tr('unblock'),
                 ),
               );
             },
