@@ -1,5 +1,4 @@
 import 'package:permission_handler/permission_handler.dart';
-import 'dart:io';
 
 class NotificationService {
   static Future<bool> shouldShowPermissionDialog() async {

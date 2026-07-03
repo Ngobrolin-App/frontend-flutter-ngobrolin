@@ -31,10 +31,10 @@ class AppRoutes {
   static const String userProfile = '/user-profile';
 
   static Route<dynamic>? generateRoute(RouteSettings settings) {
-    developer.log(
-      'AppRoutes: Navigating to: ${settings.name}',
-      name: 'AppRoutes',
-    );
+    // developer.log(
+    //   'AppRoutes: Navigating to: ${settings.name}',
+    //   name: 'AppRoutes',
+    // );
     switch (settings.name) {
       case splash:
         return MaterialPageRoute(builder: (_) => const SplashScreen());

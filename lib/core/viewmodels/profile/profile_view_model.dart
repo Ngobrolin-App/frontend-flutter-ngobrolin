@@ -22,10 +22,6 @@ class ProfileViewModel extends BaseViewModel {
 
   /// Fetches the latest authenticated user profile metrics from the network API.
   Future<bool> fetchCurrentProfile() async {
-    developer.log(
-      'ProfileViewModel - fetchCurrentProfile',
-      name: 'ProfileViewModel',
-    );
     return await runBusyFuture(() async {
           try {
             final response = await _userRepository.getCurrentProfile();

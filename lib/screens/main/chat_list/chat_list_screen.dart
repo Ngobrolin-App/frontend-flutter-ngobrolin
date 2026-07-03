@@ -59,19 +59,19 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
     // Definisikan Handlers
     _conversationUpdatedHandler = (data) {
-      developer.log(
-        '-------- conversation_updated: $data',
-        name: 'ChatListScreen',
-      );
+      // developer.log(
+      //   'ChatListScreen - _conversationUpdatedHandler: $data',
+      //   name: 'ChatListScreen',
+      // );
       final currentUserId = authViewModel.user?.id;
       chatListViewModel.handleSocketConversationUpdate(data, currentUserId);
     };
 
     _conversationCreatedHandler = (data) {
-      developer.log(
-        '-------- conversation_created: $data',
-        name: 'ChatListScreen',
-      );
+      // developer.log(
+      //   'ChatListScreen - _conversationCreatedHandler: $data',
+      //   name: 'ChatListScreen',
+      // );
       chatListViewModel.fetchChatList();
     };
 

@@ -11,13 +11,13 @@ class ApiException implements Exception {
 
   /// Factory constructor to create ApiException from DioException
   factory ApiException.fromDioException(DioException exception) {
-    developer.log('''
-    ========== API ERROR ==========
-    ${exception.response?.statusCode}
-    ${exception.response?.data}
-    ${exception.response.toString()}
-    ===============================
-    ''', name: 'ApiException');
+    // developer.log('''
+    // ========== API ERROR ==========
+    // ${exception.response?.statusCode}
+    // ${exception.response?.data}
+    // ${exception.response.toString()}
+    // ===============================
+    // ''', name: 'ApiException');
 
     String message = 'Something went wrong';
     int? statusCode = exception.response?.statusCode;

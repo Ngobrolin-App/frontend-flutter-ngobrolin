@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:ngobrolin_app/core/localization/language_constants.dart';
 import 'package:ngobrolin_app/core/services/deeplink/deeplink_service.dart';
 import 'package:provider/provider.dart';
 
@@ -38,8 +37,6 @@ import 'core/viewmodels/settings/blocked_users_view_model.dart';
 import 'core/repositories/user_repository.dart';
 
 import 'flavors/flavor_config.dart';
-
-import 'dart:developer' as developer;
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 

@@ -5,7 +5,6 @@ import 'package:iconify_flutter/icons/material_symbols.dart';
 import 'package:ngobrolin_app/core/models/chat_list_item_model.dart';
 import '../../../theme/app_colors.dart';
 import '../../localization/app_localizations.dart';
-import 'dart:developer' as developer;
 
 class ChatListItem extends StatelessWidget {
   final ChatListItemModel chat;

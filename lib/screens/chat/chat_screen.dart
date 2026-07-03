@@ -154,10 +154,10 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _setupSocketHandlers() {
     _newMessageHandler = (data) {
-      developer.log(
-        'ChatScreen - _setupSocketHandlers - _newMessageHandler data: $data',
-        name: 'ChatScreen',
-      );
+      // developer.log(
+      //   'ChatScreen - _setupSocketHandlers - _newMessageHandler data: $data',
+      //   name: 'ChatScreen',
+      // );
       try {
         final msgMap = data['message'] as Map<String, dynamic>;
         final convId = msgMap['conversationId'] as String?;
@@ -547,9 +547,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       color: AppColors.primary,
                     ),
                     const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(context.tr('take_photo') ?? 'Ambil Foto'),
-                    ),
+                    Expanded(child: Text(context.tr('take_photo'))),
                   ],
                 ),
               ),

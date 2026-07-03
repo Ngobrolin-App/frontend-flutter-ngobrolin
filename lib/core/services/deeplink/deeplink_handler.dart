@@ -2,7 +2,6 @@ import 'package:ngobrolin_app/core/models/deeplink/deeplink_data.dart';
 import 'package:ngobrolin_app/routes/app_routes.dart';
 
 import 'deeplink_routes.dart';
-import 'dart:developer' as developer;
 
 class DeeplinkHandler {
   // Untuk FCM / Notification
@@ -55,10 +54,6 @@ class DeeplinkHandler {
         );
 
       default:
-        // developer.log(
-        //   'DEBUG: Tidak ada rute yang cocok untuk path: $path',
-        //   name: 'DeeplinkHandler',
-        // );
         return null;
     }
   }

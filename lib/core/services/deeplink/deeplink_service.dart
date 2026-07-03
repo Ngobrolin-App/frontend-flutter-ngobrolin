@@ -4,7 +4,6 @@ import 'package:app_links/app_links.dart';
 
 import '../../../bootstrap.dart';
 import 'deeplink_handler.dart';
-import 'dart:developer' as developer;
 
 class DeeplinkService {
   final AppLinks _appLinks = AppLinks();
