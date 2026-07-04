@@ -234,4 +234,6 @@ const Map<String, String> zhCN = {
       '为了不错过朋友的重要聊天，请允许 Ngobrolin 向您的手机发送通知。',
   'later': '稍后',
   'enable': '开启',
+
+  'test': 'test',
 };
