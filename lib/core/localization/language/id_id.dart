@@ -143,6 +143,8 @@ const Map<String, String> idID = {
   "leave_community": "Keluar Komunitas",
   "continue": "Lanjutkan",
   "select_new_group_members": "Pilih anggota grup baru",
+  "preview_attachment": "Pratinjau Lampiran",
+  "crop_image": "Potong Gambar",
 
   // Errors
   'error_occurred': 'Terjadi kesalahan',
@@ -150,6 +152,9 @@ const Map<String, String> idID = {
   'no_internet': 'Tidak ada koneksi internet',
   'check_connection': 'Silakan periksa koneksi Anda dan coba lagi',
   'failed_to_send_message': 'Gagal mengirim pesan',
+  "failed_to_load_image": "Gagal memuat gambar",
+  "image_unavailable": "Gambar tidak tersedia",
+  "failed_to_pick_image": "Gagal memilih gambar",
 
   // Misc
   'cancel': 'Batal',

@@ -273,8 +273,17 @@ class ChatViewModel extends BaseViewModel {
   }
 
   /// Submits text strings to remote endpoints.
-  Future<bool> sendMessage(String content, {String type = 'text'}) async {
-    if (content.trim().isEmpty) return false;
+  Future<bool> sendMessage({
+    String? content,
+    String type = 'text',
+    String? mediaUrl,
+    String? mediaFileType,
+    String? mediaFileName,
+    int? mediaSize,
+  }) async {
+    if ((content?.trim().isEmpty ?? true) && mediaUrl == null) {
+      return false;
+    }
 
     if (_conversationId == null || _conversationId!.isEmpty) {
       final result = await _chatRepository.getOrCreatePrivateConversationId(
@@ -291,6 +300,10 @@ class ChatViewModel extends BaseViewModel {
               content: content,
               type: type,
               repliedMessageId: _replyingToMessage?.id,
+              mediaUrl: mediaUrl,
+              mediaFileType: mediaFileType,
+              mediaFileName: mediaFileName,
+              mediaSize: mediaSize,
             );
 
             if (result.isSuccess) {
@@ -324,7 +337,14 @@ class ChatViewModel extends BaseViewModel {
   }
 
   /// Submits binary media files through a repository upload tunnel.
-  Future<bool> sendAttachment(String filePath, String type) async {
+  Future<bool> sendAttachment({
+    required String mediaFilePath,
+    required String type,
+    String? content,
+    String? mediaFileType,
+    String? mediaFileName,
+    int? mediaSize,
+  }) async {
     if (_conversationId == null || _conversationId!.isEmpty) {
       final result = await _chatRepository.getOrCreatePrivateConversationId(
         _partnerId,
@@ -336,12 +356,19 @@ class ChatViewModel extends BaseViewModel {
     return await runBusyFuture(() async {
           try {
             final result = await _chatRepository.uploadAttachment(
-              filePath: filePath,
+              filePath: mediaFilePath,
               type: type,
             );
 
             final url = result.data ?? '';
-            return await sendMessage(url, type: type);
+            return await sendMessage(
+              content: content,
+              type: type,
+              mediaUrl: url,
+              mediaFileType: mediaFileType,
+              mediaFileName: mediaFileName,
+              mediaSize: mediaSize,
+            );
           } catch (e) {
             developer.log(
               "ChatViewModel - sendAttachment() error $e",

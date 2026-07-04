@@ -137,6 +137,8 @@ const Map<String, String> jaJP = {
   "leave_community": "コミュニティを退出",
   "continue": "続ける",
   "select_new_group_members": "新しいグループのメンバーを選択",
+  "preview_attachment": "添付ファイルをプレビュー",
+  "crop_image": "画像を切り抜く",
 
   // Errors
   'error_occurred': 'エラーが発生しました',
@@ -144,6 +146,9 @@ const Map<String, String> jaJP = {
   'no_internet': 'インターネット接続がありません',
   'check_connection': '接続を確認してもう一度試してください',
   'failed_to_send_message': 'メッセージの送信に失敗しました',
+  "failed_to_load_image": "画像の読み込みに失敗しました",
+  "image_unavailable": "画像を利用できません",
+  "failed_to_pick_image": "画像を選択できませんでした",
 
   // Misc
   'cancel': 'キャンセル',

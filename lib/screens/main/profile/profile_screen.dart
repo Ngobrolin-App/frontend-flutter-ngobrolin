@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/material_symbols.dart';
+import 'package:ngobrolin_app/core/widgets/cards/app_avatar.dart';
 import 'package:provider/provider.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/viewmodels/auth/auth_view_model.dart';
@@ -102,9 +103,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
           final displayName = user.name.trim();
           final avatarUrl = user.avatarUrl;
-          final initial = displayName.isNotEmpty
-              ? displayName[0].toUpperCase()
-              : '?';
 
           return SingleChildScrollView(
             child: Column(
@@ -116,23 +114,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   color: AppColors.primary,
                   child: Column(
                     children: [
-                      CircleAvatar(
+                      AppAvatar(
+                        imageUrl: avatarUrl,
+                        name: user.name,
                         radius: 50,
-                        backgroundColor: Colors.white,
-                        backgroundImage:
-                            (avatarUrl != null && avatarUrl.isNotEmpty)
-                            ? NetworkImage(avatarUrl)
-                            : null,
-                        child: (avatarUrl == null || avatarUrl.isEmpty)
-                            ? Text(
-                                initial,
-                                style: const TextStyle(
-                                  fontSize: 40,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.primary,
-                                ),
-                              )
-                            : null,
+                        fontSize: 40,
+                        backgroundColor: AppColors.white,
                       ),
                       const SizedBox(height: 16),
                       Text(

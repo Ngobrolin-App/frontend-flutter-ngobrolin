@@ -142,7 +142,7 @@ class ChatListItem extends StatelessWidget {
           size: 18,
           color: AppColors.timestamp,
         );
-        text = context.tr('image');
+        text = lastMessageContent ?? context.tr('image');
         break;
       case 'file':
         icon = Iconify(
@@ -150,7 +150,7 @@ class ChatListItem extends StatelessWidget {
           size: 18,
           color: AppColors.timestamp,
         );
-        text = context.tr('file');
+        text = lastMessageContent ?? context.tr('file');
         break;
       default:
         return Text(

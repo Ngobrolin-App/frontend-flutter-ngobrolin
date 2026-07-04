@@ -6,6 +6,7 @@ import '../models/message_model.dart';
 import '../models/paginated_result.dart';
 import '../services/api/api_service.dart';
 import 'package:dio/dio.dart';
+import 'dart:developer' as developer;
 
 class ChatRepository {
   final ApiService _apiService;
@@ -187,18 +188,45 @@ class ChatRepository {
 
   Future<ApiResponse<MessageModel>> sendMessage({
     required String conversationId,
-    required String content,
+    String? content,
     String type = 'text',
     String? repliedMessageId,
+    String? mediaUrl,
+    String? mediaFileType,
+    String? mediaFileName,
+    int? mediaSize,
   }) async {
+    developer.log(
+      'Sending message: $content, type: $type, mediaUrl: $mediaUrl, mediaFileType: $mediaFileType, mediaFileName: $mediaFileName, mediaSize: $mediaSize',
+      name: 'ChatRepository',
+    );
     final Map<String, dynamic> data = {
       'conversationId': conversationId,
-      'content': content,
       'type': type,
     };
 
+    if (content != null && content.isNotEmpty) {
+      data['content'] = content;
+    }
+
     if (repliedMessageId != null) {
       data['repliedMessageId'] = repliedMessageId;
+    }
+
+    if (mediaUrl != null) {
+      data['mediaUrl'] = mediaUrl;
+    }
+
+    if (mediaFileType != null) {
+      data['mediaFileType'] = mediaFileType;
+    }
+
+    if (mediaFileName != null) {
+      data['mediaFileName'] = mediaFileName;
+    }
+
+    if (mediaSize != null) {
+      data['mediaSize'] = mediaSize;
     }
 
     return _apiService.post<ApiResponse<MessageModel>>(

@@ -3,8 +3,10 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/material_symbols.dart';
+import 'package:ngobrolin_app/core/utils/general_utils.dart';
 import 'package:ngobrolin_app/core/viewmodels/profile/profile_view_model.dart';
 import 'package:ngobrolin_app/core/models/user_model.dart';
+import 'package:ngobrolin_app/core/widgets/cards/app_avatar.dart';
 import 'package:provider/provider.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/widgets/buttons/primary_button.dart';
@@ -54,33 +56,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _confirmPasswordController.dispose();
     _currentPasswordController.dispose();
     super.dispose();
-  }
-
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    // OPTIMASI: Bungkus dengan try-catch untuk mengantisipasi penolakan permission storage oleh user
-    try {
-      final pickedFile = await picker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth:
-            512, // Batasi resolusi gambar sebelum di-upload untuk menghemat bandwidth
-        imageQuality: 85,
-      );
-
-      if (pickedFile != null) {
-        setState(() {
-          _imageFile = File(pickedFile.path);
-        });
-      }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.tr('failed_to_pick_image')),
-          backgroundColor: AppColors.warning,
-        ),
-      );
-    }
   }
 
   // OPTIMASI: Bersihkan input password saat form password disembunyikan
@@ -159,6 +134,83 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
+  void _showImageSourceBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              GestureDetector(
+                onTap: () => Navigator.pop(ctx, ImageSource.camera),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.camera_alt_rounded,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(child: Text(context.tr('take_photo'))),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              GestureDetector(
+                onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+                child: Row(
+                  children: [
+                    const Icon(Icons.image, color: AppColors.primary),
+                    const SizedBox(width: 12),
+                    Expanded(child: Text(context.tr('choose_image'))),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ).then((source) {
+      if (source != null && source is ImageSource) {
+        _pickAndCropImage(source);
+      }
+    });
+  }
+
+  Future<void> _pickAndCropImage(ImageSource source) async {
+    final picker = ImagePicker();
+    try {
+      final pickedFile = await picker.pickImage(
+        source: source,
+        maxWidth: 1080, // Resolusi aman sebelum di-crop
+        imageQuality: 85,
+      );
+
+      if (pickedFile != null && mounted) {
+        final croppedFile = await GeneralUtils.cropImage(
+          sourcePath: pickedFile.path,
+          title: context.tr('edit_profile'),
+          isSquare: true,
+        );
+
+        if (croppedFile != null && mounted) {
+          setState(() {
+            _imageFile = croppedFile;
+          });
+        }
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.tr('failed_to_pick_image')),
+          backgroundColor: AppColors.warning,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -174,34 +226,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 Center(
                   child: Stack(
                     children: [
-                      CircleAvatar(
+                      AppAvatar(
+                        localFile: _imageFile, // Inject file lokal di sini
+                        imageUrl: widget.user.avatarUrl,
+                        name: widget.user.name,
                         radius: 60,
-                        backgroundColor: Colors.grey[300],
-                        backgroundImage: _imageFile != null
-                            ? FileImage(_imageFile!)
-                            : (widget.user.avatarUrl != null
-                                  ? NetworkImage(widget.user.avatarUrl!)
-                                  : null),
-                        child:
-                            (_imageFile == null &&
-                                widget.user.avatarUrl == null)
-                            ? Text(
-                                widget.user.name.isNotEmpty
-                                    ? widget.user.name[0].toUpperCase()
-                                    : '?',
-                                style: const TextStyle(
-                                  fontSize: 50,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.primary,
-                                ),
-                              )
-                            : null,
+                        fontSize: 50,
+                        backgroundColor: AppColors.lightGrey,
                       ),
                       Positioned(
                         bottom: 0,
                         right: 0,
                         child: InkWell(
-                          onTap: _pickImage,
+                          onTap: _showImageSourceBottomSheet,
                           borderRadius: BorderRadius.circular(20),
                           child: Container(
                             padding: const EdgeInsets.all(8),

@@ -7,6 +7,7 @@ import 'package:iconify_flutter/icons/material_symbols.dart';
 import 'package:iconify_flutter/icons/mdi.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:ngobrolin_app/core/widgets/cards/reply_message.dart';
+import 'package:ngobrolin_app/core/widgets/states/image_error_placeholder.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:provider/provider.dart';
 
@@ -83,7 +84,7 @@ class ChatBubble extends StatelessWidget {
     final chatViewModel = Provider.of<ChatViewModel>(context, listen: false);
     switch (value) {
       case 'copy':
-        Clipboard.setData(ClipboardData(text: message.content));
+        Clipboard.setData(ClipboardData(text: message.content ?? ''));
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(context.tr('copied_to_clipboard')),
@@ -181,11 +182,15 @@ class ChatBubble extends StatelessWidget {
       case 'file':
         return _buildFileMessage(context);
       default:
-        return Text(
-          message.content,
-          style: const TextStyle(fontSize: 16, color: AppColors.text),
-        );
+        return _buildTextMessage(context);
     }
+  }
+
+  Widget _buildTextMessage(BuildContext context) {
+    return Text(
+      message.content ?? '',
+      style: const TextStyle(fontSize: 16, color: AppColors.text),
+    );
   }
 
   Widget _buildImageMessage(BuildContext context) {
@@ -193,29 +198,55 @@ class ChatBubble extends StatelessWidget {
       alignment: Alignment.centerLeft,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 2),
-        child: GestureDetector(
-          onTap: () {
-            showDialog(
-              context: context,
-              builder: (_) => Dialog(
-                insetPadding: const EdgeInsets.all(16),
-                child: PhotoView(
-                  imageProvider: NetworkImage(message.content),
-                  initialScale: PhotoViewComputedScale.contained,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            GestureDetector(
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (_) => Dialog(
+                    insetPadding: const EdgeInsets.all(16),
+                    child: PhotoView(
+                      imageProvider: NetworkImage(message.mediaUrl ?? ''),
+                      initialScale: PhotoViewComputedScale.contained,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Center(
+                          child: ImageErrorPlaceholder(
+                            width: double.infinity,
+                            height: double.infinity,
+                            iconSize: 48,
+                            errorMessage: context.tr('failed_to_load_image'),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                );
+              },
+              onLongPress: () =>
+                  GeneralUtils.downloadAndOpen(context, message.mediaUrl ?? ''),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: CachedNetworkImage(
+                  imageUrl: message.mediaUrl ?? '',
+                  width: MediaQuery.of(context).size.width * 0.6,
+                  fit: BoxFit.cover,
+                  errorWidget: (context, url, error) => ImageErrorPlaceholder(
+                    width: MediaQuery.of(context).size.width * 0.6,
+                    height: 160,
+                    iconSize: 40,
+                    errorMessage: context.tr('failed_to_load_image'),
+                  ),
                 ),
               ),
-            );
-          },
-          onLongPress: () =>
-              GeneralUtils.downloadAndOpen(context, message.content),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: CachedNetworkImage(
-              imageUrl: message.content,
-              width: MediaQuery.of(context).size.width * 0.6,
-              fit: BoxFit.cover,
             ),
-          ),
+
+            if (message.content?.isNotEmpty ?? false) ...[
+              const SizedBox(height: 4),
+              _buildTextMessage(context), // Display caption below the image
+            ],
+          ],
         ),
       ),
     );
@@ -224,29 +255,46 @@ class ChatBubble extends StatelessWidget {
   Widget _buildFileMessage(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
-      child: InkWell(
-        onTap: () => GeneralUtils.downloadAndOpen(context, message.content),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Iconify(Mdi.file_document, size: 24, color: AppColors.text),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                _extractFileName(message.content, context.tr('file')),
-                style: const TextStyle(fontSize: 16, color: AppColors.text),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: () =>
+                GeneralUtils.downloadAndOpen(context, message.mediaUrl ?? ''),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Iconify(
+                  Mdi.file_document,
+                  size: 24,
+                  color: AppColors.text,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    _extractFileName(
+                      message.mediaFileName ?? '',
+                      context.tr('file'),
+                    ),
+                    style: const TextStyle(fontSize: 16, color: AppColors.text),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Iconify(
+                  MaterialSymbols.open_in_new,
+                  size: 20,
+                  color: AppColors.accent,
+                ),
+              ],
             ),
-            const SizedBox(width: 8),
-            const Iconify(
-              MaterialSymbols.open_in_new,
-              size: 20,
-              color: AppColors.accent,
-            ),
+          ),
+          if (message.content?.isNotEmpty ?? false) ...[
+            const SizedBox(height: 4),
+            _buildTextMessage(context), // Display caption below the image
           ],
-        ),
+        ],
       ),
     );
   }

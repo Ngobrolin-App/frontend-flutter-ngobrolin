@@ -142,6 +142,8 @@ const Map<String, String> enUS = {
   "leave_community": "Leave Community",
   "continue": "Continue",
   "select_new_group_members": "Select New Group Members",
+  "preview_attachment": "Preview Attachment",
+  "crop_image": "Crop Image",
 
   // Errors
   'error_occurred': 'An error occurred',
@@ -149,6 +151,9 @@ const Map<String, String> enUS = {
   'no_internet': 'No internet connection',
   'check_connection': 'Please check your connection and try again',
   'failed_to_send_message': 'Failed to send message',
+  "failed_to_load_image": "Failed to load image",
+  "image_unavailable": "Image unavailable",
+  "failed_to_pick_image": "Failed to pick image",
 
   // Misc
   'cancel': 'Cancel',

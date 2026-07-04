@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:ngobrolin_app/core/utils/general_utils.dart';
 import 'package:ngobrolin_app/core/viewmodels/auth/auth_view_model.dart';
+import 'package:ngobrolin_app/core/widgets/cards/app_avatar.dart';
+import 'package:ngobrolin_app/core/widgets/states/image_error_placeholder.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:provider/provider.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
@@ -208,6 +210,15 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                   imageProvider: NetworkImage(user.avatarUrl!),
                                   initialScale:
                                       PhotoViewComputedScale.contained,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      ImageErrorPlaceholder(
+                                        width: double.infinity,
+                                        height: double.infinity,
+                                        iconSize: 48,
+                                        errorMessage: context.tr(
+                                          'failed_to_load_image',
+                                        ),
+                                      ),
                                 ),
                               ),
                             );
@@ -220,24 +231,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           )
                         : null,
 
-                    child: CircleAvatar(
+                    child: AppAvatar(
+                      imageUrl: user.avatarUrl,
+                      name: user.name,
                       radius: 50,
-                      backgroundColor: Colors.white,
-                      backgroundImage: user.avatarUrl != null
-                          ? NetworkImage(user.avatarUrl!)
-                          : null,
-                      child: user.avatarUrl == null
-                          ? Text(
-                              (user.name.trim().isNotEmpty)
-                                  ? (user.name.trim()[0].toUpperCase())
-                                  : '?',
-                              style: const TextStyle(
-                                fontSize: 40,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primary,
-                              ),
-                            )
-                          : null,
+                      fontSize: 40,
+                      backgroundColor: AppColors.white,
                     ),
                   ),
                   const SizedBox(height: 16),

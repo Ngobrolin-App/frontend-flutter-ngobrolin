@@ -134,6 +134,8 @@ const Map<String, String> zhCN = {
   "leave_community": "退出社区",
   "continue": "继续",
   "select_new_group_members": "选择新群组成员",
+  "preview_attachment": "预览附件",
+  "crop_image": "裁剪图片",
 
   // Errors
   'error_occurred': '发生错误',
@@ -141,6 +143,9 @@ const Map<String, String> zhCN = {
   'no_internet': '没有互联网连接',
   'check_connection': '请检查您的连接并重试',
   'failed_to_send_message': '发送消息失败',
+  "failed_to_load_image": "图片加载失败",
+  "image_unavailable": "图片不可用",
+  "failed_to_pick_image": "无法选择图片",
 
   // Misc
   'cancel': '取消',

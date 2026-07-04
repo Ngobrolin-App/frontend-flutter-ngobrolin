@@ -3,7 +3,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:ngobrolin_app/core/enums/reply_message_layout.dart';
 import 'package:ngobrolin_app/core/models/message_model.dart';
+import 'package:ngobrolin_app/core/utils/general_utils.dart';
 import 'package:ngobrolin_app/core/viewmodels/auth/auth_view_model.dart';
+import 'package:ngobrolin_app/core/widgets/cards/app_avatar.dart';
 import 'package:ngobrolin_app/core/widgets/cards/reply_message.dart';
 import 'package:ngobrolin_app/core/widgets/inputs/chat_input_bar.dart';
 import 'package:provider/provider.dart';
@@ -21,7 +23,7 @@ import '../../core/widgets/cards/chat_bubble.dart';
 import '../../routes/app_routes.dart';
 import '../../theme/app_colors.dart';
 import 'dart:developer' as developer;
-import 'image_preview_edit_screen.dart';
+import 'attachment_preview_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   final String? chatId;
@@ -148,16 +150,15 @@ class _ChatScreenState extends State<ChatScreen> {
 
       _scrollToBottom();
     } catch (e) {
-      developer.log('Error initializing chat: $e', name: 'ChatScreen');
+      developer.log(
+        'ChatScreen - _checkBlockStatusAndInitChat() error: $e',
+        name: 'ChatScreen',
+      );
     }
   }
 
   void _setupSocketHandlers() {
     _newMessageHandler = (data) {
-      // developer.log(
-      //   'ChatScreen - _setupSocketHandlers - _newMessageHandler data: $data',
-      //   name: 'ChatScreen',
-      // );
       try {
         final msgMap = data['message'] as Map<String, dynamic>;
         final convId = msgMap['conversationId'] as String?;
@@ -279,7 +280,7 @@ class _ChatScreenState extends State<ChatScreen> {
         _socketProvider.off('user_status_changed', _statusHandler);
       } catch (e) {
         developer.log(
-          'ChatScreen - Error unregistering socket: $e',
+          'ChatScreen - dispose() - Error unregistering socket: $e',
           name: 'ChatScreen',
         );
       }
@@ -319,7 +320,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (message.isEmpty) return;
 
     try {
-      final success = await _chatViewModel.sendMessage(message);
+      final success = await _chatViewModel.sendMessage(content: message);
       if (success) {
         _messageController.clear();
       }
@@ -361,28 +362,15 @@ class _ChatScreenState extends State<ChatScreen> {
           child: Row(
             children: [
               // OPTIMASI: Ambil avatar menggunakan Selector agar tidak rebuild jika isi chat bertambah
-              Selector<ChatViewModel, String?>(
-                selector: (_, vm) => vm.partnerAvatarUrl,
-                builder: (context, avatarUrl, _) {
-                  return CircleAvatar(
+              Selector<ChatViewModel, (String?, String)>(
+                selector: (_, vm) => (vm.partnerAvatarUrl, vm.partnerName),
+                builder: (context, data, _) {
+                  return AppAvatar(
+                    imageUrl: data.$1,
+                    name: data.$2,
                     radius: 16,
+                    fontSize: 14,
                     backgroundColor: AppColors.lightGrey,
-                    backgroundImage: avatarUrl != null
-                        ? NetworkImage(avatarUrl)
-                        : null,
-                    child: avatarUrl == null
-                        ? Selector<ChatViewModel, String>(
-                            selector: (_, vm) => vm.partnerName,
-                            builder: (context, name, _) => Text(
-                              name.isNotEmpty ? name[0].toUpperCase() : '?',
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                          )
-                        : null,
                   );
                 },
               ),
@@ -588,7 +576,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
     final chatVM = Provider.of<ChatViewModel>(context, listen: false);
     final picker = ImagePicker();
+
     String? pickedPath;
+    String attachmentType = 'image'; // Default image
 
     if (choice == 'camera') {
       final picked = await picker.pickImage(
@@ -596,48 +586,54 @@ class _ChatScreenState extends State<ChatScreen> {
         imageQuality: 80,
       );
       pickedPath = picked?.path;
+      attachmentType = 'image';
     } else if (choice == 'image') {
       final picked = await picker.pickImage(
         source: ImageSource.gallery,
         imageQuality: 80,
       );
       pickedPath = picked?.path;
+      attachmentType = 'image';
     } else if (choice == 'file') {
-      final result = await FilePicker.platform.pickFiles(type: FileType.any);
-      final path = result?.files.first.path;
-      if (path != null && mounted) {
-        await chatVM.sendAttachment(path, 'file');
-        _scrollToBottom();
-      }
-      return; // Stop process di sini khusus file biasa
+      final pickedFiles = await FilePicker.platform.pickFiles(
+        type: FileType.any,
+        allowMultiple: false,
+      );
+      pickedPath = pickedFiles?.files.first.path;
+      attachmentType = 'file';
     }
 
-    // JIKA GAMBAR BERHASIL DIAMBIL (DARI GALERI ATAU KAMERA)
+    // JIKA FILE/GAMBAR BERHASIL DIAMBIL, MASUK KE PREVIEW SCREEN
     if (pickedPath != null && mounted) {
-      // Arahkan ke halaman edit/preview simple terlebih dahulu
       final result = await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => ImagePreviewEditScreen(imagePath: pickedPath!),
+          builder: (context) => AttachmentPreviewScreen(
+            filePath: pickedPath!,
+            fileType: attachmentType, // Lempar tipe filenya ke screen preview
+          ),
         ),
       );
       if (result != null && result is Map) {
-        final File editedFile = result['file'];
-        final String caption = result['caption'];
+        final File mediaFile = result['mediaFile'];
+        final String mediaFilePath = mediaFile.path;
+        final String content = result['content'];
+        final int mediaSize = result['mediaSize'];
+        final String mediaFileType = result['mediaFileType'];
+        final String mediaFileName = result['mediaFileName'];
 
-        if (editedFile != null && mounted) {
-          await chatVM.sendAttachment(editedFile.path, 'image');
+        if (mediaFilePath.isNotEmpty && mounted) {
+          await chatVM.sendAttachment(
+            mediaFilePath: mediaFilePath,
+            type: attachmentType, // Gunakan tipe attachment dari pilihan user
+            content: content,
+            mediaFileType: mediaFileType,
+            mediaFileName: mediaFileName,
+            mediaSize: mediaSize,
+          );
           _scrollToBottom();
         }
       }
-      // final File? editedFile = await Navigator.push<File?>(
-      //   context,
-      //   MaterialPageRoute(
-      //     builder: (context) => ImagePreviewEditScreen(imagePath: pickedPath!),
-      //   ),
-      // );
-
-      // Jika user menekan tombol kirim di halaman preview
     }
   }
 

@@ -4,6 +4,7 @@ import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/material_symbols.dart';
 import 'package:iconify_flutter/icons/mdi.dart';
 import 'package:ngobrolin_app/core/enums/reply_message_layout.dart';
+import 'package:ngobrolin_app/core/widgets/states/image_error_placeholder.dart';
 
 import '../../../theme/app_colors.dart';
 import '../../localization/app_localizations.dart';
@@ -57,7 +58,7 @@ class ReplyMessageWidget extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             if (_showThumbnail && _thumbnailLeft)
-              _ReplyThumbnail(imageUrl: message.content, left: true),
+              _ReplyThumbnail(imageUrl: message.mediaUrl ?? '', left: true),
 
             Expanded(
               child: Padding(
@@ -83,7 +84,7 @@ class ReplyMessageWidget extends StatelessWidget {
             ),
 
             if (_showThumbnail && !_thumbnailLeft)
-              _ReplyThumbnail(imageUrl: message.content, left: false),
+              _ReplyThumbnail(imageUrl: message.mediaUrl ?? '', left: false),
 
             if (_showClose)
               IconButton(
@@ -100,6 +101,7 @@ class ReplyMessageWidget extends StatelessWidget {
     switch (message.type) {
       case 'image':
         return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Iconify(
               MaterialSymbols.image_outline_rounded,
@@ -107,9 +109,17 @@ class ReplyMessageWidget extends StatelessWidget {
               color: AppColors.text,
             ),
             const SizedBox(width: 4),
-            Text(
-              context.tr('image'),
-              style: const TextStyle(fontSize: 12, color: AppColors.text),
+            Flexible(
+              child: Text(
+                message.content?.isNotEmpty ?? false
+                    ? message.content!
+                    : context.tr('image'),
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.text,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ),
           ],
         );
@@ -125,7 +135,10 @@ class ReplyMessageWidget extends StatelessWidget {
             const SizedBox(width: 4),
             Expanded(
               child: Text(
-                _extractFileName(message.content, context.tr('file')),
+                message.mediaFileName != null &&
+                        message.mediaFileName!.isNotEmpty
+                    ? message.mediaFileName!
+                    : context.tr('file'),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontSize: 12, color: AppColors.text),
@@ -136,7 +149,7 @@ class ReplyMessageWidget extends StatelessWidget {
 
       default:
         return Text(
-          message.content,
+          message.content ?? '',
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: const TextStyle(fontSize: 12, color: AppColors.text),
@@ -168,6 +181,13 @@ class _ReplyThumbnail extends StatelessWidget {
         width: 70,
         height: 70,
         fit: BoxFit.cover,
+        errorWidget: (context, url, error) => ImageErrorPlaceholder(
+          width: 70,
+          height: 70,
+          iconSize: 24,
+          errorMessage: context.tr('failed_to_load_image'),
+          showText: false,
+        ),
       ),
     );
   }
