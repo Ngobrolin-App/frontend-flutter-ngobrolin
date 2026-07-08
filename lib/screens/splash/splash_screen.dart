@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/providers/socket_provider.dart';
 import '../../routes/app_routes.dart';
 import '../../theme/app_colors.dart';
+import 'dart:developer' as developer;
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -23,7 +24,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _checkAuthAndNavigate() async {
     // Simulate loading time
-    await Future.delayed(const Duration(seconds: 2));
+    await Future.delayed(const Duration(seconds: 3));
 
     try {
       if (!mounted) return;
@@ -33,6 +34,16 @@ class _SplashScreenState extends State<SplashScreen> {
         listen: false,
       );
       await authViewModel.checkAuthStatus();
+
+      developer.log(
+        'SplashScreen -Auth status: ${authViewModel.authenticated}',
+      );
+      developer.log(
+        'SplashScreen -Socket connected: ${socketProvider.connected}',
+      );
+      developer.log(
+        'SplashScreen -Socket authenticated: ${socketProvider.authenticated}',
+      );
 
       if (authViewModel.authenticated &&
           socketProvider.connected &&

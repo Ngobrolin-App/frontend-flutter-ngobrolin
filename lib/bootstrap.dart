@@ -154,7 +154,6 @@ Future<void> bootstrap() async {
   runApp(
     MultiProvider(
       providers: [
-        // ❌ JANGAN INIT SOCKET DI SINI
         ChangeNotifierProvider(create: (_) => SocketProvider()),
 
         ChangeNotifierProvider(create: (_) => serviceLocator<AuthViewModel>()),
@@ -211,9 +210,6 @@ class _MyAppState extends State<MyApp> {
       }
     });
 
-    // =======================
-    // POST FRAME INIT (AMAN)
-    // =======================
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final socketProvider = Provider.of<SocketProvider>(
         context,
@@ -224,7 +220,6 @@ class _MyAppState extends State<MyApp> {
         listen: false,
       );
 
-      // 🔥 SOCKET INIT DI SINI (ANTI BLACKSCREEN)
       try {
         await socketProvider.init();
       } catch (_) {

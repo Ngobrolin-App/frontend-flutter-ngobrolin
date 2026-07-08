@@ -9,17 +9,32 @@ class MessageModel extends Equatable {
   final String id;
   final String conversationId;
   final String senderId;
+
   final String? content;
   final String type;
   final bool isRead;
   final DateTime createdAt;
+
+  // Media
   final String? mediaUrl;
+  final String? mediaFileName;
   final String? mediaFileType;
   final int? mediaSize;
-  final String? mediaFileName;
+
+  // Forward
+  final String? forwardedFromMessageId;
+  final int? forwardedCount;
+
+  // System
+  final String? systemEventType;
+  final Map<String, dynamic>? systemMetadata;
+
+  // Relation
   final UserModel? sender;
-  final bool? isSendByMe;
   final MessageModel? repliedMessage;
+
+  // UI helper
+  final bool? isSendByMe;
 
   const MessageModel({
     required this.id,
@@ -30,22 +45,23 @@ class MessageModel extends Equatable {
     this.isRead = false,
     required this.createdAt,
     this.mediaUrl,
+    this.mediaFileName,
     this.mediaFileType,
     this.mediaSize,
-    this.mediaFileName,
+    this.forwardedFromMessageId,
+    this.forwardedCount,
+    this.systemEventType,
+    this.systemMetadata,
     this.sender,
-    this.isSendByMe,
     this.repliedMessage,
+    this.isSendByMe,
   });
 
-  /// Creates a MessageModel from JSON data
   factory MessageModel.fromJson(Map<String, dynamic> json) =>
       _$MessageModelFromJson(json);
 
-  /// Converts MessageModel to JSON
   Map<String, dynamic> toJson() => _$MessageModelToJson(this);
 
-  /// Creates a copy of MessageModel with specified fields replaced
   MessageModel copyWith({
     String? id,
     String? conversationId,
@@ -55,12 +71,16 @@ class MessageModel extends Equatable {
     bool? isRead,
     DateTime? createdAt,
     String? mediaUrl,
+    String? mediaFileName,
     String? mediaFileType,
     int? mediaSize,
-    String? mediaFileName,
+    String? forwardedFromMessageId,
+    int? forwardedCount,
+    String? systemEventType,
+    Map<String, dynamic>? systemMetadata,
     UserModel? sender,
-    bool? isSendByMe,
     MessageModel? repliedMessage,
+    bool? isSendByMe,
   }) {
     return MessageModel(
       id: id ?? this.id,
@@ -71,16 +91,20 @@ class MessageModel extends Equatable {
       isRead: isRead ?? this.isRead,
       createdAt: createdAt ?? this.createdAt,
       mediaUrl: mediaUrl ?? this.mediaUrl,
+      mediaFileName: mediaFileName ?? this.mediaFileName,
       mediaFileType: mediaFileType ?? this.mediaFileType,
       mediaSize: mediaSize ?? this.mediaSize,
-      mediaFileName: mediaFileName ?? this.mediaFileName,
+      forwardedFromMessageId:
+          forwardedFromMessageId ?? this.forwardedFromMessageId,
+      forwardedCount: forwardedCount ?? this.forwardedCount,
+      systemEventType: systemEventType ?? this.systemEventType,
+      systemMetadata: systemMetadata ?? this.systemMetadata,
       sender: sender ?? this.sender,
-      isSendByMe: isSendByMe ?? this.isSendByMe,
       repliedMessage: repliedMessage ?? this.repliedMessage,
+      isSendByMe: isSendByMe ?? this.isSendByMe,
     );
   }
 
-  /// Checks if the MessageModel is sent by the current user
   bool isSentByMe(String currentUserId) => senderId == currentUserId;
 
   @override
@@ -93,10 +117,15 @@ class MessageModel extends Equatable {
     isRead,
     createdAt,
     mediaUrl,
+    mediaFileName,
     mediaFileType,
     mediaSize,
-    mediaFileName,
+    forwardedFromMessageId,
+    forwardedCount,
+    systemEventType,
+    systemMetadata,
     sender,
     repliedMessage,
+    isSendByMe,
   ];
 }

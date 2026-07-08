@@ -125,8 +125,6 @@ const Map<String, String> enUS = {
   'online': 'Online',
   'copied_to_clipboard': 'Copied to clipboard',
   'replying_to': 'Replying to',
-  'copy': 'copy',
-  'reply': 'reply',
   'take_photo': 'Take Photo',
   'preview_image': 'Preview Image',
   'add_caption': 'Add caption',
@@ -144,6 +142,21 @@ const Map<String, String> enUS = {
   "select_new_group_members": "Select New Group Members",
   "preview_attachment": "Preview Attachment",
   "crop_image": "Crop Image",
+  'group_name': 'Group Name',
+  'please_enter_group_name': 'Please enter a group name',
+  'members': 'Members',
+  'create_new_group': 'Create New Group',
+  'participantids_required': 'At least one participant is required',
+  'create_group_success': 'Group created successfully',
+  'create_group_failed': 'Failed to create group',
+  'download_and_open': 'Download and Open',
+  'download': 'Download',
+  'forward': 'Forward',
+  'forwarded': 'Forwarded',
+  'copy': 'Copy',
+  'reply': 'Reply',
+  'message_unsent': 'Message unsent',
+  'unsend_message': 'Unsend Message',
 
   // Errors
   'error_occurred': 'An error occurred',
@@ -154,6 +167,7 @@ const Map<String, String> enUS = {
   "failed_to_load_image": "Failed to load image",
   "image_unavailable": "Image unavailable",
   "failed_to_pick_image": "Failed to pick image",
+  'no_file_uploaded': 'No file uploaded',
 
   // Misc
   'cancel': 'Cancel',
@@ -163,6 +177,9 @@ const Map<String, String> enUS = {
   'back': 'Back',
   'search': 'Search',
   'loading': 'Loading...',
+  'today': 'Today',
+  'yesterday': 'Yesterday',
+
   // Custom messages for block/unblock with name
   'has_been_unblocked': 'has been unblocked',
   'failed_to_unblock': 'Failed to unblock',
@@ -261,4 +278,14 @@ const Map<String, String> enUS = {
       'To make sure you don\'t miss any important chats from your friends, allow Ngobrolin to send notifications to your phone.',
   'later': 'Later',
   'enable': 'Enable',
+
+  // WITH ARGS
+  'system_msg_group_created': '{actorName} created the group "{groupName}"',
+  'system_msg_user_added': '{actorName} added {targetName}',
+  'system_msg_image_changed': '{actorName} changed the group photo',
+  'system_msg_name_changed':
+      '{actorName} changed the group name to "{groupName}"',
+  'system_msg_user_removed': '{actorName} removed {targetName}',
+  'system_msg_user_left': '{actorName} left the group',
+  'user_typing': '{actorName} is typing',
 };

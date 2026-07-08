@@ -36,7 +36,33 @@ class PaginatedResult<T> {
       limit: pagination['limit'] as int,
       total: pagination['total'] as int,
       totalPages: pagination['totalPages'] as int,
-      metadata: metadataKey != null ? json[metadataKey] as Map<String, dynamic>? : null,
+      metadata: metadataKey != null
+          ? json[metadataKey] as Map<String, dynamic>?
+          : null,
     );
+  }
+
+  /// Mengubah PaginatedResult kembali menjadi Map/JSON
+  Map<String, dynamic> toJson(
+    Map<String, dynamic> Function(T) toJsonT, {
+    String itemsKey = 'items',
+    String? metadataKey,
+  }) {
+    final Map<String, dynamic> data = {
+      itemsKey: items.map((item) => toJsonT(item)).toList(),
+      'pagination': {
+        'page': page,
+        'limit': limit,
+        'total': total,
+        'totalPages': totalPages,
+      },
+    };
+
+    // Tambahkan metadata hanya jika metadataKey dan isinya tidak null
+    if (metadataKey != null && metadata != null) {
+      data[metadataKey] = metadata;
+    }
+
+    return data;
   }
 }

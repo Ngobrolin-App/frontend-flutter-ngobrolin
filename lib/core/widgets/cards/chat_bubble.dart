@@ -6,10 +6,13 @@ import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/material_symbols.dart';
 import 'package:iconify_flutter/icons/mdi.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:iconify_flutter/icons/system_uicons.dart';
+import 'package:ngobrolin_app/core/enums/general_enums.dart';
 import 'package:ngobrolin_app/core/widgets/cards/reply_message.dart';
 import 'package:ngobrolin_app/core/widgets/states/image_error_placeholder.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:provider/provider.dart';
+import 'package:iconify_flutter/icons/ion.dart';
 
 import 'package:ngobrolin_app/core/utils/general_utils.dart';
 import 'package:ngobrolin_app/core/viewmodels/chat/chat_view_model.dart';
@@ -19,13 +22,17 @@ import '../../models/message_model.dart';
 
 class ChatBubble extends StatelessWidget {
   final MessageModel message;
+  final ConversationType? conversationType;
   final bool isMe;
+  final bool showSenderName;
   final Function(String)? onReplyTap;
 
   const ChatBubble({
     super.key,
     required this.message,
     required this.isMe,
+    this.showSenderName = false,
+    this.conversationType,
     this.onReplyTap,
   });
 
@@ -38,7 +45,11 @@ class ChatBubble extends StatelessWidget {
     return fallback;
   }
 
-  void _showContextMenu(BuildContext context, Offset position) async {
+  void _showContextMenu({
+    required BuildContext context,
+    required Offset position,
+    bool showDownloadAndOpen = false,
+  }) async {
     final RenderBox overlay =
         Overlay.of(context).context.findRenderObject() as RenderBox;
 
@@ -72,6 +83,31 @@ class ChatBubble extends StatelessWidget {
             ],
           ),
         ),
+        if (showDownloadAndOpen)
+          PopupMenuItem(
+            value: 'download',
+            child: Row(
+              children: [
+                Iconify(
+                  MaterialSymbols.download_rounded,
+                  size: 20,
+                  color: AppColors.primary,
+                ),
+                SizedBox(width: 12),
+                Text(context.tr('download')),
+              ],
+            ),
+          ),
+        PopupMenuItem(
+          value: 'forward',
+          child: Row(
+            children: [
+              Iconify(Ion.forward, size: 20, color: AppColors.primary),
+              SizedBox(width: 12),
+              Text(context.tr('forward')),
+            ],
+          ),
+        ),
       ],
     );
 
@@ -100,6 +136,9 @@ class ChatBubble extends StatelessWidget {
       case 'reply':
         chatViewModel.setReplyingTo(message);
         break;
+      case 'download':
+        GeneralUtils.downloadAndOpen(context, message.mediaUrl ?? '');
+        break;
     }
   }
 
@@ -108,8 +147,10 @@ class ChatBubble extends StatelessWidget {
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: GestureDetector(
-        onLongPressStart: (details) =>
-            _showContextMenu(context, details.globalPosition),
+        onLongPressStart: (details) => _showContextMenu(
+          context: context,
+          position: details.globalPosition,
+        ),
         child: Container(
           constraints: BoxConstraints(
             maxWidth: MediaQuery.of(context).size.width * 0.75,
@@ -135,15 +176,40 @@ class ChatBubble extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.min,
               children: [
+                if (!isMe &&
+                    (conversationType == ConversationType.group) &&
+                    showSenderName)
+                  Align(
+                    alignment: isMe
+                        ? Alignment.centerRight
+                        : Alignment.centerLeft,
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        top: 8,
+                        left: 8,
+                        right: 8,
+                        bottom: (message.repliedMessage != null) ? 4 : 0,
+                      ),
+                      child: Text(
+                        message.sender?.name ?? '',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.buttonText,
+                        ),
+                      ),
+                    ),
+                  ),
+
                 if (message.repliedMessage != null) ...[
+                  const SizedBox(height: 4),
                   _buildRepliedMessage(context),
                   const SizedBox(height: 4),
                 ],
+                if (message.forwardedFromMessageId != null)
+                  _buildForwardedMark(context),
+
                 Padding(
-                  padding: EdgeInsets.symmetric(
-                    vertical: message.repliedMessage != null ? 4 : 8,
-                    horizontal: 8,
-                  ),
+                  padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     mainAxisSize: MainAxisSize.min,
@@ -172,6 +238,22 @@ class ChatBubble extends StatelessWidget {
           onReplyTap?.call(message.repliedMessage!.id);
         }
       },
+    );
+  }
+
+  Widget _buildForwardedMark(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8, right: 8, top: 2, bottom: 2),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Iconify(Ion.forward, size: 14, color: AppColors.timestamp),
+          Text(
+            context.tr('forwarded'),
+            style: TextStyle(fontSize: 12, color: AppColors.timestamp),
+          ),
+        ],
+      ),
     );
   }
 
@@ -224,8 +306,12 @@ class ChatBubble extends StatelessWidget {
                   ),
                 );
               },
-              onLongPress: () =>
-                  GeneralUtils.downloadAndOpen(context, message.mediaUrl ?? ''),
+
+              onLongPressStart: (details) => _showContextMenu(
+                context: context,
+                position: details.globalPosition,
+                showDownloadAndOpen: true,
+              ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: CachedNetworkImage(

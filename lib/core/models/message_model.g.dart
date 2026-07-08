@@ -15,16 +15,20 @@ MessageModel _$MessageModelFromJson(Map<String, dynamic> json) => MessageModel(
   isRead: json['isRead'] as bool? ?? false,
   createdAt: DateTime.parse(json['createdAt'] as String),
   mediaUrl: json['mediaUrl'] as String?,
+  mediaFileName: json['mediaFileName'] as String?,
   mediaFileType: json['mediaFileType'] as String?,
   mediaSize: (json['mediaSize'] as num?)?.toInt(),
-  mediaFileName: json['mediaFileName'] as String?,
+  forwardedFromMessageId: json['forwardedFromMessageId'] as String?,
+  forwardedCount: (json['forwardedCount'] as num?)?.toInt(),
+  systemEventType: json['systemEventType'] as String?,
+  systemMetadata: json['systemMetadata'] as Map<String, dynamic>?,
   sender: json['sender'] == null
       ? null
       : UserModel.fromJson(json['sender'] as Map<String, dynamic>),
-  isSendByMe: json['isSendByMe'] as bool?,
   repliedMessage: json['repliedMessage'] == null
       ? null
       : MessageModel.fromJson(json['repliedMessage'] as Map<String, dynamic>),
+  isSendByMe: json['isSendByMe'] as bool?,
 );
 
 Map<String, dynamic> _$MessageModelToJson(MessageModel instance) =>
@@ -37,10 +41,14 @@ Map<String, dynamic> _$MessageModelToJson(MessageModel instance) =>
       'isRead': instance.isRead,
       'createdAt': instance.createdAt.toIso8601String(),
       'mediaUrl': instance.mediaUrl,
+      'mediaFileName': instance.mediaFileName,
       'mediaFileType': instance.mediaFileType,
       'mediaSize': instance.mediaSize,
-      'mediaFileName': instance.mediaFileName,
+      'forwardedFromMessageId': instance.forwardedFromMessageId,
+      'forwardedCount': instance.forwardedCount,
+      'systemEventType': instance.systemEventType,
+      'systemMetadata': instance.systemMetadata,
       'sender': instance.sender,
-      'isSendByMe': instance.isSendByMe,
       'repliedMessage': instance.repliedMessage,
+      'isSendByMe': instance.isSendByMe,
     };

@@ -103,13 +103,41 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
               Expanded(
                 child: Consumer<SearchUserViewModel>(
                   builder: (context, viewModel, _) {
-                    if (viewModel.isLoading) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (viewModel.users.isEmpty) {
-                      return EmptyState(title: context.tr('no_users_found'));
-                    }
-                    return _buildUserList(viewModel);
+                    return RefreshIndicator(
+                      onRefresh: () async =>
+                          viewModel.setSearchQuery(_searchController.text),
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          if (viewModel.isLoading) {
+                            return SingleChildScrollView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              child: SizedBox(
+                                height: constraints
+                                    .maxHeight, // Memaksa tinggi seukuran sisa layar
+                                child: const Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              ),
+                            );
+                          }
+
+                          if (viewModel.users.isEmpty) {
+                            return SingleChildScrollView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              child: SizedBox(
+                                height: constraints
+                                    .maxHeight, // Memaksa tinggi seukuran sisa layar
+                                child: EmptyState(
+                                  title: context.tr('no_users_found'),
+                                ),
+                              ),
+                            );
+                          }
+
+                          return _buildUserList(viewModel);
+                        },
+                      ),
+                    );
                   },
                 ),
               ),
@@ -121,14 +149,10 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
               ? Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: PrimaryButton(
-                    text: context.tr(
-                      'continue',
-                    ), // Pastikan string 'continue' ada di localization
+                    text: context.tr('continue'),
                     onPressed: () {
-                      // Navigasi ke screen buat grup dengan membawa list member
                       Navigator.of(context).pushNamed(
-                        AppRoutes
-                            .createChatGroup, // Sesuaikan dengan route Anda
+                        AppRoutes.createChatGroup,
                         arguments: {'members': viewModel.selectedGroupMembers},
                       );
                     },
@@ -175,80 +199,77 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
   }
 
   Widget _buildUserList(SearchUserViewModel viewModel) {
-    return RefreshIndicator(
-      onRefresh: () async => viewModel.setSearchQuery(_searchController.text),
-      child: ListView(
-        controller: _scrollController,
-        children: [
-          // Header Dinamis
-          if (viewModel.isSelectingGroupMembers)
-            _buildSelectionHeader(viewModel)
-          else
-            ActionListTile(
-              title: context.tr('new_group'),
-              icon: Mdi.account_multiple_plus,
-              onTap: () => viewModel.setSelectingGroupMembers(true),
-            ),
-          const Divider(indent: 72),
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount:
-                viewModel.users.length + (viewModel.isLoadingMore ? 1 : 0),
-            separatorBuilder: (_, __) => const Divider(height: 1, indent: 72),
-            itemBuilder: (context, index) {
-              if (index >= viewModel.users.length) {
-                return const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
-              final user = viewModel.users[index];
-              final isSelected = viewModel.selectedGroupMembers.any(
-                (u) => u.id == user.id,
-              );
-              return UserListItem(
-                user: user,
-                onTap: () {
-                  if (viewModel.isSelectingGroupMembers) {
-                    viewModel.toggleUserSelection(user);
-                  } else {
-                    Navigator.of(context).pushNamed(
-                      AppRoutes.userProfile,
-                      arguments: {'userId': user.id},
-                    );
-                  }
-                },
-                actionWidget: viewModel.isSelectingGroupMembers
-                    ? Icon(
-                        isSelected
-                            ? Icons.check_circle
-                            : Icons.radio_button_unchecked,
-                        color: AppColors.primary,
-                      )
-                    : !user.isPrivate
-                    ? MiniIconTextButton(
-                        onTap: () => Navigator.of(context).pushNamed(
-                          AppRoutes.chat,
-                          arguments: {
-                            'userId': user.id,
-                            'name': user.name,
-                            'avatarUrl': user.avatarUrl,
-                          },
-                        ),
-                        icon: const Iconify(
-                          Mdi.message_plus_outline,
-                          color: Colors.white,
-                          size: 16,
-                        ),
-                        text: context.tr('message'),
-                      )
-                    : null,
-              );
-            },
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      controller: _scrollController,
+      children: [
+        // Header Dinamis
+        if (viewModel.isSelectingGroupMembers)
+          _buildSelectionHeader(viewModel)
+        else
+          ActionListTile(
+            title: context.tr('new_group'),
+            icon: Mdi.account_multiple_plus,
+            onTap: () => viewModel.setSelectingGroupMembers(true),
           ),
-        ],
-      ),
+        const Divider(indent: 72),
+        ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: viewModel.users.length + (viewModel.isLoadingMore ? 1 : 0),
+          separatorBuilder: (_, __) => const Divider(height: 1, indent: 72),
+          itemBuilder: (context, index) {
+            if (index >= viewModel.users.length) {
+              return const Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+            final user = viewModel.users[index];
+            final isSelected = viewModel.selectedGroupMembers.any(
+              (u) => u.id == user.id,
+            );
+            return UserListItem(
+              user: user,
+              onTap: () {
+                if (viewModel.isSelectingGroupMembers) {
+                  viewModel.toggleUserSelection(user);
+                } else {
+                  Navigator.of(context).pushNamed(
+                    AppRoutes.userProfile,
+                    arguments: {'userId': user.id},
+                  );
+                }
+              },
+              actionWidget: viewModel.isSelectingGroupMembers
+                  ? Icon(
+                      isSelected
+                          ? Icons.check_circle
+                          : Icons.radio_button_unchecked,
+                      color: AppColors.primary,
+                    )
+                  : !user.isPrivate
+                  ? MiniIconTextButton(
+                      onTap: () => Navigator.of(context).pushNamed(
+                        AppRoutes.chat,
+                        arguments: {
+                          'userId': user.id,
+                          'name': user.name,
+                          'avatarUrl': user.avatarUrl,
+                        },
+                      ),
+                      icon: const Iconify(
+                        Mdi.message_plus_outline,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                      text: context.tr('message'),
+                    )
+                  : null,
+            );
+          },
+        ),
+      ],
     );
   }
 
@@ -279,9 +300,9 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
             height: 100,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
               itemCount: viewModel.selectedGroupMembers.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              separatorBuilder: (_, __) => const SizedBox(width: 4),
               itemBuilder: (context, index) {
                 final user = viewModel.selectedGroupMembers[index];
                 return CircleUserItemSelected(

@@ -35,9 +35,17 @@ class AppLocalizations {
     for (var lang in supportedLanguages) lang.languageCode: lang,
   };
 
-  String translate(String key) {
+  String translate(String key, {Map<String, String>? args}) {
     final language = _languageMap[locale.languageCode] ?? _languageMap['en'];
-    return language?.translations[key] ?? key;
+    String value = language?.translations[key] ?? key;
+
+    if (args != null) {
+      args.forEach((placeholder, replacement) {
+        value = value.replaceAll('{$placeholder}', replacement);
+      });
+    }
+
+    return value;
   }
 
   String formatDate(DateTime? date) {
@@ -78,5 +86,6 @@ class _AppLocalizationsDelegate
 extension LocalizationExtension on BuildContext {
   AppLocalizations get loc => AppLocalizations.of(this);
 
-  String tr(String key) => AppLocalizations.of(this).translate(key);
+  String tr(String key, {Map<String, String>? args}) =>
+      AppLocalizations.of(this).translate(key, args: args);
 }

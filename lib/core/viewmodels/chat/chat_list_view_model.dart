@@ -13,6 +13,9 @@ class ChatListViewModel extends BaseViewModel {
   List<ChatListItemModel> _chatList = [];
   List<ChatListItemModel> get chatList => _chatList;
 
+  bool _isLoadingMore = false;
+  bool get isLoadingMore => _isLoadingMore;
+
   // Pagination states
   int _page = 1;
   final int _limit = 20;
@@ -61,37 +64,40 @@ class ChatListViewModel extends BaseViewModel {
   /// Appends older conversations to the active list when scrolling down (Infinite Scroll).
   Future<bool> loadMoreChatList() async {
     // Prevent duplicated API requests if there is no more data or the channel is busy
-    if (!_hasMore || isLoading) return false;
+    if (!_hasMore || isLoading || _isLoadingMore) return false;
 
-    return await runBusyFuture(() async {
-          try {
-            _page += 1;
-            final result = await _chatRepository.getConversationList(
-              page: _page,
-              limit: _limit,
-            );
+    // Set loading more secara manual agar tidak mengganggu state isLoading utama
+    _isLoadingMore = true;
+    notifyListeners();
 
-            final paginatedResult = result.data;
-            final conversationList = paginatedResult?.items ?? [];
+    try {
+      _page += 1;
+      final result = await _chatRepository.getConversationList(
+        page: _page,
+        limit: _limit,
+      );
 
-            _chatList.addAll(conversationList);
-            _hasMore =
-                (paginatedResult?.page ?? 0) <
-                (paginatedResult?.totalPages ?? 0);
+      final paginatedResult = result.data;
+      final conversationList = paginatedResult?.items ?? [];
 
-            notifyListeners();
-            return true;
-          } catch (e) {
-            developer.log(
-              'ChatListViewModel - loadMoreChatList() error: $e',
-              name: 'ChatListViewModel',
-            );
-            setError(e.toString());
-            _page -= 1; // Rollback page index on network failure
-            return false;
-          }
-        }) ??
-        false;
+      _chatList.addAll(conversationList);
+      _hasMore =
+          (paginatedResult?.page ?? 0) < (paginatedResult?.totalPages ?? 0);
+
+      _isLoadingMore = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      developer.log(
+        'ChatListViewModel - loadMoreChatList() error: $e',
+        name: 'ChatListViewModel',
+      );
+      setError(e.toString());
+      _page -= 1; // Rollback page index on network failure
+      _isLoadingMore = false;
+      notifyListeners();
+      return false;
+    }
   }
 
   /// Implements optimistic updates to clear unread counts instantly and synchronization over the API network.
@@ -208,6 +214,58 @@ class ChatListViewModel extends BaseViewModel {
     } catch (e) {
       developer.log(
         'ChatListViewModel - handleSocketConversationReadByMe() error: $e',
+        name: 'ChatListViewModel',
+      );
+      setError(e.toString());
+    }
+  }
+
+  void handleConversationMessagesStatusUpdated(
+    String conversationId,
+    List<String> messageIds,
+  ) {
+    try {
+      if (messageIds.isEmpty || conversationId.isEmpty) return;
+      final index = _chatList.indexWhere((chat) => chat.id == conversationId);
+      if (index != -1) {
+        final lastMessage = _chatList[index].lastMessage;
+        final lastMessageId = lastMessage?.id;
+        if (messageIds.contains(lastMessageId)) {
+          final newLastMessage = lastMessage?.copyWith(isRead: true);
+          _chatList[index] = _chatList[index].copyWith(
+            lastMessage: newLastMessage,
+          );
+        }
+        notifyListeners();
+      }
+    } catch (e) {
+      developer.log(
+        'ChatListViewModel - handleReadStatus() error: $e',
+        name: 'ChatListViewModel',
+      );
+      setError(e.toString());
+    }
+  }
+
+  void handleConversationUserTypingToggle(
+    String conversationId,
+    String userName,
+    bool isTyping,
+  ) {
+    try {
+      if (conversationId.isEmpty || userName.isEmpty) return;
+      final index = _chatList.indexWhere((chat) => chat.id == conversationId);
+      if (index != -1) {
+        _chatList[index] = _chatList[index].copyWith(
+          isTyping: isTyping,
+          typingUserName: isTyping ? userName : null,
+        );
+
+        notifyListeners();
+      }
+    } catch (e) {
+      developer.log(
+        'ChatListViewModel - handleConversationUserTypingToggle() error: $e',
         name: 'ChatListViewModel',
       );
       setError(e.toString());

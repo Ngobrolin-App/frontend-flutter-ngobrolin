@@ -117,8 +117,6 @@ const Map<String, String> zhCN = {
   'online': '在线',
   'copied_to_clipboard': '已复制到剪贴板',
   'replying_to': '回复:',
-  'copy': '复制',
-  'reply': '回复',
   'take_photo': '拍照',
   'preview_image': '预览图片',
   'add_caption': '添加说明',
@@ -136,6 +134,21 @@ const Map<String, String> zhCN = {
   "select_new_group_members": "选择新群组成员",
   "preview_attachment": "预览附件",
   "crop_image": "裁剪图片",
+  'group_name': '群组名称',
+  'please_enter_group_name': '请输入群组名称',
+  'members': '成员',
+  'create_new_group': '创建新群组',
+  'participantids_required': '至少需要一名参与者',
+  'create_group_success': '成功创建群组',
+  'create_group_failed': '创建群组失败',
+  'download_and_open': '下载并打开',
+  'download': '下载',
+  'forward': '转发',
+  'forwarded': '已转发',
+  'copy': '复制',
+  'reply': '回复',
+  'message_unsent': '消息已撤回',
+  'unsend_message': '撤回消息',
 
   // Errors
   'error_occurred': '发生错误',
@@ -146,6 +159,7 @@ const Map<String, String> zhCN = {
   "failed_to_load_image": "图片加载失败",
   "image_unavailable": "图片不可用",
   "failed_to_pick_image": "无法选择图片",
+  'no_file_uploaded': '未上传文件',
 
   // Misc
   'cancel': '取消',
@@ -155,6 +169,8 @@ const Map<String, String> zhCN = {
   'back': '返回',
   'search': '搜索',
   'loading': '加载中...',
+  'today': '今天',
+  'yesterday': '昨天',
 
   // Block/Unblock messages
   'has_been_unblocked': '已取消屏蔽',
@@ -240,5 +256,12 @@ const Map<String, String> zhCN = {
   'later': '稍后',
   'enable': '开启',
 
-  'test': 'test',
+  // WITH ARGS
+  'system_msg_group_created': '{actorName} 创建了群组 "{groupName}"',
+  'system_msg_user_added': '{actorName} 将 {targetName} 加入了群组',
+  'system_msg_image_changed': '{actorName} 修改了群头像',
+  'system_msg_name_changed': '{actorName} 将群组名称修改为 "{groupName}"',
+  'system_msg_user_removed': '{actorName} 将 {targetName} 移出了群组',
+  'system_msg_user_left': '{actorName} 离开了群组',
+  'user_typing': '{actorName} 正在输入',
 };

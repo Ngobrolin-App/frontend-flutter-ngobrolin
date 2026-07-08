@@ -19,6 +19,8 @@ class AuthViewModel extends BaseViewModel {
   UserModel? _user;
   UserModel? get user => _user;
 
+  String? get currentUserId => _user?.id;
+
   AuthViewModel({AuthRepository? authRepository})
     : _authRepository = authRepository ?? AuthRepository() {
     checkAuthStatus();

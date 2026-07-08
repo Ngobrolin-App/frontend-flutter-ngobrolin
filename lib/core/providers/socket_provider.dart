@@ -67,6 +67,15 @@ class SocketProvider extends ChangeNotifier {
       notifyListeners();
     });
 
+    _socket.on('joined_conversation', (data) {
+      developer.log(
+        'SocketProvider: joined conversation $data',
+        name: 'SocketProvider',
+      );
+      _authenticated = true;
+      notifyListeners();
+    });
+
     _socket.on('auth_error', (data) {
       developer.log(
         'SocketProvider: auth_error - $data',
@@ -101,6 +110,10 @@ class SocketProvider extends ChangeNotifier {
   }
 
   void sendTypingStart(String conversationId) {
+    developer.log(
+      'SocketProvider - sendTypingStart - $conversationId',
+      name: 'SocketProvider',
+    );
     _socket.emit('typing_start', {'conversationId': conversationId});
   }
 

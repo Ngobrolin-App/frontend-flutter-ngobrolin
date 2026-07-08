@@ -1,13 +1,16 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:ngobrolin_app/core/enums/reply_message_layout.dart';
+import 'package:ngobrolin_app/core/enums/general_enums.dart';
 import 'package:ngobrolin_app/core/models/message_model.dart';
 import 'package:ngobrolin_app/core/utils/general_utils.dart';
 import 'package:ngobrolin_app/core/viewmodels/auth/auth_view_model.dart';
 import 'package:ngobrolin_app/core/widgets/cards/app_avatar.dart';
+import 'package:ngobrolin_app/core/widgets/cards/chat_date_badge.dart';
+import 'package:ngobrolin_app/core/widgets/cards/chat_system_message_badge.dart';
 import 'package:ngobrolin_app/core/widgets/cards/reply_message.dart';
 import 'package:ngobrolin_app/core/widgets/inputs/chat_input_bar.dart';
+import 'package:ngobrolin_app/core/widgets/modals/media_picker_modal.dart';
 import 'package:provider/provider.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/ic.dart';
@@ -119,21 +122,20 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _checkBlockStatusAndInitChat() async {
     try {
-      final isBlocked = await _settingsViewModel.isUserBlocked(widget.userId);
-      if (!mounted)
-        return; // Pelindung utama jika user keburu menekan tombol back
+      if (widget.userId.isNotEmpty) {
+        final isBlocked = await _settingsViewModel.isUserBlocked(widget.userId);
 
-      if (isBlocked) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.tr('user_is_blocked_cannot_start_chat')),
-            backgroundColor: AppColors.warning,
-          ),
-        );
-        Navigator.of(context).pop();
-        return;
+        if (isBlocked && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.tr('user_is_blocked_cannot_start_chat')),
+              backgroundColor: AppColors.warning,
+            ),
+          );
+          Navigator.of(context).pop();
+          return;
+        }
       }
-
       _chatViewModel.initChat(
         conversationId: widget.chatId,
         userId: widget.userId,
@@ -219,18 +221,16 @@ class _ChatScreenState extends State<ChatScreen> {
 
     _typingHandler = (data) {
       try {
-        if (data['conversationId'] == _chatViewModel.conversationId &&
-            data['userId'] == widget.userId) {
-          _chatViewModel.setPartnerTyping(true);
+        if (data['conversationId'] == _chatViewModel.conversationId) {
+          _chatViewModel.setParticipantTyping(true, data['userName']);
         }
       } catch (_) {}
     };
 
     _stopTypingHandler = (data) {
       try {
-        if (data['conversationId'] == _chatViewModel.conversationId &&
-            data['userId'] == widget.userId) {
-          _chatViewModel.setPartnerTyping(false);
+        if (data['conversationId'] == _chatViewModel.conversationId) {
+          _chatViewModel.setParticipantTyping(false, null);
         }
       } catch (_) {}
     };
@@ -239,8 +239,9 @@ class _ChatScreenState extends State<ChatScreen> {
       try {
         final userId = data['userId'] as String?;
         final status = data['status'] as String?;
-        if (userId == widget.userId && status != null) {
-          _chatViewModel.setPartnerStatus(status);
+        // if (userId == widget.userId && status != null) {
+        if (status != null) {
+          _chatViewModel.setPrivatePartnerStatus(status);
         }
       } catch (_) {}
     };
@@ -354,16 +355,23 @@ class _ChatScreenState extends State<ChatScreen> {
       appBar: AppBar(
         title: GestureDetector(
           onTap: () {
-            Navigator.of(context).pushNamed(
-              AppRoutes.userProfile,
-              arguments: {'userId': context.read<ChatViewModel>().partnerId},
-            );
+            final chatViewModel = context.read<ChatViewModel>();
+            if (chatViewModel.conversationType ==
+                ConversationType.private.name) {
+              Navigator.of(context).pushNamed(
+                AppRoutes.userProfile,
+                arguments: {
+                  'userId': context.read<ChatViewModel>().privatePartnerId,
+                },
+              );
+            }
           },
           child: Row(
             children: [
               // OPTIMASI: Ambil avatar menggunakan Selector agar tidak rebuild jika isi chat bertambah
               Selector<ChatViewModel, (String?, String)>(
-                selector: (_, vm) => (vm.partnerAvatarUrl, vm.partnerName),
+                selector: (_, vm) =>
+                    (vm.conversationImageUrl, vm.conversationName ?? ''),
                 builder: (context, data, _) {
                   return AppAvatar(
                     imageUrl: data.$1,
@@ -375,40 +383,82 @@ class _ChatScreenState extends State<ChatScreen> {
                 },
               ),
               const SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Selector<ChatViewModel, String>(
-                    selector: (_, vm) => vm.partnerName,
-                    builder: (context, name, _) => Text(name),
-                  ),
-                  // OPTIMASI: Lokalisasi rebuild sub-komponen status/typing via Selector
-                  Selector<ChatViewModel, (bool, String)>(
-                    selector: (_, vm) => (vm.isPartnerTyping, vm.partnerStatus),
-                    builder: (context, state, _) {
-                      final isTyping = state.$1;
-                      final status = state.$2;
-                      if (isTyping) {
-                        return Text(
-                          '${context.tr('typing')}...',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontStyle: FontStyle.italic,
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Selector<ChatViewModel, String>(
+                      selector: (_, vm) => vm.conversationName ?? '',
+                      builder: (context, name, _) => Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                        );
-                      } else if (status == 'online') {
-                        return Text(
-                          context.tr('online'),
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.greenAccent,
-                          ),
-                        );
-                      }
-                      return const SizedBox.shrink();
-                    },
-                  ),
-                ],
+                        ],
+                      ),
+                    ),
+                    // OPTIMASI: Lokalisasi rebuild sub-komponen status/typing via Selector
+                    Selector<
+                      ChatViewModel,
+                      (bool, String?, String, String?, String)
+                    >(
+                      selector: (_, vm) => (
+                        vm.isParticipantTyping,
+                        vm.typingParticipantName,
+                        vm.privatePartnerStatus,
+                        vm.conversationType,
+                        vm.participantNamesText,
+                      ),
+                      builder: (context, state, _) {
+                        final isParticipantTyping = state.$1;
+                        final typingParticipantName = state.$2;
+                        final privatePartnerStatus = state.$3;
+                        final conversationType = state.$4;
+                        final participantNamesText = state.$5;
+                        if (isParticipantTyping) {
+                          return Text(
+                            (conversationType == ConversationType.group.name)
+                                ? context.tr(
+                                    'user_typing',
+                                    args: {
+                                      'actorName':
+                                          (typingParticipantName != null)
+                                          ? typingParticipantName
+                                          : 'Someone',
+                                    },
+                                  )
+                                : context.tr('typing'),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          );
+                        } else if (conversationType ==
+                            ConversationType.group.name) {
+                          return Text(
+                            participantNamesText,
+                            style: const TextStyle(fontSize: 12),
+                          );
+                        } else if (conversationType ==
+                                ConversationType.private.name &&
+                            privatePartnerStatus == UserStatus.online.name) {
+                          return Text(
+                            context.tr('online'),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.greenAccent,
+                            ),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -453,31 +503,107 @@ class _ChatScreenState extends State<ChatScreen> {
                         subtitle: context.tr('start_new_chat'),
                       );
                     }
+
                     return ListView.builder(
                       controller: _scrollController,
                       reverse: true,
                       padding: const EdgeInsets.all(16),
-                      itemCount: messages.length,
+                      // FIX: Tambah +1 pada itemCount agar bisa render spinner pagination di paling atas
+                      itemCount: messages.length + 1,
                       itemBuilder: (context, index) {
-                        if (index == _chatViewModel.messages.length) {
-                          // Tampilkan loading spinner di atas jika sedang memuat
-                          return _chatViewModel.isLoadingMore
-                              ? const Center(child: CircularProgressIndicator())
+                        // FIX LOGIKA PAGINATION SPINNER
+                        if (index == messages.length) {
+                          return chatVM.isLoadingMore
+                              ? const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 16),
+                                  child: Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                )
                               : const SizedBox.shrink();
                         }
+
                         final message = messages[index];
                         final isMe = myId != null && message.senderId == myId;
+                        final conversationType = chatVM.conversationType ?? '';
+
                         final key = _messageKeys.putIfAbsent(
                           message.id,
                           () => GlobalKey(),
                         );
-                        return ChatBubble(
-                          key: key,
-                          message: message,
-                          isMe: isMe,
-                          onReplyTap: (repliedMessageId) =>
-                              _scrollToRepliedMessage(repliedMessageId),
-                        );
+
+                        // --- LOGIKA DATE HEADER ---
+                        bool showDateHeader = false;
+
+                        // Jika ini adalah pesan paling ujung atas (paling tua yang sedang diload)
+                        if (index == messages.length - 1) {
+                          // Selalu tampilkan header jika kita sudah di ujung list,
+                          // KECUALI jika masih ada data lama di server (karena nanti akan ketimpa saat pagination)
+                          showDateHeader = !chatVM.hasMore;
+                        } else {
+                          // Bandingkan dengan pesan sebelumnya (yang ada di atasnya / index + 1)
+                          final currentMsgDate = message.createdAt;
+                          final previousMsgDate = messages[index + 1].createdAt;
+
+                          if (currentMsgDate.year != previousMsgDate.year ||
+                              currentMsgDate.month != previousMsgDate.month ||
+                              currentMsgDate.day != previousMsgDate.day) {
+                            showDateHeader = true;
+                          }
+                        }
+                        // ---------------------------
+
+                        //LOGIKA SHOW SENDER NAME
+                        bool showSenderName = true;
+                        if (index == messages.length - 1) {
+                          showSenderName = true;
+                        } else {
+                          final currentMessageSenderId = message.senderId;
+                          final isCurrentMessageRepliedAnotherMessage =
+                              message.repliedMessage != null;
+                          final previousMessageSenderId =
+                              messages[index + 1].senderId;
+                          final previousMessageType = messages[index + 1].type;
+
+                          showSenderName =
+                              (currentMessageSenderId !=
+                                  previousMessageSenderId) ||
+                              isCurrentMessageRepliedAnotherMessage ||
+                              (previousMessageType ==
+                                  MessageType.system.name) ||
+                              showDateHeader;
+                        }
+
+                        final bubbleWidget =
+                            (message.type == MessageType.system.name)
+                            ? ChatSystemMessageBadge(message: message)
+                            : ChatBubble(
+                                key: key,
+                                message: message,
+                                isMe: isMe,
+                                conversationType: (conversationType.isNotEmpty)
+                                    ? ConversationType.values.byName(
+                                        conversationType,
+                                      )
+                                    : null,
+                                onReplyTap: (repliedMessageId) =>
+                                    _scrollToRepliedMessage(repliedMessageId),
+                                showSenderName: showSenderName,
+                              );
+
+                        // Jika butuh header, bungkus dengan Column
+                        if (showDateHeader) {
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              ChatDateBadge(date: message.createdAt),
+                              bubbleWidget,
+                            ],
+                          );
+                        }
+
+                        // Jika tidak, render bubble biasa
+                        return bubbleWidget;
                       },
                     );
                   },
@@ -517,59 +643,9 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _handleAttachment(BuildContext context) async {
-    final choice = await showModalBottomSheet<String>(
-      context: context,
-      builder: (ctx) => SafeArea(
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // OPSI 1: KAMERA
-              GestureDetector(
-                onTap: () => Navigator.pop(ctx, 'camera'),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.camera_alt_rounded,
-                      color: AppColors.primary,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(child: Text(context.tr('take_photo'))),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              // OPSI 2: GALERI
-              GestureDetector(
-                onTap: () => Navigator.pop(ctx, 'image'),
-                child: Row(
-                  children: [
-                    const Icon(Icons.image, color: AppColors.primary),
-                    const SizedBox(width: 12),
-                    Expanded(child: Text(context.tr('choose_image'))),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              // OPSI 3: FILE
-              GestureDetector(
-                onTap: () => Navigator.pop(ctx, 'file'),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.insert_drive_file,
-                      color: AppColors.primary,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(child: Text(context.tr('choose_file'))),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+    final choice = await MediaPickerModal.showPickerBottomSheet(
+      context,
+      showFileOption: true,
     );
 
     if (!mounted || choice == null) return;
@@ -578,23 +654,23 @@ class _ChatScreenState extends State<ChatScreen> {
     final picker = ImagePicker();
 
     String? pickedPath;
-    String attachmentType = 'image'; // Default image
+    String attachmentType = 'image';
 
-    if (choice == 'camera') {
+    if (choice == MediaSource.camera) {
       final picked = await picker.pickImage(
         source: ImageSource.camera,
         imageQuality: 80,
       );
       pickedPath = picked?.path;
       attachmentType = 'image';
-    } else if (choice == 'image') {
+    } else if (choice == MediaSource.gallery) {
       final picked = await picker.pickImage(
         source: ImageSource.gallery,
         imageQuality: 80,
       );
       pickedPath = picked?.path;
       attachmentType = 'image';
-    } else if (choice == 'file') {
+    } else if (choice == MediaSource.file) {
       final pickedFiles = await FilePicker.platform.pickFiles(
         type: FileType.any,
         allowMultiple: false,

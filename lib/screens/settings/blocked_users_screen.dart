@@ -68,11 +68,6 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
 
           if (blockedUsers.isEmpty) {
             return EmptyState(
-              image: const Iconify(
-                Ic.round_block,
-                size: 80,
-                color: AppColors.lightGrey,
-              ),
               title: context.tr('no_blocked_users'),
               subtitle: context.tr('no_blocked_users_description'),
             );

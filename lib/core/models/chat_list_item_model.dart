@@ -17,6 +17,8 @@ class ChatListItemModel extends Equatable {
   final List<UserModel>? participants;
   final DateTime? joinedAt;
   final int? unreadCount;
+  final bool? isTyping;
+  final String? typingUserName;
 
   const ChatListItemModel({
     required this.id,
@@ -29,6 +31,8 @@ class ChatListItemModel extends Equatable {
     this.participants,
     this.joinedAt,
     this.unreadCount,
+    this.isTyping,
+    this.typingUserName,
   });
 
   /// Creates a ChatListItemModel from JSON data
@@ -50,6 +54,8 @@ class ChatListItemModel extends Equatable {
     List<UserModel>? participants,
     DateTime? joinedAt,
     int? unreadCount,
+    bool? isTyping,
+    String? typingUserName,
   }) {
     return ChatListItemModel(
       id: id ?? this.id,
@@ -62,6 +68,8 @@ class ChatListItemModel extends Equatable {
       participants: participants ?? this.participants,
       joinedAt: joinedAt ?? this.joinedAt,
       unreadCount: unreadCount ?? this.unreadCount,
+      isTyping: isTyping ?? this.isTyping,
+      typingUserName: typingUserName ?? this.typingUserName,
     );
   }
 
@@ -77,5 +85,7 @@ class ChatListItemModel extends Equatable {
     participants,
     joinedAt,
     unreadCount,
+    isTyping,
+    typingUserName,
   ];
 }

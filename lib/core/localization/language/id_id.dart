@@ -122,12 +122,10 @@ const Map<String, String> idID = {
   'choose_file': 'Pilih File',
   'file': 'File',
   'image': 'Gambar',
-  'typing': 'Sedang mengetik',
+  'typing': 'Sedang mengetik...',
   'online': 'Online',
   'copied_to_clipboard': 'Disalin ke papan klip',
   'replying_to': 'Membalas pesan',
-  'copy': 'Salin',
-  'reply': 'Balas',
   'take_photo': 'Ambil Foto',
   'preview_image': 'Pratinjau Gambar',
   'add_caption': 'Tambahkan keterangan',
@@ -145,6 +143,21 @@ const Map<String, String> idID = {
   "select_new_group_members": "Pilih anggota grup baru",
   "preview_attachment": "Pratinjau Lampiran",
   "crop_image": "Potong Gambar",
+  'group_name': 'Nama Grup',
+  'please_enter_group_name': 'Silakan masukkan nama grup',
+  'members': 'Anggota',
+  'create_new_group': 'Buat Grup Baru',
+  'participantids_required': 'Minimal harus ada satu peserta',
+  'create_group_success': 'Berhasil membuat grup baru',
+  'create_group_failed': 'Gagal membuat grup baru',
+  'download_and_open': 'Unduh dan Buka',
+  'download': 'Unduh',
+  'forward': 'Teruskan',
+  'forwarded': 'Diteruskan',
+  'copy': 'Salin',
+  'reply': 'Balas',
+  'message_unsent': 'Pesan dibatalkan',
+  'unsend_message': 'Batalkan pesan',
 
   // Errors
   'error_occurred': 'Terjadi kesalahan',
@@ -155,6 +168,7 @@ const Map<String, String> idID = {
   "failed_to_load_image": "Gagal memuat gambar",
   "image_unavailable": "Gambar tidak tersedia",
   "failed_to_pick_image": "Gagal memilih gambar",
+  'no_file_uploaded': 'Tidak ada file yang diunggah',
 
   // Misc
   'cancel': 'Batal',
@@ -164,6 +178,8 @@ const Map<String, String> idID = {
   'back': 'Kembali',
   'search': 'Cari',
   'loading': 'Memuat...',
+  'today': 'Hari ini',
+  'yesterday': 'Kemarin',
 
   // Pesan khusus block/unblock dengan nama
   'has_been_unblocked': 'telah dibatalkan blokir',
@@ -267,4 +283,14 @@ const Map<String, String> idID = {
       'Agar tidak ketinggalan chat penting dari teman-teman, izinkan Ngobrolin untuk mengirimkan notifikasi ke HP Anda.',
   'later': 'Nanti saja',
   'enable': 'Aktifkan',
+
+  // WITH ARGS
+  'system_msg_group_created': '{actorName} membuat grup "{groupName}"',
+  'system_msg_user_added': '{actorName} menambahkan {targetName}',
+  'system_msg_image_changed': '{actorName} mengubah foto grup',
+  'system_msg_name_changed':
+      '{actorName} mengubah nama grup menjadi "{groupName}"',
+  'system_msg_user_removed': '{actorName} mengeluarkan {targetName}',
+  'system_msg_user_left': '{actorName} keluar dari grup',
+  'user_typing': '{actorName} sedang mengetik',
 };

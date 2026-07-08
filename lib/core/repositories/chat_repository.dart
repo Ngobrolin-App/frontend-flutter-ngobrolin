@@ -1,3 +1,4 @@
+import 'package:ngobrolin_app/core/enums/general_enums.dart';
 import 'package:ngobrolin_app/core/models/api_response.dart';
 import 'package:ngobrolin_app/core/models/conversation_model.dart';
 import 'package:ngobrolin_app/core/models/conversation_participant_model.dart';
@@ -74,7 +75,39 @@ class ChatRepository {
   ) async {
     return _apiService.post<ApiResponse<ConversationModel>>(
       '/conversations/create',
-      data: {'type': 'private', 'participantId': participantId},
+      data: {
+        'type': ConversationType.private.name,
+        'participantId': participantId,
+      },
+      parser: (response) {
+        return ApiResponse<ConversationModel>.fromJson(
+          response,
+          (data) => ConversationModel.fromJson(
+            data as Map<String, dynamic>? ?? <String, dynamic>{},
+          ),
+        );
+      },
+    );
+  }
+
+  Future<ApiResponse<ConversationModel>> createGroupConversation({
+    required String groupName,
+    required List<String> participantIds,
+    String? groupImageUrl,
+  }) async {
+    final data = {
+      'type': ConversationType.group.name,
+      'name': groupName,
+      'participantIds': participantIds,
+    };
+
+    if (groupImageUrl != null) {
+      data['groupImage'] = groupImageUrl;
+    }
+
+    return _apiService.post<ApiResponse<ConversationModel>>(
+      '/conversations/create',
+      data: data,
       parser: (response) {
         return ApiResponse<ConversationModel>.fromJson(
           response,
@@ -254,6 +287,24 @@ class ChatRepository {
 
     return _apiService.post<ApiResponse<String>>(
       '/messages/upload',
+      data: formData,
+      options: Options(contentType: 'multipart/form-data'),
+      parser: (response) => ApiResponse<String>.fromJson(response, (data) {
+        final dataMap = data as Map<String, dynamic>? ?? <String, dynamic>{};
+        return (dataMap['url'] as String? ?? '').toString();
+      }),
+    );
+  }
+
+  Future<ApiResponse<String>> uploadConversationGroupImage({
+    required String filePath,
+  }) async {
+    final formData = FormData.fromMap({
+      'groupImage': await MultipartFile.fromFile(filePath),
+    });
+
+    return _apiService.post<ApiResponse<String>>(
+      '/conversations/upload-group-image',
       data: formData,
       options: Options(contentType: 'multipart/form-data'),
       parser: (response) => ApiResponse<String>.fromJson(response, (data) {

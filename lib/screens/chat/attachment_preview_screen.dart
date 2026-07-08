@@ -5,7 +5,7 @@ import 'dart:ui' as ui;
 import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
-import 'package:ngobrolin_app/core/enums/reply_message_layout.dart';
+import 'package:ngobrolin_app/core/enums/general_enums.dart';
 import 'package:ngobrolin_app/core/models/message_model.dart';
 import 'package:ngobrolin_app/core/utils/general_utils.dart';
 import 'package:ngobrolin_app/core/viewmodels/chat/chat_view_model.dart';

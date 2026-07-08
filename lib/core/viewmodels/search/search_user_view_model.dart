@@ -31,6 +31,12 @@ class SearchUserViewModel extends BaseViewModel {
   SearchUserViewModel({UserRepository? userRepository})
     : _userRepository = userRepository ?? UserRepository();
 
+  void resetGroupSelection() {
+    _isSelectingGroupMembers = false;
+    _selectedGroupMembers.clear();
+    notifyListeners();
+  }
+
   /// Sets the real-time search criteria string and resets query indices.
   void setSearchQuery(String query) {
     _searchQuery = query;

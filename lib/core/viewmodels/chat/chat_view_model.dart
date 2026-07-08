@@ -1,3 +1,6 @@
+import 'package:ngobrolin_app/core/enums/general_enums.dart';
+import 'package:ngobrolin_app/core/models/user_model.dart';
+
 import '../../models/message_model.dart';
 import '../../repositories/chat_repository.dart';
 import '../base_view_model.dart';
@@ -11,20 +14,17 @@ class ChatViewModel extends BaseViewModel {
   List<MessageModel> _messages = [];
   List<MessageModel> get messages => _messages;
 
-  String _partnerId = '';
-  String get partnerId => _partnerId;
+  String _privatePartnerId = '';
+  String get privatePartnerId => _privatePartnerId;
 
-  String _partnerName = '';
-  String get partnerName => _partnerName;
+  String _privatePartnerStatus = UserStatus.offline.name;
+  String get privatePartnerStatus => _privatePartnerStatus;
 
-  String? _partnerAvatarUrl;
-  String? get partnerAvatarUrl => _partnerAvatarUrl;
+  bool _isParticipantTyping = false;
+  bool get isParticipantTyping => _isParticipantTyping;
 
-  bool _isPartnerTyping = false;
-  bool get isPartnerTyping => _isPartnerTyping;
-
-  String _partnerStatus = 'offline';
-  String get partnerStatus => _partnerStatus;
+  String? _typingParticipantName;
+  String? get typingParticipantName => _typingParticipantName;
 
   String? _conversationId;
   String? get conversationId => _conversationId;
@@ -35,11 +35,20 @@ class ChatViewModel extends BaseViewModel {
   String? _conversationName;
   String? get conversationName => _conversationName;
 
-  String? _conversationGroupImage;
-  String? get conversationGroupImage => _conversationGroupImage;
+  String? _conversationImageUrl;
+  String? get conversationImageUrl => _conversationImageUrl;
 
   MessageModel? _replyingToMessage;
   MessageModel? get replyingToMessage => _replyingToMessage;
+
+  List<UserModel> _participants = [];
+  List<UserModel> get participants => _participants;
+
+  List<String> get participantNames =>
+      _participants.map((user) => user.name).toList();
+
+  String get participantNamesText =>
+      _participants.map((user) => user.name).join(', ');
 
   // Pagination states
   int _page = 1;
@@ -59,12 +68,12 @@ class ChatViewModel extends BaseViewModel {
     String? avatarUrl,
     String? conversationId,
   }) {
-    _partnerId = userId ?? '';
-    _partnerName = name ?? '';
-    _partnerAvatarUrl = avatarUrl ?? '';
+    _privatePartnerId = userId ?? '';
+    _conversationName = name ?? '';
+    _conversationImageUrl = avatarUrl ?? '';
     _messages = [];
-    _isPartnerTyping = false;
-    _partnerStatus = 'offline';
+    _isParticipantTyping = false;
+    _privatePartnerStatus = UserStatus.offline.name;
     _conversationId = conversationId;
     _page = 1;
     _hasMore = true;
@@ -91,7 +100,7 @@ class ChatViewModel extends BaseViewModel {
     return await runBusyFuture(() async {
           try {
             final result = await _chatRepository
-                .getPrivateConversationByPartnerId(_partnerId);
+                .getPrivateConversationByPartnerId(_privatePartnerId);
             final conversation = result.data;
             _conversationId = conversation?.id;
 
@@ -109,13 +118,14 @@ class ChatViewModel extends BaseViewModel {
         false;
   }
 
-  void setPartnerTyping(bool isTyping) {
-    _isPartnerTyping = isTyping;
+  void setParticipantTyping(bool isTyping, String? participantName) {
+    _isParticipantTyping = isTyping;
+    _typingParticipantName = participantName;
     notifyListeners();
   }
 
-  void setPartnerStatus(String status) {
-    _partnerStatus = status;
+  void setPrivatePartnerStatus(String status) {
+    _privatePartnerStatus = status;
     notifyListeners();
   }
 
@@ -138,7 +148,10 @@ class ChatViewModel extends BaseViewModel {
 
             _conversationType = conversation?.type;
             _conversationName = conversation?.name;
-            _conversationGroupImage = conversation?.groupImage;
+            if (conversation?.type == ConversationType.group.name) {
+              _conversationImageUrl = conversation?.groupImage;
+            }
+            _participants = conversation?.participants ?? [];
 
             notifyListeners();
             return true;
@@ -162,15 +175,16 @@ class ChatViewModel extends BaseViewModel {
           try {
             final result = await _chatRepository.getConversationParticipants(
               conversationId: _conversationId!,
-              isIncludeMe: _conversationType != 'private',
+              isIncludeMe: _conversationType != ConversationType.private.name,
             );
 
             final participants = result.data ?? [];
 
-            if (_conversationType == 'private' && participants.isNotEmpty) {
-              _partnerId = participants.first.id;
-              _partnerName = participants.first.name;
-              _partnerAvatarUrl = participants.first.avatarUrl;
+            if (_conversationType == ConversationType.private.name &&
+                participants.isNotEmpty) {
+              _privatePartnerId = participants.first.id;
+              _conversationName = participants.first.name;
+              _conversationImageUrl = participants.first.avatarUrl;
             }
 
             notifyListeners();
@@ -210,7 +224,8 @@ class ChatViewModel extends BaseViewModel {
             // Auto-acknowledge unread elements sent by the partner peer upon entering viewport
             if (_messages.isNotEmpty) {
               final lastMessage = _messages.last;
-              if (!lastMessage.isRead && lastMessage.senderId == _partnerId) {
+              if (!lastMessage.isRead &&
+                  lastMessage.senderId == _privatePartnerId) {
                 await _chatRepository.markAsRead(
                   conversationId: _conversationId!,
                   messageId: lastMessage.id,
@@ -272,6 +287,46 @@ class ChatViewModel extends BaseViewModel {
     notifyListeners();
   }
 
+  Future<bool> createGroupConversation({
+    required String groupName,
+    required List<String> participantIds,
+    String? groupImagePath,
+  }) async {
+    return await runBusyFuture(() async {
+          try {
+            String? groupImageUrl;
+            if (groupImagePath != null && groupImagePath.isNotEmpty) {
+              final result = await _chatRepository.uploadConversationGroupImage(
+                filePath: groupImagePath,
+              );
+              groupImageUrl = result.data;
+            }
+            final result = await _chatRepository.createGroupConversation(
+              groupName: groupName,
+              participantIds: participantIds,
+              groupImageUrl: groupImageUrl,
+            );
+
+            final conversation = result.data;
+            setConversationId(conversation?.id);
+            _conversationType = conversation?.type;
+            _conversationName = conversation?.name;
+            _conversationImageUrl = conversation?.groupImage;
+
+            notifyListeners();
+            return true;
+          } catch (e) {
+            developer.log(
+              "ChatViewModel - createGroupConversation() error $e",
+              name: 'ChatViewModel',
+            );
+            setError(e.toString());
+            return false;
+          }
+        }) ??
+        false;
+  }
+
   /// Submits text strings to remote endpoints.
   Future<bool> sendMessage({
     String? content,
@@ -287,7 +342,7 @@ class ChatViewModel extends BaseViewModel {
 
     if (_conversationId == null || _conversationId!.isEmpty) {
       final result = await _chatRepository.getOrCreatePrivateConversationId(
-        _partnerId,
+        _privatePartnerId,
       );
       final conversation = result.data;
       setConversationId(conversation?.id);
@@ -347,7 +402,7 @@ class ChatViewModel extends BaseViewModel {
   }) async {
     if (_conversationId == null || _conversationId!.isEmpty) {
       final result = await _chatRepository.getOrCreatePrivateConversationId(
-        _partnerId,
+        _privatePartnerId,
       );
       final conversation = result.data;
       setConversationId(conversation?.id);

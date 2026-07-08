@@ -1,1 +1,0 @@
-enum ReplyMessageLayout { bubble, composer }

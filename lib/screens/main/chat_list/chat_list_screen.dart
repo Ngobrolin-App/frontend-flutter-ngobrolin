@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/mdi.dart';
 import 'package:iconify_flutter/icons/material_symbols.dart';
+import 'package:ngobrolin_app/core/enums/general_enums.dart';
+import 'package:ngobrolin_app/core/models/conversation_model.dart';
 import 'package:ngobrolin_app/core/providers/socket_provider.dart';
 import 'package:ngobrolin_app/core/viewmodels/auth/auth_view_model.dart';
+import 'package:ngobrolin_app/core/viewmodels/settings/settings_view_model.dart';
 import 'package:provider/provider.dart';
 import 'package:ngobrolin_app/core/widgets/states/empty_state.dart';
 import '../../../core/localization/app_localizations.dart';
@@ -22,11 +25,15 @@ class ChatListScreen extends StatefulWidget {
 
 class _ChatListScreenState extends State<ChatListScreen> {
   late final ScrollController _scrollController;
+  bool _isInit = false;
 
   // Socket Handlers disederhanakan tanpa late init ambigu
   Function(dynamic)? _conversationUpdatedHandler;
   Function(dynamic)? _conversationCreatedHandler;
   Function(dynamic)? _conversationReadHandler;
+  Function(dynamic)? _conversationMessagesStatusUpdatedHandler;
+  Function(dynamic)? _conversationUserTypingHandler;
+  Function(dynamic)? _conversationUserStoppedTypingHandler;
 
   // Diubah menjadi nullable untuk mengantisipasi eksekusi dispose dini
   SocketProvider? _socketProvider;
@@ -59,20 +66,24 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
     // Definisikan Handlers
     _conversationUpdatedHandler = (data) {
-      // developer.log(
-      //   'ChatListScreen - _conversationUpdatedHandler: $data',
-      //   name: 'ChatListScreen',
-      // );
+      developer.log(
+        'ChatListScreen - _conversationUpdatedHandler: $data',
+        name: 'ChatListScreen',
+      );
       final currentUserId = authViewModel.user?.id;
       chatListViewModel.handleSocketConversationUpdate(data, currentUserId);
     };
 
     _conversationCreatedHandler = (data) {
-      // developer.log(
-      //   'ChatListScreen - _conversationCreatedHandler: $data',
-      //   name: 'ChatListScreen',
-      // );
+      developer.log(
+        'ChatListScreen - _conversationCreatedHandler: $data',
+        name: 'ChatListScreen',
+      );
+
+      ConversationModel? newConversation = ConversationModel.fromJson(data);
+
       chatListViewModel.fetchChatList();
+      _socketProvider?.joinConversation(newConversation.id);
     };
 
     _conversationReadHandler = (data) {
@@ -89,18 +100,76 @@ class _ChatListScreenState extends State<ChatListScreen> {
       }
     };
 
+    _conversationMessagesStatusUpdatedHandler = (data) {
+      try {
+        final convId = data['conversationId'] as String?;
+        final messageIds = data['messageIds'] as List<dynamic>? ?? [];
+        if (convId != null && messageIds.isNotEmpty) {
+          final ids = messageIds.map((e) => e.toString()).toList();
+          chatListViewModel.handleConversationMessagesStatusUpdated(
+            convId,
+            ids,
+          );
+        }
+      } catch (_) {}
+    };
+
+    _conversationUserTypingHandler = (data) {
+      try {
+        final userName = data['userName'] as String?;
+        final conversationId = data['conversationId'] as String?;
+
+        if (userName != null && conversationId != null) {
+          chatListViewModel.handleConversationUserTypingToggle(
+            conversationId,
+            userName,
+            true,
+          );
+        }
+      } catch (_) {}
+    };
+
+    _conversationUserStoppedTypingHandler = (data) {
+      try {
+        final userName = data['userName'] as String?;
+        final conversationId = data['conversationId'] as String?;
+
+        if (userName != null && conversationId != null) {
+          chatListViewModel.handleConversationUserTypingToggle(
+            conversationId,
+            userName,
+            false,
+          );
+        }
+      } catch (_) {}
+    };
+
     // Daftarkan Handlers ke Socket
     _socketProvider?.on('conversation_updated', _conversationUpdatedHandler!);
     _socketProvider?.on('conversation_created', _conversationCreatedHandler!);
     _socketProvider?.on('conversation_read_by_me', _conversationReadHandler!);
+    _socketProvider?.on(
+      'conversation_messages_status_updated',
+      _conversationMessagesStatusUpdatedHandler!,
+    );
+    _socketProvider?.on(
+      'conversation_user_typing',
+      _conversationUserTypingHandler!,
+    );
+    _socketProvider?.on(
+      'conversation_user_stopped_typing',
+      _conversationUserStoppedTypingHandler!,
+    );
   }
 
   void _onScroll() {
     final vm = Provider.of<ChatListViewModel>(context, listen: false);
-    // OPTIMASI: Cegah double fetch jika view model sedang dalam keadaan loading
+    // OPTIMASI: Pastikan tidak sedang memuat halaman utama ataupun halaman tambahan
     if (!vm.isLoading &&
+        !vm.isLoadingMore &&
+        vm.hasMore &&
         _scrollController.position.pixels >=
-            _scrollController.position.maxScrollExtent - 200) {
+            _scrollController.position.maxScrollExtent - 100) {
       vm.loadMoreChatList();
     }
   }
@@ -131,6 +200,24 @@ class _ChatListScreenState extends State<ChatListScreen> {
             _conversationReadHandler,
           );
         }
+        if (_conversationMessagesStatusUpdatedHandler != null) {
+          _socketProvider!.off(
+            'conversation_messages_status_updated',
+            _conversationMessagesStatusUpdatedHandler!,
+          );
+        }
+        if (_conversationUserTypingHandler != null) {
+          _socketProvider!.off(
+            'conversation_user_typing',
+            _conversationUserTypingHandler!,
+          );
+        }
+        if (_conversationUserStoppedTypingHandler != null) {
+          _socketProvider!.off(
+            'conversation_user_stopped_typing',
+            _conversationUserStoppedTypingHandler!,
+          );
+        }
       } catch (e) {
         developer.log(
           'Error removing socket listeners: $e',
@@ -144,6 +231,8 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settingsVM = context.read<SettingsViewModel>();
+    final String currentLanguageCode = settingsVM.locale.languageCode;
     return Scaffold(
       appBar: AppBar(
         title: Text(context.tr('chats')),
@@ -181,23 +270,58 @@ class _ChatListScreenState extends State<ChatListScreen> {
             );
           }
 
-          return ListView.separated(
-            controller: _scrollController,
-            itemCount: chatList.length,
-            separatorBuilder: (context, index) =>
-                const Divider(height: 1, indent: 72),
-            itemBuilder: (context, index) {
-              final chat = chatList[index];
-              return ChatListItem(
-                chat: chat,
-                onTap: () {
-                  chatListViewModel.markChatAsRead(chat.id);
-                  Navigator.of(
-                    context,
-                  ).pushNamed(AppRoutes.chat, arguments: {'chatId': chat.id});
-                },
-              );
+          return RefreshIndicator(
+            onRefresh: () async {
+              await chatListViewModel.fetchChatList();
             },
+            child: ListView.separated(
+              physics: const AlwaysScrollableScrollPhysics(),
+              controller: _scrollController,
+              // Tambahkan 1 item tambahan di akhir jika masih ada data (hasMore) untuk menampung loading indicator
+              itemCount: chatListViewModel.hasMore
+                  ? chatList.length + 1
+                  : chatList.length,
+              separatorBuilder: (context, index) {
+                // Jangan tampilkan divider untuk item loading indicator paling bawah
+                if (index >= chatList.length - 1) {
+                  return const SizedBox.shrink();
+                }
+                return const Divider(height: 1, indent: 72);
+              },
+              itemBuilder: (context, index) {
+                // Cek jika index berada di posisi item tambahan paling bawah
+                if (index == chatList.length) {
+                  return chatListViewModel.isLoadingMore
+                      ? const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 20),
+                          child: Center(
+                            child: SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                              ),
+                            ),
+                          ),
+                        )
+                      : const SizedBox.shrink();
+                }
+
+                final chat = chatList[index];
+                final type = ConversationType.values.byName(chat.type);
+                return ChatListItem(
+                  chat: chat,
+                  type: type,
+                  languageCode: currentLanguageCode,
+                  onTap: () {
+                    chatListViewModel.markChatAsRead(chat.id);
+                    Navigator.of(
+                      context,
+                    ).pushNamed(AppRoutes.chat, arguments: {'chatId': chat.id});
+                  },
+                );
+              },
+            ),
           );
         },
       ),

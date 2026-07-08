@@ -30,6 +30,8 @@ ChatListItemModel _$ChatListItemModelFromJson(Map<String, dynamic> json) =>
           ? null
           : DateTime.parse(json['joinedAt'] as String),
       unreadCount: (json['unreadCount'] as num?)?.toInt(),
+      isTyping: json['isTyping'] as bool?,
+      typingUserName: json['typingUserName'] as String?,
     );
 
 Map<String, dynamic> _$ChatListItemModelToJson(ChatListItemModel instance) =>
@@ -44,4 +46,6 @@ Map<String, dynamic> _$ChatListItemModelToJson(ChatListItemModel instance) =>
       'participants': instance.participants,
       'joinedAt': instance.joinedAt?.toIso8601String(),
       'unreadCount': instance.unreadCount,
+      'isTyping': instance.isTyping,
+      'typingUserName': instance.typingUserName,
     };

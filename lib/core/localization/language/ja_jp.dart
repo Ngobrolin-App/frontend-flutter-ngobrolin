@@ -120,8 +120,6 @@ const Map<String, String> jaJP = {
   'online': 'オンライン',
   'copied_to_clipboard': 'クリップボードにコピーしました',
   'replying_to': '返信先:',
-  'copy': 'コピー',
-  'reply': '返信',
   'take_photo': '写真を撮る',
   'preview_image': '画像をプレビュー',
   'add_caption': 'キャプションを追加',
@@ -139,6 +137,21 @@ const Map<String, String> jaJP = {
   "select_new_group_members": "新しいグループのメンバーを選択",
   "preview_attachment": "添付ファイルをプレビュー",
   "crop_image": "画像を切り抜く",
+  'group_name': 'グループ名',
+  'please_enter_group_name': 'グループ名を入力してください',
+  'members': 'メンバー',
+  'create_new_group': '新しいグループを作成',
+  'participantids_required': '少なくとも1人の参加者が必要です',
+  'create_group_success': 'グループの作成に成功しました',
+  'create_group_failed': 'グループの作成に失敗しました',
+  'download_and_open': 'ダウンロードして開く',
+  'download': 'ダウンロード',
+  'forward': '転送',
+  'forwarded': '転送済み',
+  'copy': 'コピー',
+  'reply': '返信',
+  'message_unsent': 'メッセージの送信を取り消しました',
+  'unsend_message': 'メッセージの送信を取り消す',
 
   // Errors
   'error_occurred': 'エラーが発生しました',
@@ -149,6 +162,7 @@ const Map<String, String> jaJP = {
   "failed_to_load_image": "画像の読み込みに失敗しました",
   "image_unavailable": "画像を利用できません",
   "failed_to_pick_image": "画像を選択できませんでした",
+  'no_file_uploaded': 'ファイルがアップロードされていません',
 
   // Misc
   'cancel': 'キャンセル',
@@ -162,6 +176,8 @@ const Map<String, String> jaJP = {
   'failed_to_unblock': 'ブロック解除に失敗しました',
   'has_been_blocked': 'はブロックされました',
   'failed_to_block': 'ブロックに失敗しました',
+  'today': '今日',
+  'yesterday': '昨日',
 
   // Language
   'language': '言語',
@@ -242,4 +258,13 @@ const Map<String, String> jaJP = {
       '友達からの重要なチャットを見逃さないように、Ngobrolinに通知を送信する許可を与えてください。',
   'later': '後で',
   'enable': '有効にする',
+
+  // WITH ARGS
+  'system_msg_group_created': '{actorName}がグループ「{groupName}」を作成しました',
+  'system_msg_user_added': '{actorName}が{targetName}を追加しました',
+  'system_msg_image_changed': '{actorName}がグループの写真を変更しました',
+  'system_msg_name_changed': '{actorName}がグループ名を「{groupName}」に変更しました',
+  'system_msg_user_removed': '{actorName}が{targetName}をグループから削除しました',
+  'system_msg_user_left': '{actorName}がグループから退室しました',
+  'user_typing': '{actorName}が入力中',
 };

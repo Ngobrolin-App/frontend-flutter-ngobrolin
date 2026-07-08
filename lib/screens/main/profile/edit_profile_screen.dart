@@ -3,10 +3,13 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/material_symbols.dart';
+import 'package:ngobrolin_app/core/enums/general_enums.dart';
 import 'package:ngobrolin_app/core/utils/general_utils.dart';
 import 'package:ngobrolin_app/core/viewmodels/profile/profile_view_model.dart';
 import 'package:ngobrolin_app/core/models/user_model.dart';
+import 'package:ngobrolin_app/core/widgets/buttons/app_icon_button.dart';
 import 'package:ngobrolin_app/core/widgets/cards/app_avatar.dart';
+import 'package:ngobrolin_app/core/widgets/modals/media_picker_modal.dart';
 import 'package:provider/provider.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/widgets/buttons/primary_button.dart';
@@ -134,48 +137,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
-  void _showImageSourceBottomSheet() {
-    showModalBottomSheet(
-      context: context,
-      builder: (ctx) => SafeArea(
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              GestureDetector(
-                onTap: () => Navigator.pop(ctx, ImageSource.camera),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.camera_alt_rounded,
-                      color: AppColors.primary,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(child: Text(context.tr('take_photo'))),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              GestureDetector(
-                onTap: () => Navigator.pop(ctx, ImageSource.gallery),
-                child: Row(
-                  children: [
-                    const Icon(Icons.image, color: AppColors.primary),
-                    const SizedBox(width: 12),
-                    Expanded(child: Text(context.tr('choose_image'))),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    ).then((source) {
-      if (source != null && source is ImageSource) {
-        _pickAndCropImage(source);
-      }
-    });
+  void _handleImageSelection() async {
+    // Call the helper, file option is hidden by default
+    final source = await MediaPickerModal.showPickerBottomSheet(context);
+
+    if (source == null) return;
+
+    final imageSource = source == MediaSource.camera
+        ? ImageSource.camera
+        : ImageSource.gallery;
+
+    _pickAndCropImage(imageSource);
   }
 
   Future<void> _pickAndCropImage(ImageSource source) async {
@@ -237,29 +209,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       Positioned(
                         bottom: 0,
                         right: 0,
-                        child: InkWell(
-                          onTap: _showImageSourceBottomSheet,
-                          borderRadius: BorderRadius.circular(20),
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: const BoxDecoration(
-                              color: AppColors.accent,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Iconify(
-                              MaterialSymbols.android_camera,
-                              color: AppColors.white,
-                              size: 20,
-                            ),
+                        child: AppIconButton(
+                          onTap: _handleImageSelection,
+                          icon: const Iconify(
+                            MaterialSymbols.android_camera,
+                            color: AppColors.white,
+                            size: 20,
                           ),
                         ),
                       ),
                     ],
                   ),
                 ),
+
                 const SizedBox(height: 24),
 
-                // Name field
                 CustomTextField(
                   controller: _nameController,
                   labelText: context.tr('name'),
@@ -270,6 +234,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     return null;
                   },
                 ),
+
                 const SizedBox(height: 16),
 
                 // Email field

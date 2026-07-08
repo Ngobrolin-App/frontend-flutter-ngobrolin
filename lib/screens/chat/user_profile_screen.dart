@@ -224,13 +224,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                             );
                           }
                         : null,
-                    onLongPress: user.avatarUrl != null
-                        ? () => GeneralUtils.downloadAndOpen(
-                            context,
-                            user.avatarUrl!,
-                          )
-                        : null,
 
+                    // onLongPress: user.avatarUrl != null
+                    //     ? () => GeneralUtils.downloadAndOpen(
+                    //         context,
+                    //         user.avatarUrl!,
+                    //       )
+                    //     : null,
                     child: AppAvatar(
                       imageUrl: user.avatarUrl,
                       name: user.name,
