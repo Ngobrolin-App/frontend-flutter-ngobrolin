@@ -11,7 +11,13 @@ class ConversationModel extends Equatable {
   final String? name;
   final String? groupImage;
   final List<UserModel>? participants;
+
+  final String? groupDescription;
+  final String? createdByUserId;
   final DateTime? createdAt;
+  final DateTime? updatedAt;
+
+  final UserModel? createdByUser;
 
   const ConversationModel({
     required this.id,
@@ -19,7 +25,11 @@ class ConversationModel extends Equatable {
     this.name,
     this.groupImage,
     this.participants,
+    this.groupDescription,
+    this.createdByUserId,
     this.createdAt,
+    this.updatedAt,
+    this.createdByUser,
   });
 
   /// Creates a ConversationModel from JSON data
@@ -36,7 +46,11 @@ class ConversationModel extends Equatable {
     String? name,
     String? groupImage,
     List<UserModel>? participants,
+    String? groupDescription,
+    String? createdByUserId,
     DateTime? createdAt,
+    DateTime? updatedAt,
+    UserModel? createdByUser,
   }) {
     return ConversationModel(
       id: id ?? this.id,
@@ -44,7 +58,11 @@ class ConversationModel extends Equatable {
       name: name ?? this.name,
       groupImage: groupImage ?? this.groupImage,
       participants: participants ?? this.participants,
+      groupDescription: groupDescription ?? this.groupDescription,
+      createdByUserId: createdByUserId ?? this.createdByUserId,
       createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      createdByUser: createdByUser ?? this.createdByUser,
     );
   }
 
@@ -55,6 +73,10 @@ class ConversationModel extends Equatable {
     name,
     groupImage,
     participants,
+    groupDescription,
+    createdByUserId,
     createdAt,
+    updatedAt,
+    createdByUser,
   ];
 }

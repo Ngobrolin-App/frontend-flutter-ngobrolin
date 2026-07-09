@@ -15,9 +15,17 @@ ConversationModel _$ConversationModelFromJson(Map<String, dynamic> json) =>
       participants: (json['participants'] as List<dynamic>?)
           ?.map((e) => UserModel.fromJson(e as Map<String, dynamic>))
           .toList(),
+      groupDescription: json['groupDescription'] as String?,
+      createdByUserId: json['createdByUserId'] as String?,
       createdAt: json['createdAt'] == null
           ? null
           : DateTime.parse(json['createdAt'] as String),
+      updatedAt: json['updatedAt'] == null
+          ? null
+          : DateTime.parse(json['updatedAt'] as String),
+      createdByUser: json['createdByUser'] == null
+          ? null
+          : UserModel.fromJson(json['createdByUser'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$ConversationModelToJson(ConversationModel instance) =>
@@ -27,5 +35,9 @@ Map<String, dynamic> _$ConversationModelToJson(ConversationModel instance) =>
       'name': instance.name,
       'groupImage': instance.groupImage,
       'participants': instance.participants,
+      'groupDescription': instance.groupDescription,
+      'createdByUserId': instance.createdByUserId,
       'createdAt': instance.createdAt?.toIso8601String(),
+      'updatedAt': instance.updatedAt?.toIso8601String(),
+      'createdByUser': instance.createdByUser,
     };

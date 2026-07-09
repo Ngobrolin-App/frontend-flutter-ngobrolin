@@ -208,8 +208,7 @@ class _AttachmentPreviewScreenState extends State<AttachmentPreviewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:
-          Colors.black, // Beri background gelap agar preview lebih fokus
+      backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
         title: Text(

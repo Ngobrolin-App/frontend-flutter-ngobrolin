@@ -15,7 +15,7 @@ class PasswordField extends StatefulWidget {
   final bool enabled;
 
   const PasswordField({
-    Key? key,
+    super.key,
     this.controller,
     this.hintText,
     this.labelText,
@@ -25,7 +25,7 @@ class PasswordField extends StatefulWidget {
     this.textInputAction,
     this.onSubmitted,
     this.enabled = true,
-  }) : super(key: key);
+  });
 
   @override
   State<PasswordField> createState() => _PasswordFieldState();

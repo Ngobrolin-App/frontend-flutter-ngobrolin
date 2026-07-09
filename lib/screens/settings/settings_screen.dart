@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ngobrolin_app/core/localization/language_constants.dart';
 import 'package:ngobrolin_app/core/models/language_model.dart';
+import 'package:ngobrolin_app/core/viewmodels/auth/auth_view_model.dart';
 import 'package:provider/provider.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/fa.dart';
@@ -28,6 +29,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (!mounted) return;
       Provider.of<SettingsViewModel>(context, listen: false).initSettings();
     });
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(dialogContext.tr('logout')),
+        content: Text(dialogContext.tr('are_you_sure_logout')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(dialogContext.tr('no')),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              _logout(); // Menggunakan instance context utama widget
+            },
+            child: Text(
+              dialogContext.tr('yes'),
+              style: const TextStyle(color: AppColors.warning),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // OPTIMASI: Pencegahan bug BuildContext asinkronus saat navigasi keluar
+  void _logout() async {
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+
+    await authViewModel.signOut();
+
+    if (!mounted) return;
+
+    // Bersihkan seluruh stack navigasi kembali ke Login screen
+    Navigator.of(
+      context,
+    ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
   }
 
   @override
@@ -121,6 +162,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _showAboutDialog(context);
                 },
               ),
+
+              const Divider(),
+
+              // Logout Button
+              ListTile(
+                title: Text(context.tr('logout')),
+                leading: const Iconify(
+                  MaterialSymbols.logout_rounded,
+                  color: AppColors.text,
+                ),
+                onTap: () {
+                  _showLogoutDialog(context);
+                },
+              ),
+
+              const Divider(),
             ],
           );
         },

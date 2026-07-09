@@ -90,7 +90,6 @@ class ChatViewModel extends BaseViewModel {
 
     if (_conversationId != null && _conversationId!.isNotEmpty) {
       await _getConversationDataOnly();
-      await _loadParticipant();
       await _loadMessages();
     }
   }
@@ -168,38 +167,38 @@ class ChatViewModel extends BaseViewModel {
   }
 
   /// Fetches participants metadata linked inside the room roster array.
-  Future<bool> _loadParticipant() async {
-    if (_conversationId == null) return false;
+  // Future<bool> _loadParticipant() async {
+  //   if (_conversationId == null) return false;
 
-    return await runBusyFuture(() async {
-          try {
-            final result = await _chatRepository.getConversationParticipants(
-              conversationId: _conversationId!,
-              isIncludeMe: _conversationType != ConversationType.private.name,
-            );
+  //   return await runBusyFuture(() async {
+  //         try {
+  //           final result = await _chatRepository.getConversationParticipants(
+  //             conversationId: _conversationId!,
+  //             isIncludeMe: _conversationType != ConversationType.private.name,
+  //           );
 
-            final participants = result.data ?? [];
+  //           final participants = result.data ?? [];
 
-            if (_conversationType == ConversationType.private.name &&
-                participants.isNotEmpty) {
-              _privatePartnerId = participants.first.id;
-              _conversationName = participants.first.name;
-              _conversationImageUrl = participants.first.avatarUrl;
-            }
+  //           if (_conversationType == ConversationType.private.name &&
+  //               participants.isNotEmpty) {
+  //             _privatePartnerId = participants.first.id;
+  //             _conversationName = participants.first.name;
+  //             _conversationImageUrl = participants.first.avatarUrl;
+  //           }
 
-            notifyListeners();
-            return true;
-          } catch (e) {
-            developer.log(
-              "ChatViewModel - _loadParticipant() error $e",
-              name: 'ChatViewModel',
-            );
-            setError(e.toString());
-            return false;
-          }
-        }) ??
-        false;
-  }
+  //           notifyListeners();
+  //           return true;
+  //         } catch (e) {
+  //           developer.log(
+  //             "ChatViewModel - _loadParticipant() error $e",
+  //             name: 'ChatViewModel',
+  //           );
+  //           setError(e.toString());
+  //           return false;
+  //         }
+  //       }) ??
+  //       false;
+  // }
 
   /// Requests modern messages logs belonging to the active room.
   Future<bool> _loadMessages() async {
@@ -290,6 +289,7 @@ class ChatViewModel extends BaseViewModel {
   Future<bool> createGroupConversation({
     required String groupName,
     required List<String> participantIds,
+    required String createdByUserId,
     String? groupImagePath,
   }) async {
     return await runBusyFuture(() async {
@@ -305,6 +305,7 @@ class ChatViewModel extends BaseViewModel {
               groupName: groupName,
               participantIds: participantIds,
               groupImageUrl: groupImageUrl,
+              createdByUserId: createdByUserId,
             );
 
             final conversation = result.data;

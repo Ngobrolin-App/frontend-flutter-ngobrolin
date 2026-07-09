@@ -3,6 +3,7 @@ import 'package:ngobrolin_app/core/utils/general_utils.dart';
 import 'package:ngobrolin_app/core/viewmodels/auth/auth_view_model.dart';
 import 'package:ngobrolin_app/core/widgets/cards/app_avatar.dart';
 import 'package:ngobrolin_app/core/widgets/states/image_error_placeholder.dart';
+import 'package:ngobrolin_app/core/widgets/texts/expandable_text_section.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:provider/provider.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
@@ -256,30 +257,16 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 ],
               ),
             ),
-            if (user.bio != null && user.bio!.isNotEmpty)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          context.tr('bio'),
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(user.bio!, style: const TextStyle(fontSize: 16)),
-                      ],
-                    ),
-                  ),
-                  const Divider(),
-                ],
+            if (user.bio != null && user.bio!.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: ExpandableTextSection(
+                  title: context.tr('bio'),
+                  content: user.bio!,
+                ),
               ),
+              const Divider(),
+            ],
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(

@@ -60,19 +60,9 @@ class ChatBubble extends StatelessWidget {
         Offset.zero & overlay.size,
       ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      color: Colors.white,
+      color: AppColors.white,
       elevation: 8,
-      items: [
-        PopupMenuItem(
-          value: 'copy',
-          child: Row(
-            children: [
-              Iconify(Mdi.content_copy, size: 20, color: AppColors.primary),
-              SizedBox(width: 12),
-              Text(context.tr('copy')),
-            ],
-          ),
-        ),
+      items: <PopupMenuEntry<String>>[
         PopupMenuItem(
           value: 'reply',
           child: Row(
@@ -80,6 +70,16 @@ class ChatBubble extends StatelessWidget {
               Iconify(Mdi.reply, size: 20, color: AppColors.primary),
               SizedBox(width: 12),
               Text(context.tr('reply')),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'copy',
+          child: Row(
+            children: [
+              Iconify(Mdi.content_copy, size: 20, color: AppColors.primary),
+              SizedBox(width: 12),
+              Text(context.tr('copy')),
             ],
           ),
         ),
@@ -98,16 +98,31 @@ class ChatBubble extends StatelessWidget {
               ],
             ),
           ),
-        PopupMenuItem(
-          value: 'forward',
-          child: Row(
-            children: [
-              Iconify(Ion.forward, size: 20, color: AppColors.primary),
-              SizedBox(width: 12),
-              Text(context.tr('forward')),
-            ],
-          ),
-        ),
+        // PopupMenuItem(
+        //   value: 'forward',
+        //   child: Row(
+        //     children: [
+        //       Iconify(Ion.forward, size: 20, color: AppColors.primary),
+        //       SizedBox(width: 12),
+        //       Text(context.tr('forward')),
+        //     ],
+        //   ),
+        // ),
+        // const PopupMenuDivider(),
+        // PopupMenuItem(
+        //   value: 'unsend_message',
+        //   child: Row(
+        //     children: [
+        //       Iconify(
+        //         MaterialSymbols.delete_forever_outline_rounded,
+        //         size: 20,
+        //         color: AppColors.primary,
+        //       ),
+        //       SizedBox(width: 12),
+        //       Text(context.tr('unsend_message')),
+        //     ],
+        //   ),
+        // ),
       ],
     );
 
@@ -119,6 +134,9 @@ class ChatBubble extends StatelessWidget {
   void _handleMenuAction(String value, BuildContext context) {
     final chatViewModel = Provider.of<ChatViewModel>(context, listen: false);
     switch (value) {
+      case 'reply':
+        chatViewModel.setReplyingTo(message);
+        break;
       case 'copy':
         Clipboard.setData(ClipboardData(text: message.content ?? ''));
         ScaffoldMessenger.of(context).showSnackBar(
@@ -133,11 +151,12 @@ class ChatBubble extends StatelessWidget {
           ),
         );
         break;
-      case 'reply':
-        chatViewModel.setReplyingTo(message);
-        break;
       case 'download':
         GeneralUtils.downloadAndOpen(context, message.mediaUrl ?? '');
+        break;
+      case 'forward':
+        break;
+      case 'unsend_message':
         break;
     }
   }

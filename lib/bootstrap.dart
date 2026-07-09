@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:ngobrolin_app/core/services/deeplink/deeplink_service.dart';
+import 'package:ngobrolin_app/core/viewmodels/chat/group_profile_view_model.dart';
 import 'package:provider/provider.dart';
 
 import 'package:firebase_core/firebase_core.dart';
@@ -168,6 +169,9 @@ Future<void> bootstrap() async {
           create: (_) => serviceLocator<ChatListViewModel>(),
         ),
         ChangeNotifierProvider(
+          create: (_) => serviceLocator<GroupProfileViewModel>(),
+        ),
+        ChangeNotifierProvider(
           create: (_) => serviceLocator<SearchUserViewModel>(),
         ),
         ChangeNotifierProvider(
@@ -215,28 +219,27 @@ class _MyAppState extends State<MyApp> {
         context,
         listen: false,
       );
-      final chatListViewModel = Provider.of<ChatListViewModel>(
-        context,
-        listen: false,
-      );
-
       try {
         await socketProvider.init();
       } catch (_) {
         return;
       }
+      // final chatListViewModel = Provider.of<ChatListViewModel>(
+      //   context,
+      //   listen: false,
+      // );
 
-      try {
-        final fetched = await chatListViewModel.fetchChatList();
-        if (fetched) {
-          for (final chat in chatListViewModel.chatList) {
-            final convId = chat.id as String?;
-            if (convId != null) {
-              socketProvider.joinConversation(convId);
-            }
-          }
-        }
-      } catch (_) {}
+      // try {
+      //   final fetched = await chatListViewModel.fetchChatList();
+      //   if (fetched) {
+      //     for (final chat in chatListViewModel.chatList) {
+      //       final convId = chat.id as String?;
+      //       if (convId != null) {
+      //         socketProvider.joinConversation(convId);
+      //       }
+      //     }
+      //   }
+      // } catch (_) {}
     });
   }
 

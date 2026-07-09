@@ -4,6 +4,7 @@ import 'package:iconify_flutter/icons/ph.dart';
 import 'package:iconify_flutter/icons/ri.dart';
 import 'package:iconify_flutter/icons/material_symbols.dart';
 import 'package:ngobrolin_app/core/services/notification_service.dart';
+import 'package:ngobrolin_app/theme/app_texts.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import 'chat_list/chat_list_screen.dart';
@@ -95,47 +96,82 @@ class _MainScreenState extends State<MainScreen> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) {
-          if (_currentIndex == index)
-            return; // Cegah rebuild jika mengetuk tab yang sama
+          if (_currentIndex == index) return;
           setState(() {
             _currentIndex = index;
           });
         },
-        type: BottomNavigationBarType
-            .fixed, // Memastikan layout tab tetap konsisten
+        type: BottomNavigationBarType.fixed,
         selectedItemColor: AppColors.primary,
         unselectedItemColor: AppColors.deactiveButton,
+        selectedLabelStyle: AppTexts.selectedBottomNavigationTextStyle,
+        unselectedLabelStyle: AppTexts.unselectedBottomNavigationTextStyle,
         items: [
           BottomNavigationBarItem(
-            icon: const Iconify(
-              Ph.chat_dots_light,
-              color: AppColors.deactiveButton,
+            backgroundColor: AppColors.chatBubbleUser,
+            icon: Container(
+              margin: EdgeInsets.only(bottom: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: const Iconify(
+                Ph.chat_dots_light,
+                color: AppColors.deactiveButton,
+              ),
             ),
-            activeIcon: const Iconify(
-              Ph.chat_dots_fill,
-              color: AppColors.primary,
+            activeIcon: Container(
+              margin: EdgeInsets.only(bottom: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.lightGreen,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Iconify(Ph.chat_dots_fill, color: AppColors.primary),
             ),
             label: context.tr('chats'),
           ),
           BottomNavigationBarItem(
-            icon: const Iconify(
-              Ri.search_2_line,
-              color: AppColors.deactiveButton,
+            icon: Container(
+              margin: EdgeInsets.only(bottom: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: const Iconify(
+                Ri.search_2_line,
+                color: AppColors.deactiveButton,
+              ),
             ),
-            activeIcon: const Iconify(
-              Ri.search_eye_fill,
-              color: AppColors.primary,
+            activeIcon: Container(
+              margin: EdgeInsets.only(bottom: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.lightGreen,
+
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Iconify(
+                Ri.search_eye_fill,
+                color: AppColors.primary,
+              ),
             ),
             label: context.tr('users'),
           ),
           BottomNavigationBarItem(
-            icon: const Iconify(
-              MaterialSymbols.person_2_outline_rounded,
-              color: AppColors.deactiveButton,
+            icon: Container(
+              margin: EdgeInsets.only(bottom: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: const Iconify(
+                MaterialSymbols.person_2_outline_rounded,
+                color: AppColors.deactiveButton,
+              ),
             ),
-            activeIcon: const Iconify(
-              MaterialSymbols.person_2_rounded,
-              color: AppColors.primary,
+            activeIcon: Container(
+              margin: EdgeInsets.only(bottom: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.lightGreen,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Iconify(
+                MaterialSymbols.person_2_rounded,
+                color: AppColors.primary,
+              ),
             ),
             label: context.tr('profile'),
           ),

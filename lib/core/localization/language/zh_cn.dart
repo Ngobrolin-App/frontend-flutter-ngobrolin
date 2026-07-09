@@ -123,6 +123,9 @@ const Map<String, String> zhCN = {
   "new_group": "新建群组",
   "groups": "群组",
   "group": "群组",
+  'group_info': '群组信息',
+  'group_description': '群组描述',
+  'description': '描述',
   "select_members": "选择成员",
   "new_community": "新建社区",
   "community": "社区",
@@ -149,6 +152,7 @@ const Map<String, String> zhCN = {
   'reply': '回复',
   'message_unsent': '消息已撤回',
   'unsend_message': '撤回消息',
+  'createdbyuserid_required': '创建者用户 ID 为必填项',
 
   // Errors
   'error_occurred': '发生错误',
@@ -171,6 +175,7 @@ const Map<String, String> zhCN = {
   'loading': '加载中...',
   'today': '今天',
   'yesterday': '昨天',
+  'read_more': '阅读更多',
 
   // Block/Unblock messages
   'has_been_unblocked': '已取消屏蔽',
@@ -263,5 +268,5 @@ const Map<String, String> zhCN = {
   'system_msg_name_changed': '{actorName} 将群组名称修改为 "{groupName}"',
   'system_msg_user_removed': '{actorName} 将 {targetName} 移出了群组',
   'system_msg_user_left': '{actorName} 离开了群组',
-  'user_typing': '{actorName} 正在输入',
+  'number_of_members': '{number} 位成员',
 };

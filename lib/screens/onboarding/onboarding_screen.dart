@@ -77,7 +77,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final totalPages = _onboardingPages.length;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundGeneral,
       body: SafeArea(
         child: Column(
           children: [

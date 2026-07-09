@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:ngobrolin_app/bootstrap.dart';
 import 'package:ngobrolin_app/core/localization/app_localizations.dart';
-import 'package:ngobrolin_app/screens/chat/create_chat_group.dart';
+import 'package:ngobrolin_app/screens/chat/create_chat_group_screen.dart';
+import 'package:ngobrolin_app/screens/chat/group_profile_screen.dart';
 import 'package:ngobrolin_app/theme/app_colors.dart';
 
 // Screens
@@ -31,6 +32,7 @@ class AppRoutes {
   static const String settingsRoute = '/settings';
   static const String blockedUsers = '/settings/blocked-users';
   static const String userProfile = '/user-profile';
+  static const String groupProfile = '/group-profile';
 
   static Route<dynamic>? generateRoute(RouteSettings settings) {
     // developer.log(
@@ -79,6 +81,13 @@ class AppRoutes {
         return MaterialPageRoute(
           builder: (_) =>
               UserProfileScreen(userId: args?['userId'] as String? ?? ''),
+        );
+      case groupProfile:
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => GroupProfileScreen(
+            conversationId: args?['conversationId'] as String? ?? '',
+          ),
         );
       default:
         _showRouteError(settings.name);

@@ -126,6 +126,9 @@ const Map<String, String> jaJP = {
   "new_group": "新しいグループ",
   "groups": "グループ",
   "group": "グループ",
+  'group_info': 'グループ情報',
+  'group_description': 'グループの説明',
+  'description': '説明',
   "select_members": "メンバーを選択",
   "new_community": "新しいコミュニティ",
   "community": "コミュニティ",
@@ -152,6 +155,7 @@ const Map<String, String> jaJP = {
   'reply': '返信',
   'message_unsent': 'メッセージの送信を取り消しました',
   'unsend_message': 'メッセージの送信を取り消す',
+  'createdbyuserid_required': 'グループ作成者のユーザーIDは必須です',
 
   // Errors
   'error_occurred': 'エラーが発生しました',
@@ -178,6 +182,7 @@ const Map<String, String> jaJP = {
   'failed_to_block': 'ブロックに失敗しました',
   'today': '今日',
   'yesterday': '昨日',
+  'read_more': 'もっと読む',
 
   // Language
   'language': '言語',
@@ -267,4 +272,5 @@ const Map<String, String> jaJP = {
   'system_msg_user_removed': '{actorName}が{targetName}をグループから削除しました',
   'system_msg_user_left': '{actorName}がグループから退室しました',
   'user_typing': '{actorName}が入力中',
+  'number_of_members': '{number}人のメンバー',
 };

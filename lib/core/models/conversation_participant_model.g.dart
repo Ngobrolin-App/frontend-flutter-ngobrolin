@@ -11,13 +11,14 @@ ConversationParticipantModel _$ConversationParticipantModelFromJson(
 ) => ConversationParticipantModel(
   id: json['id'] as String,
   conversationId: json['conversationId'] as String,
-  name: json['name'] as String,
-  username: json['username'] as String,
-  avatarUrl: json['avatarUrl'] as String?,
+  userId: json['userId'] as String,
   lastReadMessageId: json['lastReadMessageId'] as String?,
   joinedAt: json['joinedAt'] == null
       ? null
       : DateTime.parse(json['joinedAt'] as String),
+  user: json['user'] == null
+      ? null
+      : UserModel.fromJson(json['user'] as Map<String, dynamic>),
 );
 
 Map<String, dynamic> _$ConversationParticipantModelToJson(
@@ -25,9 +26,8 @@ Map<String, dynamic> _$ConversationParticipantModelToJson(
 ) => <String, dynamic>{
   'id': instance.id,
   'conversationId': instance.conversationId,
-  'name': instance.name,
-  'username': instance.username,
-  'avatarUrl': instance.avatarUrl,
+  'userId': instance.userId,
   'lastReadMessageId': instance.lastReadMessageId,
   'joinedAt': instance.joinedAt?.toIso8601String(),
+  'user': instance.user,
 };

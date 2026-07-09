@@ -131,6 +131,9 @@ const Map<String, String> enUS = {
   "new_group": "New Group",
   "groups": "Groups",
   "group": "Group",
+  'group_info': 'Group Info',
+  'group_description': 'Group Description',
+  'description': 'Description',
   "select_members": "Select Members",
   "new_community": "New Community",
   "community": "Community",
@@ -157,6 +160,7 @@ const Map<String, String> enUS = {
   'reply': 'Reply',
   'message_unsent': 'Message unsent',
   'unsend_message': 'Unsend Message',
+  'createdbyuserid_required': 'Creator user ID is required',
 
   // Errors
   'error_occurred': 'An error occurred',
@@ -179,6 +183,7 @@ const Map<String, String> enUS = {
   'loading': 'Loading...',
   'today': 'Today',
   'yesterday': 'Yesterday',
+  'read_more': 'Read more',
 
   // Custom messages for block/unblock with name
   'has_been_unblocked': 'has been unblocked',
@@ -288,4 +293,5 @@ const Map<String, String> enUS = {
   'system_msg_user_removed': '{actorName} removed {targetName}',
   'system_msg_user_left': '{actorName} left the group',
   'user_typing': '{actorName} is typing',
+  'number_of_members': '{number} members',
 };

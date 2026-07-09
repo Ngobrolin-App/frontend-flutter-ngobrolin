@@ -93,12 +93,14 @@ class ChatRepository {
   Future<ApiResponse<ConversationModel>> createGroupConversation({
     required String groupName,
     required List<String> participantIds,
+    required String createdByUserId,
     String? groupImageUrl,
   }) async {
     final data = {
       'type': ConversationType.group.name,
       'name': groupName,
       'participantIds': participantIds,
+      'createdByUserId': createdByUserId,
     };
 
     if (groupImageUrl != null) {
@@ -157,27 +159,51 @@ class ChatRepository {
     );
   }
 
-  Future<ApiResponse<List<ConversationParticipantModel>>>
+  Future<ApiResponse<PaginatedResult<ConversationParticipantModel>>>
   getConversationParticipants({
+    int page = 1,
+    int limit = 20,
     required String conversationId,
     bool isIncludeMe = true,
   }) async {
-    return await _apiService
-        .post<ApiResponse<List<ConversationParticipantModel>>>(
-          '/conversations/participants',
-          data: {'conversationId': conversationId, 'isIncludeMe': isIncludeMe},
-          parser: (response) =>
-              ApiResponse<List<ConversationParticipantModel>>.fromJson(
-                response,
-                (data) => (data as List<dynamic>? ?? [])
-                    .map(
-                      (e) => ConversationParticipantModel.fromJson(
-                        e as Map<String, dynamic>? ?? <String, dynamic>{},
-                      ),
-                    )
-                    .toList(),
-              ),
-        );
+    return await _apiService.post<
+      ApiResponse<PaginatedResult<ConversationParticipantModel>>
+    >(
+      '/conversations/participants',
+      data: {
+        'page': page,
+        'limit': limit,
+        'conversationId': conversationId,
+        'isIncludeMe': isIncludeMe,
+      },
+      parser: (response) =>
+          ApiResponse<PaginatedResult<ConversationParticipantModel>>.fromJson(
+            response,
+            (data) {
+              final mappedData =
+                  data as Map<String, dynamic>? ?? <String, dynamic>{};
+              final pagination =
+                  mappedData['pagination'] as Map<String, dynamic>? ?? {};
+              final participants =
+                  mappedData['participants'] as List<dynamic>? ?? [];
+
+              final items = participants
+                  .map(
+                    (e) => ConversationParticipantModel.fromJson(
+                      e as Map<String, dynamic>? ?? <String, dynamic>{},
+                    ),
+                  )
+                  .toList();
+              return PaginatedResult(
+                items: items,
+                total: (pagination['total'] as int?) ?? 0,
+                page: (pagination['page'] as int?) ?? 1,
+                limit: (pagination['limit'] as int?) ?? 20,
+                totalPages: (pagination['totalPages'] as int?) ?? 1,
+              );
+            },
+          ),
+    );
   }
 
   Future<ApiResponse<PaginatedResult<MessageModel>>>

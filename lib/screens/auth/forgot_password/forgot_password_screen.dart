@@ -79,7 +79,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final isLoading = context.select<AuthViewModel, bool>((vm) => vm.isLoading);
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,

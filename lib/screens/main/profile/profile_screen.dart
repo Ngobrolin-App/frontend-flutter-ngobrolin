@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/material_symbols.dart';
 import 'package:ngobrolin_app/core/widgets/cards/app_avatar.dart';
+import 'package:ngobrolin_app/core/widgets/states/image_error_placeholder.dart';
+import 'package:ngobrolin_app/core/widgets/texts/expandable_text_section.dart';
+import 'package:photo_view/photo_view.dart';
 import 'package:provider/provider.dart';
 import '../../../core/localization/app_localizations.dart';
-import '../../../core/viewmodels/auth/auth_view_model.dart';
 import '../../../core/viewmodels/profile/profile_view_model.dart';
 import '../../../core/widgets/buttons/primary_button.dart';
-import '../../../core/widgets/buttons/secondary_button.dart';
 import '../../../routes/app_routes.dart';
 import '../../../theme/app_colors.dart';
 import 'edit_profile_screen.dart';
@@ -30,46 +31,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         listen: false,
       ).fetchCurrentProfile();
     });
-  }
-
-  void _showLogoutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(dialogContext.tr('logout')),
-        content: Text(dialogContext.tr('are_you_sure_logout')),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: Text(dialogContext.tr('no')),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-              _logout(); // Menggunakan instance context utama widget
-            },
-            child: Text(
-              dialogContext.tr('yes'),
-              style: const TextStyle(color: AppColors.warning),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // OPTIMASI: Pencegahan bug BuildContext asinkronus saat navigasi keluar
-  void _logout() async {
-    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-
-    await authViewModel.signOut();
-
-    if (!mounted) return;
-
-    // Bersihkan seluruh stack navigasi kembali ke Login screen
-    Navigator.of(
-      context,
-    ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
   }
 
   @override
@@ -114,12 +75,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   color: AppColors.primary,
                   child: Column(
                     children: [
-                      AppAvatar(
-                        imageUrl: avatarUrl,
-                        name: user.name,
-                        radius: 50,
-                        fontSize: 40,
-                        backgroundColor: AppColors.white,
+                      GestureDetector(
+                        onTap: user.avatarUrl != null
+                            ? () {
+                                showDialog(
+                                  context: context,
+                                  builder: (_) => Dialog(
+                                    insetPadding: const EdgeInsets.all(16),
+                                    child: PhotoView(
+                                      imageProvider: NetworkImage(
+                                        user.avatarUrl!,
+                                      ),
+                                      initialScale:
+                                          PhotoViewComputedScale.contained,
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              ImageErrorPlaceholder(
+                                                width: double.infinity,
+                                                height: double.infinity,
+                                                iconSize: 48,
+                                                errorMessage: context.tr(
+                                                  'failed_to_load_image',
+                                                ),
+                                              ),
+                                    ),
+                                  ),
+                                );
+                              }
+                            : null,
+                        child: AppAvatar(
+                          imageUrl: avatarUrl,
+                          name: user.name,
+                          radius: 50,
+                          fontSize: 40,
+                          backgroundColor: AppColors.white,
+                        ),
                       ),
                       const SizedBox(height: 16),
                       Text(
@@ -151,28 +141,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                 ),
-
                 // Bio Description section
                 if (user.bio != null && user.bio!.isNotEmpty) ...[
                   Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          context.tr('bio'),
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          user.bio!,
-                          style: const TextStyle(fontSize: 16),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
+                    padding: const EdgeInsets.all(20),
+                    child: ExpandableTextSection(
+                      title: context.tr('bio'),
+                      content: user.bio!,
                     ),
                   ),
                   const Divider(),
@@ -196,18 +171,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         profileViewModel.fetchCurrentProfile();
                       }
                     },
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  child: SecondaryButton(
-                    text: context.tr('logout'),
-                    onPressed: () => _showLogoutDialog(context),
-                    borderColor: AppColors.warning,
-                    textColor: AppColors.warning,
                   ),
                 ),
               ],

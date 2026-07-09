@@ -365,6 +365,12 @@ class _ChatScreenState extends State<ChatScreen> {
                 },
               );
             }
+            if (chatViewModel.conversationType == ConversationType.group.name) {
+              Navigator.of(context).pushNamed(
+                AppRoutes.groupProfile,
+                arguments: {'conversationId': chatViewModel.conversationId},
+              );
+            }
           },
           child: Row(
             children: [
@@ -464,23 +470,32 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         ),
         actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == 'block') _showBlockDialog(context);
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'block',
-                child: Row(
-                  children: [
-                    Iconify(Ic.round_block, color: AppColors.warning),
-                    const SizedBox(width: 8),
-                    Text(context.tr('block_account')),
-                  ],
+          if (_chatViewModel.conversationType == ConversationType.private.name)
+            PopupMenuButton<String>(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  bottomLeft: Radius.circular(16),
+                  bottomRight: Radius.circular(16),
                 ),
               ),
-            ],
-          ),
+              color: AppColors.white,
+              onSelected: (value) {
+                if (value == 'block') _showBlockDialog(context);
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'block',
+                  child: Row(
+                    children: [
+                      Iconify(Ic.round_block, color: AppColors.warning),
+                      const SizedBox(width: 8),
+                      Text(context.tr('block_account')),
+                    ],
+                  ),
+                ),
+              ],
+            ),
         ],
       ),
       body: Column(

@@ -13,7 +13,12 @@ MessageModel _$MessageModelFromJson(Map<String, dynamic> json) => MessageModel(
   content: json['content'] as String?,
   type: json['type'] as String? ?? 'text',
   isRead: json['isRead'] as bool? ?? false,
+  isUnsent: json['isUnsent'] as bool? ?? false,
+  isEdited: json['isEdited'] as bool? ?? false,
   createdAt: DateTime.parse(json['createdAt'] as String),
+  updatedAt: json['updatedAt'] == null
+      ? null
+      : DateTime.parse(json['updatedAt'] as String),
   mediaUrl: json['mediaUrl'] as String?,
   mediaFileName: json['mediaFileName'] as String?,
   mediaFileType: json['mediaFileType'] as String?,
@@ -39,7 +44,10 @@ Map<String, dynamic> _$MessageModelToJson(MessageModel instance) =>
       'content': instance.content,
       'type': instance.type,
       'isRead': instance.isRead,
+      'isUnsent': instance.isUnsent,
+      'isEdited': instance.isEdited,
       'createdAt': instance.createdAt.toIso8601String(),
+      'updatedAt': instance.updatedAt?.toIso8601String(),
       'mediaUrl': instance.mediaUrl,
       'mediaFileName': instance.mediaFileName,
       'mediaFileType': instance.mediaFileType,

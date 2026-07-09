@@ -188,7 +188,24 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
                   },
                 )
               : null,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(24)),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(24),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(24),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(24),
+            borderSide: BorderSide.none,
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(24),
+            borderSide: BorderSide.none,
+          ),
+          filled: true,
+          fillColor: AppColors.textFieldLightGrey,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
             vertical: 8,

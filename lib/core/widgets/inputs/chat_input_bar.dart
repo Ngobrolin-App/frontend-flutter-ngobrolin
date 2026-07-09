@@ -82,6 +82,7 @@ class ChatInputBar extends StatelessWidget {
                 IconButton(
                   icon: const Icon(Icons.attach_file, color: AppColors.grey),
                   onPressed: enabled ? onAttachment : null,
+                  padding: EdgeInsets.zero,
                 ),
 
               Expanded(
@@ -102,8 +103,20 @@ class ChatInputBar extends StatelessWidget {
                       borderRadius: BorderRadius.circular(24),
                       borderSide: BorderSide.none,
                     ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: BorderSide.none,
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: BorderSide.none,
+                    ),
                     filled: true,
-                    fillColor: AppColors.lightGrey.withOpacity(.3),
+                    fillColor: AppColors.textFieldLightGrey,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 8,

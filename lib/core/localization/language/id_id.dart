@@ -132,6 +132,9 @@ const Map<String, String> idID = {
   "new_group": "Grup Baru",
   "groups": "Grup",
   "group": "Grup",
+  'group_info': 'Info Grup',
+  'group_description': 'Deskripsi Grup',
+  'description': 'Deskripsi',
   "select_members": "Pilih Anggota",
   "new_community": "Komunitas Baru",
   "community": "Komunitas",
@@ -158,6 +161,7 @@ const Map<String, String> idID = {
   'reply': 'Balas',
   'message_unsent': 'Pesan dibatalkan',
   'unsend_message': 'Batalkan pesan',
+  'createdbyuserid_required': 'ID pembuat grup wajib diisi',
 
   // Errors
   'error_occurred': 'Terjadi kesalahan',
@@ -180,6 +184,7 @@ const Map<String, String> idID = {
   'loading': 'Memuat...',
   'today': 'Hari ini',
   'yesterday': 'Kemarin',
+  'read_more': 'Baca selengkapnya',
 
   // Pesan khusus block/unblock dengan nama
   'has_been_unblocked': 'telah dibatalkan blokir',
@@ -293,4 +298,5 @@ const Map<String, String> idID = {
   'system_msg_user_removed': '{actorName} mengeluarkan {targetName}',
   'system_msg_user_left': '{actorName} keluar dari grup',
   'user_typing': '{actorName} sedang mengetik',
+  'number_of_members': '{number} anggota',
 };

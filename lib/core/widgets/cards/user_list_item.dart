@@ -5,13 +5,13 @@ import '../../models/user_model.dart';
 
 class UserListItem extends StatelessWidget {
   final UserModel user;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final Widget? actionWidget;
 
   const UserListItem({
     super.key,
     required this.user,
-    required this.onTap,
+    this.onTap,
     this.actionWidget,
   });
 

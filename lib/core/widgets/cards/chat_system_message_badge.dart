@@ -19,6 +19,7 @@ class ChatSystemMessageBadge extends StatelessWidget {
       ),
       child: Text(
         GeneralUtils.getSystemMessageText(message, context),
+        textAlign: TextAlign.center,
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w500,

@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:ngobrolin_app/core/models/user_model.dart';
 
 part 'conversation_participant_model.g.dart';
 
@@ -7,20 +8,18 @@ part 'conversation_participant_model.g.dart';
 class ConversationParticipantModel extends Equatable {
   final String id;
   final String conversationId;
-  final String name;
-  final String username;
-  final String? avatarUrl;
+  final String userId;
   final String? lastReadMessageId;
   final DateTime? joinedAt;
+  final UserModel? user;
 
   const ConversationParticipantModel({
     required this.id,
     required this.conversationId,
-    required this.name,
-    required this.username,
-    this.avatarUrl,
+    required this.userId,
     this.lastReadMessageId,
     this.joinedAt,
+    this.user,
   });
 
   /// Creates a Chat from JSON data
@@ -34,20 +33,18 @@ class ConversationParticipantModel extends Equatable {
   ConversationParticipantModel copyWith({
     String? id,
     String? conversationId,
-    String? name,
-    String? username,
-    String? avatarUrl,
+    String? userId,
     String? lastReadMessageId,
     DateTime? joinedAt,
+    UserModel? user,
   }) {
     return ConversationParticipantModel(
       id: id ?? this.id,
       conversationId: conversationId ?? this.conversationId,
-      name: name ?? this.name,
-      username: username ?? this.username,
-      avatarUrl: avatarUrl ?? this.avatarUrl,
+      userId: userId ?? this.userId,
       lastReadMessageId: lastReadMessageId ?? this.lastReadMessageId,
       joinedAt: joinedAt ?? this.joinedAt,
+      user: user ?? this.user,
     );
   }
 
@@ -55,10 +52,9 @@ class ConversationParticipantModel extends Equatable {
   List<Object?> get props => [
     id,
     conversationId,
-    name,
-    username,
-    avatarUrl,
+    userId,
     lastReadMessageId,
     joinedAt,
+    user,
   ];
 }

@@ -13,7 +13,10 @@ class MessageModel extends Equatable {
   final String? content;
   final String type;
   final bool isRead;
+  final bool isUnsent;
+  final bool isEdited;
   final DateTime createdAt;
+  final DateTime? updatedAt;
 
   // Media
   final String? mediaUrl;
@@ -43,7 +46,10 @@ class MessageModel extends Equatable {
     this.content,
     this.type = 'text',
     this.isRead = false,
+    this.isUnsent = false,
+    this.isEdited = false,
     required this.createdAt,
+    this.updatedAt,
     this.mediaUrl,
     this.mediaFileName,
     this.mediaFileType,
@@ -69,7 +75,10 @@ class MessageModel extends Equatable {
     String? content,
     String? type,
     bool? isRead,
+    bool? isUnsent,
+    bool? isEdited,
     DateTime? createdAt,
+    DateTime? updatedAt,
     String? mediaUrl,
     String? mediaFileName,
     String? mediaFileType,
@@ -89,7 +98,10 @@ class MessageModel extends Equatable {
       content: content ?? this.content,
       type: type ?? this.type,
       isRead: isRead ?? this.isRead,
+      isUnsent: isUnsent ?? this.isUnsent,
+      isEdited: isEdited ?? this.isEdited,
       createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
       mediaUrl: mediaUrl ?? this.mediaUrl,
       mediaFileName: mediaFileName ?? this.mediaFileName,
       mediaFileType: mediaFileType ?? this.mediaFileType,
@@ -115,7 +127,10 @@ class MessageModel extends Equatable {
     content,
     type,
     isRead,
+    isUnsent,
+    isEdited,
     createdAt,
+    updatedAt,
     mediaUrl,
     mediaFileName,
     mediaFileType,

@@ -94,7 +94,6 @@ class _LoginScreenState extends State<LoginScreen> {
     final isLoading = context.select<AuthViewModel, bool>((vm) => vm.isLoading);
 
     return Scaffold(
-      backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(

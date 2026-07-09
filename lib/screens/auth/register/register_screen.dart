@@ -98,7 +98,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final isLoading = context.select<AuthViewModel, bool>((vm) => vm.isLoading);
 
     return Scaffold(
-      backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
