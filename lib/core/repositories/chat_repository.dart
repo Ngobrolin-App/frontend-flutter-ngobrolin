@@ -159,6 +159,16 @@ class ChatRepository {
     );
   }
 
+  Future<ApiResponse> leaveConversation({
+    required String conversationId,
+  }) async {
+    return await _apiService.post<ApiResponse>(
+      '/conversations/leave',
+      data: {'conversationId': conversationId},
+      parser: (response) => ApiResponse.fromJson(response, null),
+    );
+  }
+
   Future<ApiResponse<PaginatedResult<ConversationParticipantModel>>>
   getConversationParticipants({
     int page = 1,

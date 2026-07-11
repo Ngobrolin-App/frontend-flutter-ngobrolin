@@ -115,7 +115,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (!mounted) return;
 
     if (!_joinedRoom && _chatViewModel.conversationId != null) {
-      _socketProvider.joinConversation(_chatViewModel.conversationId!);
+      _socketProvider.joinConversationSocket(_chatViewModel.conversationId!);
       _joinedRoom = true;
     }
   }
@@ -146,7 +146,7 @@ class _ChatScreenState extends State<ChatScreen> {
       _chatViewModel.addListener(_onChatViewModelChanged);
 
       if (_chatViewModel.conversationId != null && !_joinedRoom) {
-        _socketProvider.joinConversation(_chatViewModel.conversationId!);
+        _socketProvider.joinConversationSocket(_chatViewModel.conversationId!);
         _joinedRoom = true;
       }
 
@@ -212,7 +212,7 @@ class _ChatScreenState extends State<ChatScreen> {
           final convId = conv['id'] as String?;
           if (convId != null) {
             _chatViewModel.setConversationId(convId);
-            _socketProvider.joinConversation(convId);
+            _socketProvider.joinConversationSocket(convId);
             _joinedRoom = true;
           }
         }
@@ -266,7 +266,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
     if (_isInit) {
       if (_chatViewModel.conversationId != null) {
-        _socketProvider.leaveConversation(_chatViewModel.conversationId!);
+        _socketProvider.leaveConversationSocket(_chatViewModel.conversationId!);
       }
 
       try {
@@ -519,7 +519,10 @@ class _ChatScreenState extends State<ChatScreen> {
                       );
                     }
 
-                    return ListView.builder(
+                    return ListView.separated(
+                      separatorBuilder: (context, index) {
+                        return SizedBox(height: 10);
+                      },
                       controller: _scrollController,
                       reverse: true,
                       padding: const EdgeInsets.all(16),
@@ -612,6 +615,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               ChatDateBadge(date: message.createdAt),
+                              SizedBox(height: 10),
                               bubbleWidget,
                             ],
                           );

@@ -82,6 +82,8 @@ const Map<String, String> zhCN = {
   'logout': '退出登录',
   'change_password': '修改密码',
   'profile_updated': '资料更新成功',
+  'logout_success': '已成功退出登录',
+  'logout_failed': '退出登录失败',
 
   // Settings
   'blocked_users': '已屏蔽用户',
@@ -153,6 +155,9 @@ const Map<String, String> zhCN = {
   'message_unsent': '消息已撤回',
   'unsend_message': '撤回消息',
   'createdbyuserid_required': '创建者用户 ID 为必填项',
+  'are_you_sure_leave_group': '确定要退出此群组吗？',
+  'leave_group_success': '已成功退出群组',
+  'leave_group_failed': '退出群组失败',
 
   // Errors
   'error_occurred': '发生错误',
@@ -176,6 +181,7 @@ const Map<String, String> zhCN = {
   'today': '今天',
   'yesterday': '昨天',
   'read_more': '阅读更多',
+  'load_more': '加载更多',
 
   // Block/Unblock messages
   'has_been_unblocked': '已取消屏蔽',

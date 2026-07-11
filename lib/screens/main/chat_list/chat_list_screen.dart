@@ -80,10 +80,14 @@ class _ChatListScreenState extends State<ChatListScreen> {
         name: 'ChatListScreen',
       );
 
-      ConversationModel? newConversation = ConversationModel.fromJson(data);
+      if (data != null && data.isNotEmpty) {
+        ConversationModel? newConversation = ConversationModel.fromJson(data);
 
-      chatListViewModel.fetchChatList();
-      _socketProvider?.joinConversation(newConversation.id);
+        // chatListViewModel.handleSocketConversationCreate(newConversation);
+
+        chatListViewModel.fetchChatList();
+        // _socketProvider?.joinConversation(newConversation.id);
+      }
     };
 
     _conversationReadHandler = (data) {

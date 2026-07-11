@@ -68,11 +68,11 @@ class SocketService {
     _socket?.clearListeners();
   }
 
-  void joinConversation(String conversationId) {
+  void joinConversationSocket(String conversationId) {
     _socket?.emit('join_conversation', {'conversationId': conversationId});
   }
 
-  void leaveConversation(String conversationId) {
+  void leaveConversationSocket(String conversationId) {
     _socket?.emit('leave_conversation', {'conversationId': conversationId});
   }
 

@@ -83,6 +83,8 @@ const Map<String, String> jaJP = {
   'logout': 'ログアウト',
   'change_password': 'パスワードを変更',
   'profile_updated': 'プロフィールが更新されました',
+  'logout_success': 'ログアウトしました',
+  'logout_failed': 'ログアウトに失敗しました',
 
   // Settings
   'blocked_users': 'ブロック中のユーザー',
@@ -156,6 +158,9 @@ const Map<String, String> jaJP = {
   'message_unsent': 'メッセージの送信を取り消しました',
   'unsend_message': 'メッセージの送信を取り消す',
   'createdbyuserid_required': 'グループ作成者のユーザーIDは必須です',
+  'are_you_sure_leave_group': 'このグループを退出してもよろしいですか？',
+  'leave_group_success': 'グループを退出しました',
+  'leave_group_failed': 'グループから退出できませんでした',
 
   // Errors
   'error_occurred': 'エラーが発生しました',
@@ -183,6 +188,7 @@ const Map<String, String> jaJP = {
   'today': '今日',
   'yesterday': '昨日',
   'read_more': 'もっと読む',
+  'load_more': 'さらに読み込む',
 
   // Language
   'language': '言語',

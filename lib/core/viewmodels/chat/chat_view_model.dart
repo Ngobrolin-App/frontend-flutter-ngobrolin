@@ -146,11 +146,19 @@ class ChatViewModel extends BaseViewModel {
             final conversation = result.data;
 
             _conversationType = conversation?.type;
-            _conversationName = conversation?.name;
             if (conversation?.type == ConversationType.group.name) {
+              _conversationName = conversation?.name;
               _conversationImageUrl = conversation?.groupImage;
             }
             _participants = conversation?.participants ?? [];
+            if (conversation?.type == ConversationType.private.name) {
+              if (_participants.isNotEmpty) {
+                final privatePartner = _participants.first;
+                _privatePartnerId = privatePartner.id;
+                _conversationName = privatePartner.name;
+                _conversationImageUrl = privatePartner.avatarUrl;
+              }
+            }
 
             notifyListeners();
             return true;

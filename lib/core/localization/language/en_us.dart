@@ -87,6 +87,8 @@ const Map<String, String> enUS = {
   'logout': 'Logout',
   'change_password': 'Change Password',
   'profile_updated': 'Profile updated successfully',
+  'logout_success': 'Successfully logged out',
+  'logout_failed': 'Failed to log out',
 
   // Settings
   'blocked_users': 'Blocked Users',
@@ -161,6 +163,9 @@ const Map<String, String> enUS = {
   'message_unsent': 'Message unsent',
   'unsend_message': 'Unsend Message',
   'createdbyuserid_required': 'Creator user ID is required',
+  'are_you_sure_leave_group': 'Are you sure you want to leave this group?',
+  'leave_group_success': 'Successfully left the group',
+  'leave_group_failed': 'Failed to leave the group',
 
   // Errors
   'error_occurred': 'An error occurred',
@@ -184,6 +189,7 @@ const Map<String, String> enUS = {
   'today': 'Today',
   'yesterday': 'Yesterday',
   'read_more': 'Read more',
+  'load_more': 'Load more',
 
   // Custom messages for block/unblock with name
   'has_been_unblocked': 'has been unblocked',

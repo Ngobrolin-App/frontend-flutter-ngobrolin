@@ -57,18 +57,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // OPTIMASI: Pencegahan bug BuildContext asinkronus saat navigasi keluar
   void _logout() async {
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
 
-    await authViewModel.signOut();
-
     if (!mounted) return;
+    final success = await authViewModel.signOut();
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.tr('logout_success')),
+          backgroundColor: AppColors.accent,
+        ),
+      );
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.tr('logout_failed')),
+          backgroundColor: AppColors.warning,
+        ),
+      );
+    }
 
     // Bersihkan seluruh stack navigasi kembali ke Login screen
-    Navigator.of(
-      context,
-    ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
   }
 
   @override

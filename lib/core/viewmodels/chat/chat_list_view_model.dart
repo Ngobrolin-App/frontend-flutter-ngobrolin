@@ -1,3 +1,4 @@
+import 'package:ngobrolin_app/core/models/conversation_model.dart';
 import 'package:ngobrolin_app/core/models/message_model.dart';
 
 import '../../models/chat_list_item_model.dart';
@@ -155,6 +156,18 @@ class ChatListViewModel extends BaseViewModel {
       setError(e.toString());
     }
   }
+
+  // void handleSocketConversationCreate(ConversationModel newConversation) {
+  //   try {
+  //     _chatList.add(newConversation);
+  //   } catch (e) {
+  //     developer.log(
+  //       'ChatListViewModel - handleSocketConversationCreate() error: $e',
+  //       name: 'ChatListViewModel',
+  //     );
+  //     setError(e.toString());
+  //   }
+  // }
 
   /// Updates or realigns a conversation block within the inbox layout upon receiving a new message payload.
   Future<void> updateWithNewMessage(

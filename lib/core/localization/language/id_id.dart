@@ -87,6 +87,8 @@ const Map<String, String> idID = {
   'logout': 'Keluar Akun',
   'change_password': 'Ganti Password',
   'profile_updated': 'Profil berhasil diperbarui',
+  'logout_success': 'Berhasil keluar dari akun',
+  'logout_failed': 'Gagal keluar dari akun',
 
   // Settings
   'blocked_users': 'Pengguna Diblokir',
@@ -162,6 +164,9 @@ const Map<String, String> idID = {
   'message_unsent': 'Pesan dibatalkan',
   'unsend_message': 'Batalkan pesan',
   'createdbyuserid_required': 'ID pembuat grup wajib diisi',
+  'are_you_sure_leave_group': 'Apakah Anda yakin ingin keluar dari grup ini?',
+  'leave_group_success': 'Berhasil keluar dari grup',
+  'leave_group_failed': 'Gagal keluar dari grup',
 
   // Errors
   'error_occurred': 'Terjadi kesalahan',
@@ -185,6 +190,7 @@ const Map<String, String> idID = {
   'today': 'Hari ini',
   'yesterday': 'Kemarin',
   'read_more': 'Baca selengkapnya',
+  'load_more': 'Muat lebih banyak',
 
   // Pesan khusus block/unblock dengan nama
   'has_been_unblocked': 'telah dibatalkan blokir',

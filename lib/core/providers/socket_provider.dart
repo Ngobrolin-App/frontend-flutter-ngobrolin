@@ -101,12 +101,12 @@ class SocketProvider extends ChangeNotifier {
     _socket.off(event, handler);
   }
 
-  void joinConversation(String conversationId) {
-    _socket.joinConversation(conversationId);
+  void joinConversationSocket(String conversationId) {
+    _socket.joinConversationSocket(conversationId);
   }
 
-  void leaveConversation(String conversationId) {
-    _socket.leaveConversation(conversationId);
+  void leaveConversationSocket(String conversationId) {
+    _socket.leaveConversationSocket(conversationId);
   }
 
   void sendTypingStart(String conversationId) {

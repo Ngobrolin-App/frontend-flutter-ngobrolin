@@ -38,7 +38,7 @@ class GroupProfileViewModel extends BaseViewModel {
   int get countLoadedConversationParticipants =>
       _conversationParticipants.length;
 
-  final int _limit = 10;
+  final int _limit = 5;
   int _pageParticipants = 1;
   bool _hasMoreParticipants = true;
   bool get hasMoreParticipants => _hasMoreParticipants;
@@ -171,6 +171,33 @@ class GroupProfileViewModel extends BaseViewModel {
             );
             _pageParticipants -= 1;
             _isLoadingMoreParticipants = false;
+            setError(e.toString());
+            return false;
+          }
+        }) ??
+        false;
+  }
+
+  Future<bool> leaveConversation({required String? conversationId}) async {
+    if (conversationId == null || conversationId.isEmpty) return false;
+
+    return await runBusyFuture(() async {
+          try {
+            var success = true;
+
+            final result = await _chatRepository.leaveConversation(
+              conversationId: conversationId,
+            );
+            success = result.isSuccess;
+            setSuccess(result.message);
+
+            notifyListeners();
+            return success;
+          } catch (e) {
+            developer.log(
+              "GroupProfileViewModel - leaveConversation() error $e",
+              name: 'GroupProfileViewModel',
+            );
             setError(e.toString());
             return false;
           }

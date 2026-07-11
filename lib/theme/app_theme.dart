@@ -76,6 +76,12 @@ class AppTheme {
         type: BottomNavigationBarType.fixed,
         elevation: 8,
       ),
+      dividerTheme: DividerThemeData(
+        thickness: 1,
+        color: AppColors.lightGrey,
+        indent: 16,
+        endIndent: 16,
+      ),
     );
   }
 }
