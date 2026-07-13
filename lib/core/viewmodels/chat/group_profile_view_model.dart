@@ -154,6 +154,8 @@ class GroupProfileViewModel extends BaseViewModel {
             );
 
             final paginatedResult = result.data;
+            _totalParticipants = paginatedResult?.total ?? 0;
+
             final participantList = paginatedResult?.items ?? [];
 
             _conversationParticipants.addAll(participantList);
@@ -255,5 +257,55 @@ class GroupProfileViewModel extends BaseViewModel {
           }
         }) ??
         false;
+  }
+
+  void handleConversationUpdated(dynamic data) {
+    try {
+      final rawUpdatedConversation =
+          data['updatedConversation'] as Map<String, dynamic>?;
+
+      ConversationModel? updatedConversation;
+      if (rawUpdatedConversation != null) {
+        updatedConversation = ConversationModel.fromJson(
+          rawUpdatedConversation,
+        );
+        _conversationGroupImage = updatedConversation.groupImage;
+        _conversationDescription = updatedConversation.groupDescription;
+        _conversationName = updatedConversation.name;
+      }
+      notifyListeners();
+    } catch (e) {
+      developer.log(
+        'GroupProfileViewModel - handleConversationUpdated() error: $e',
+        name: 'GroupProfileViewModel',
+      );
+      setError(e.toString());
+    }
+  }
+
+  void handleLeftParticipant(dynamic data) {
+    try {
+      final userId = data as String?;
+
+      if (userId != null) {
+        final initialLength = _conversationParticipants.length;
+
+        _conversationParticipants.removeWhere(
+          (participant) => participant.userId == userId,
+        );
+
+        if (_conversationParticipants.length < initialLength) {
+          _totalParticipants--;
+        }
+      }
+
+      notifyListeners();
+    } catch (e) {
+      developer.log(
+        'GroupProfileViewModel - handleLeftParticipant() error: $e',
+        name: 'GroupProfileViewModel',
+      );
+      setError(e.toString());
+    }
   }
 }

@@ -52,7 +52,6 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _joinedRoom = false;
   bool _isInit = false;
   Timer? _typingTimer;
-  final GlobalKey _textBoxKey = GlobalKey();
   Map<String, GlobalKey> _messageKeys = {};
 
   // Socket Handlers

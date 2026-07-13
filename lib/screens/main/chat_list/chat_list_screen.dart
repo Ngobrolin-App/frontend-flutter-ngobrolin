@@ -25,7 +25,6 @@ class ChatListScreen extends StatefulWidget {
 
 class _ChatListScreenState extends State<ChatListScreen> {
   late final ScrollController _scrollController;
-  bool _isInit = false;
 
   // Socket Handlers disederhanakan tanpa late init ambigu
   Function(dynamic)? _conversationUpdatedHandler;

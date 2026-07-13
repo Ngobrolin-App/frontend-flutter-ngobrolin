@@ -36,9 +36,12 @@ class GroupProfileScreen extends StatefulWidget {
 class _GroupProfileScreenState extends State<GroupProfileScreen> {
   final ScrollController _scrollController = ScrollController();
 
+  File? _groupImageFile;
+
   late SocketProvider _socketProvider;
 
-  File? _groupImageFile;
+  late Function(dynamic) _conversationUpdatedHandler;
+  late Function(dynamic) _leftParticipantHandler;
 
   @override
   void initState() {
@@ -48,20 +51,42 @@ class _GroupProfileScreenState extends State<GroupProfileScreen> {
       context.read<GroupProfileViewModel>().initGroupProfile(
         conversationId: widget.conversationId,
       );
-    });
 
-    // Menggunakan context.read() untuk mendengarkan perubahan scroll pagination tanpa memicu rebuild global
-    // _scrollController.addListener(() {
-    //   if (_scrollController.position.pixels >=
-    //       _scrollController.position.maxScrollExtent - 200) {
-    //     context.read<GroupProfileViewModel>().loadMoreParticipants();
-    //   }
-    // });
+      _setupSocketHandlers();
+    });
+  }
+
+  void _setupSocketHandlers() {
+    _socketProvider = Provider.of<SocketProvider>(context, listen: false);
+
+    final groupProfileViewModel = context.read<GroupProfileViewModel>();
+
+    _conversationUpdatedHandler = (data) {
+      groupProfileViewModel.handleConversationUpdated(data);
+    };
+
+    _leftParticipantHandler = (data) {
+      groupProfileViewModel.handleLeftParticipant(data);
+    };
+
+    _socketProvider.on('conversation_updated', _conversationUpdatedHandler);
+    _socketProvider.on('left_participant', _leftParticipantHandler);
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+
+    try {
+      _socketProvider.off('conversation_updated', _conversationUpdatedHandler);
+      _socketProvider.off('left_participant', _leftParticipantHandler);
+    } catch (e) {
+      developer.log(
+        'GroupProfileScreen - dispose() - Error unregistering socket: $e',
+        name: 'ChatScreen',
+      );
+    }
+
     super.dispose();
   }
 

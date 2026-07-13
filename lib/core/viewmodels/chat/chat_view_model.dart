@@ -496,7 +496,7 @@ class ChatViewModel extends BaseViewModel {
       notifyListeners();
     } catch (e) {
       developer.log(
-        'ChatListViewModel - handleSocketConversationUpdate() error: $e',
+        'ChatViewModel - handleConversationUpdated() error: $e',
         name: 'ChatListViewModel',
       );
       setError(e.toString());
@@ -514,8 +514,8 @@ class ChatViewModel extends BaseViewModel {
       notifyListeners();
     } catch (e) {
       developer.log(
-        'ChatListViewModel - handleSocketConversationUpdate() error: $e',
-        name: 'ChatListViewModel',
+        'ChatViewModel - handleLeftParticipant() error: $e',
+        name: 'ChatViewModel',
       );
       setError(e.toString());
     }

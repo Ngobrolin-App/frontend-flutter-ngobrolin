@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'package:iconify_flutter/iconify_flutter.dart';
-import 'package:iconify_flutter/icons/material_symbols.dart';
 import 'package:ngobrolin_app/core/enums/general_enums.dart';
 import 'package:ngobrolin_app/core/utils/general_utils.dart';
 import 'package:ngobrolin_app/core/viewmodels/profile/profile_view_model.dart';
 import 'package:ngobrolin_app/core/models/user_model.dart';
-import 'package:ngobrolin_app/core/widgets/buttons/app_icon_button.dart';
 import 'package:ngobrolin_app/core/widgets/cards/app_avatar.dart';
 import 'package:ngobrolin_app/core/widgets/modals/media_picker_modal.dart';
 import 'package:ngobrolin_app/core/widgets/states/image_error_placeholder.dart';

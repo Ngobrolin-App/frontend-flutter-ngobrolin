@@ -14,13 +14,11 @@ import 'package:ngobrolin_app/core/widgets/buttons/app_icon_button.dart';
 import 'package:ngobrolin_app/core/widgets/buttons/primary_button.dart';
 import 'package:ngobrolin_app/core/widgets/cards/app_avatar.dart';
 import 'package:ngobrolin_app/core/widgets/cards/circle_user_item.dart';
-import 'package:ngobrolin_app/core/widgets/cards/circle_user_item_selected.dart';
 import 'package:ngobrolin_app/core/widgets/inputs/custom_text_field.dart';
 import 'package:ngobrolin_app/core/widgets/modals/media_picker_modal.dart';
 import 'package:ngobrolin_app/routes/app_routes.dart';
 import 'package:ngobrolin_app/theme/app_colors.dart';
 import 'package:provider/provider.dart';
-import 'dart:developer' as developer;
 
 class CreateChatGroupScreen extends StatefulWidget {
   const CreateChatGroupScreen({super.key});
