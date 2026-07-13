@@ -166,6 +166,26 @@ const Map<String, String> enUS = {
   'are_you_sure_leave_group': 'Are you sure you want to leave this group?',
   'leave_group_success': 'Successfully left the group',
   'leave_group_failed': 'Failed to leave the group',
+  'add_group_description': 'Add group description',
+  'group_description_visibility':
+      'The group description is visible to group members, people invited to this group, and people who request to join this group.',
+  'conversation_update_success': 'Conversation updated successfully',
+  'conversation_update_failed': 'Failed to update conversation',
+  'conversation_name_update_success': 'Conversation name updated successfully',
+  'conversation_name_update_failed': 'Failed to update conversation name',
+  'conversation_group_image_update_success': 'Group image updated successfully',
+  'conversation_group_image_update_failed': 'Failed to update group image',
+  'conversation_group_description_update_success':
+      'Group description updated successfully',
+  'conversation_group_description_update_failed':
+      'Failed to update group description',
+  'join_group': 'Join Group',
+  'request_to_join_group': 'Request to Join Group',
+  'none_selected': 'Nothing selected',
+
+  // General Enums
+  'view_profile_image': 'View Profile Image',
+  'change_profile_image': 'Change Profile Image',
 
   // Errors
   'error_occurred': 'An error occurred',
@@ -190,6 +210,7 @@ const Map<String, String> enUS = {
   'yesterday': 'Yesterday',
   'read_more': 'Read more',
   'load_more': 'Load more',
+  'none': 'None',
 
   // Custom messages for block/unblock with name
   'has_been_unblocked': 'has been unblocked',
@@ -236,7 +257,6 @@ const Map<String, String> enUS = {
   'access_denied': 'Access Denied',
   'conversation_not_found': 'Conversation Not Found',
   'can_only_update_group_conversations': 'Can only update group conversations',
-  'conversation_update_success': 'Conversation updated successfully',
   'you_are_not_a_participant': 'You are not a participant in this conversation',
   'left_conversation_success': 'Successfully left the conversation',
   'message_sent_success': 'Message sent successfully',
@@ -300,4 +320,6 @@ const Map<String, String> enUS = {
   'system_msg_user_left': '{actorName} left the group',
   'user_typing': '{actorName} is typing',
   'number_of_members': '{number} members',
+  'system_msg_description_changed':
+      '{actorName} changed the group description to "{groupDescription}"',
 };

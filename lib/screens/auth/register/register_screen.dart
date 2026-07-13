@@ -257,7 +257,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         child: Text(
                           context.tr('login'),
                           style: const TextStyle(
-                            color: AppColors.primary,
+                            color: AppColors.accent,
                             fontWeight: FontWeight.bold,
                           ),
                         ),

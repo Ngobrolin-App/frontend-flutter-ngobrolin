@@ -19,6 +19,8 @@ class CustomTextField extends StatelessWidget {
   final void Function(String)? onSubmitted;
   final EdgeInsetsGeometry? contentPadding;
   final TextCapitalization textCapitalization;
+  final int? maxLength;
+  final bool autofocus;
 
   const CustomTextField({
     super.key,
@@ -39,6 +41,8 @@ class CustomTextField extends StatelessWidget {
     this.onSubmitted,
     this.contentPadding,
     this.textCapitalization = TextCapitalization.none,
+    this.maxLength,
+    this.autofocus = false,
   });
 
   @override
@@ -53,6 +57,8 @@ class CustomTextField extends StatelessWidget {
       minLines: minLines,
       enabled: enabled,
       focusNode: focusNode,
+      maxLength: maxLength,
+      autofocus: autofocus,
       textInputAction: textInputAction,
       onFieldSubmitted: onSubmitted,
       textCapitalization: textCapitalization,
@@ -62,6 +68,7 @@ class CustomTextField extends StatelessWidget {
         labelText: labelText,
         prefixIcon: prefixIcon,
         suffixIcon: suffixIcon,
+        contentPadding: contentPadding,
       ),
     );
   }

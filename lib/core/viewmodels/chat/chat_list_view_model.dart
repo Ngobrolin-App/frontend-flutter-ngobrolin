@@ -135,22 +135,89 @@ class ChatListViewModel extends BaseViewModel {
   void handleSocketConversationUpdate(dynamic data, String? currentUserId) {
     try {
       final conversationId = data['conversationId'] as String?;
-      final rawLastMessage = data['lastMessage'] as Map<String, dynamic>? ?? {};
+      if (conversationId == null) return; // Fail fast jika tidak ada ID
 
-      final lastMessage = MessageModel.fromJson(rawLastMessage);
-      if (conversationId != null) {
-        final unreadCount = data['unreadCount'] as int;
+      final rawLastMessage = data['lastMessage'] as Map<String, dynamic>?;
+      final rawUpdatedConversation =
+          data['updatedConversation'] as Map<String, dynamic>?;
+
+      // Parse secara independen hanya jika data benar-benar ada
+      MessageModel? lastMessage;
+      if (rawLastMessage != null && rawLastMessage.isNotEmpty) {
+        lastMessage = MessageModel.fromJson(rawLastMessage);
+      }
+
+      ConversationModel? updatedConversation;
+      if (rawUpdatedConversation != null && rawUpdatedConversation.isNotEmpty) {
+        updatedConversation = ConversationModel.fromJson(
+          rawUpdatedConversation,
+        );
+      }
+
+      // Jika minimal ada salah satu data yang baru, lakukan update
+      if (lastMessage != null || updatedConversation != null) {
+        final unreadCount = data['unreadCount'] as int?;
 
         updateWithNewMessage(
           conversationId,
           currentUserId: currentUserId,
           lastMessage: lastMessage,
           unreadCount: unreadCount,
+          updatedConversation: updatedConversation,
         );
       }
     } catch (e) {
       developer.log(
         'ChatListViewModel - handleSocketConversationUpdate() error: $e',
+        name: 'ChatListViewModel',
+      );
+      setError(e.toString());
+    }
+  }
+
+  Future<void> updateWithNewMessage(
+    String chatId, {
+    String? currentUserId,
+    MessageModel? lastMessage,
+    int? unreadCount,
+    ConversationModel? updatedConversation,
+  }) async {
+    try {
+      final index = _chatList.indexWhere((chat) => chat.id == chatId);
+
+      if (index != -1) {
+        final oldChat = _chatList[index];
+
+        _chatList[index] = oldChat.copyWith(
+          // Gunakan pesan baru jika ada, kalau tidak ada pertahankan pesan lama
+          lastMessage: lastMessage ?? oldChat.lastMessage,
+          unreadCount: unreadCount ?? oldChat.unreadCount,
+          groupImage: updatedConversation?.groupImage ?? oldChat.groupImage,
+          name: updatedConversation?.name ?? oldChat.name,
+        );
+
+        // Re-sort current lists
+        _chatList.sort((a, b) {
+          final timestampA = a.lastMessage?.createdAt;
+          final timestampB = b.lastMessage?.createdAt;
+
+          // Perbaikan logika sorting
+          if (timestampA == null && timestampB == null) return 0;
+          if (timestampA == null) return 1; // Jika A kosong, turunkan A
+          if (timestampB == null) return -1; // Jika B kosong, turunkan B
+
+          return timestampB.compareTo(timestampA);
+        });
+
+        notifyListeners();
+        return;
+      }
+
+      // If the chat block is non-existent in the current viewport
+      await fetchChatList();
+    } catch (e) {
+      developer.log(
+        'ChatListViewModel - updateWithNewMessage() error: $e',
         name: 'ChatListViewModel',
       );
       setError(e.toString());
@@ -168,53 +235,6 @@ class ChatListViewModel extends BaseViewModel {
   //     setError(e.toString());
   //   }
   // }
-
-  /// Updates or realigns a conversation block within the inbox layout upon receiving a new message payload.
-  Future<void> updateWithNewMessage(
-    String chatId, {
-    String? currentUserId,
-    MessageModel? lastMessage,
-    int? unreadCount,
-  }) async {
-    try {
-      final index = _chatList.indexWhere((chat) => chat.id == chatId);
-      if (index != -1) {
-        final oldChat = _chatList[index];
-
-        _chatList[index] = oldChat.copyWith(
-          lastMessage: lastMessage,
-          unreadCount: unreadCount,
-        );
-
-        // Re-sort current lists so that the freshest interaction rises to the top layout
-        _chatList.sort((a, b) {
-          final lastMessageA = a.lastMessage;
-          final timestampA = lastMessageA?.createdAt;
-          final lastMessageB = b.lastMessage;
-          final timestampB = lastMessageB?.createdAt;
-
-          // Jika salah satu atau keduanya null, anggap urutan tidak berubah (return 0)
-          if (timestampA == null || timestampB == null) {
-            return 0;
-          }
-
-          return timestampB.compareTo(timestampA);
-        });
-
-        notifyListeners();
-        return;
-      }
-
-      // If the chat block is non-existent in the current paginated index viewport, fetch page 1 to update layout
-      await fetchChatList();
-    } catch (e) {
-      developer.log(
-        'ChatListViewModel - updateWithNewMessage() error: $e',
-        name: 'ChatListViewModel',
-      );
-      setError(e.toString());
-    }
-  }
 
   /// Event listener proxy callback bound to socket event pipelines for 'conversation_read_by_me'.
   void handleSocketConversationReadByMe(String conversationId) {

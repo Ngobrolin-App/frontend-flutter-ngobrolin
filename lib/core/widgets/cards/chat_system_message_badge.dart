@@ -21,10 +21,12 @@ class ChatSystemMessageBadge extends StatelessWidget {
         child: Text(
           GeneralUtils.getSystemMessageText(message, context),
           textAlign: TextAlign.center,
+          maxLines: 3,
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w500,
             color: AppColors.text,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ),

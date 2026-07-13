@@ -73,10 +73,9 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
             );
           }
 
-          return ListView.separated(
+          return ListView.builder(
             controller: _scrollController,
             itemCount: blockedUsers.length,
-            separatorBuilder: (context, index) => const Divider(height: 1),
             itemBuilder: (context, index) {
               final user = blockedUsers[index];
 

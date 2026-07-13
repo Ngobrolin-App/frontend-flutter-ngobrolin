@@ -1,15 +1,23 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:ngobrolin_app/core/enums/general_enums.dart';
 import 'package:ngobrolin_app/core/localization/app_localizations.dart';
 import 'package:ngobrolin_app/core/models/conversation_participant_model.dart';
 import 'package:ngobrolin_app/core/providers/socket_provider.dart';
+import 'package:ngobrolin_app/core/utils/general_utils.dart';
 import 'package:ngobrolin_app/core/viewmodels/auth/auth_view_model.dart';
 import 'package:ngobrolin_app/core/viewmodels/chat/group_profile_view_model.dart';
 import 'package:ngobrolin_app/core/widgets/buttons/load_more_list_button.dart';
 import 'package:ngobrolin_app/core/widgets/cards/action_list_tile.dart';
 import 'package:ngobrolin_app/core/widgets/cards/app_avatar.dart';
 import 'package:ngobrolin_app/core/widgets/cards/user_list_item.dart';
+import 'package:ngobrolin_app/core/widgets/modals/media_picker_modal.dart';
+import 'package:ngobrolin_app/core/widgets/states/image_error_placeholder.dart';
 import 'package:ngobrolin_app/core/widgets/texts/expandable_text_section.dart';
 import 'package:ngobrolin_app/routes/app_routes.dart';
+import 'package:photo_view/photo_view.dart';
 import 'package:provider/provider.dart';
 import '../../../theme/app_colors.dart';
 import 'package:iconify_flutter/icons/material_symbols.dart';
@@ -29,6 +37,8 @@ class _GroupProfileScreenState extends State<GroupProfileScreen> {
   final ScrollController _scrollController = ScrollController();
 
   late SocketProvider _socketProvider;
+
+  File? _groupImageFile;
 
   @override
   void initState() {
@@ -126,6 +136,177 @@ class _GroupProfileScreenState extends State<GroupProfileScreen> {
     }
   }
 
+  void _navigateToEditName(String currentName) {
+    Navigator.pushNamed(
+      context,
+      AppRoutes.textEditor,
+      arguments: {
+        'title': context.tr('group_name'),
+        'initialValue': currentName,
+        'maxLength': 100,
+        'maxLines': 1,
+      },
+    ).then((newValue) {
+      if (newValue != null && newValue != currentName) {
+        if (!mounted) return;
+
+        final groupProfileViewModel = context.read<GroupProfileViewModel>();
+
+        groupProfileViewModel.updateConversation(name: newValue as String);
+      }
+    });
+  }
+
+  void _navigateToEditDescription(String currentDesc) {
+    Navigator.pushNamed(
+      context,
+      AppRoutes.textEditor,
+      arguments: {
+        'title': context.tr('group_description'),
+        'initialValue': currentDesc,
+        'maxLength': 500,
+        'maxLines': null,
+        'description': context.tr('group_description_visibility'),
+      },
+    ).then((newValue) {
+      if (newValue != null && newValue != currentDesc) {
+        if (!mounted) return;
+
+        final groupProfileViewModel = context.read<GroupProfileViewModel>();
+
+        groupProfileViewModel.updateConversation(
+          groupDescription: newValue as String,
+        );
+      }
+    });
+  }
+
+  void _handleProfileTap() async {
+    final groupProfileViewModel = context.read<GroupProfileViewModel>();
+    final groupProfileImage = groupProfileViewModel.conversationGroupImage;
+    final tappedOption = await MediaPickerModal.showProfileTapOptionModal(
+      context,
+      viewProfileImageEnabled:
+          (groupProfileImage != null) && (groupProfileImage.isNotEmpty),
+    );
+
+    if (tappedOption == ProfileTapOption.viewProfileImage) {
+      showDialog(
+        context: context,
+        builder: (_) => Dialog(
+          insetPadding: const EdgeInsets.all(16),
+          child: PhotoView(
+            imageProvider: NetworkImage(groupProfileImage!),
+            initialScale: PhotoViewComputedScale.contained,
+            errorBuilder: (context, error, stackTrace) => ImageErrorPlaceholder(
+              width: double.infinity,
+              height: double.infinity,
+              iconSize: 48,
+              errorMessage: context.tr('failed_to_load_image'),
+            ),
+          ),
+        ),
+      );
+    } else {
+      _handleImageSelection();
+    }
+  }
+
+  void _handleImageSelection() async {
+    // Call the helper, file option is hidden by default
+    final source = await MediaPickerModal.showMediaPickerBottomSheet(context);
+
+    if (source == null) return;
+
+    final imageSource = source.getImageSource;
+
+    if (imageSource != null) _pickAndCropImage(imageSource);
+  }
+
+  Future<void> _pickAndCropImage(ImageSource source) async {
+    final picker = ImagePicker();
+    try {
+      final pickedFile = await picker.pickImage(
+        source: source,
+        maxWidth: 1080, // Resolusi aman sebelum di-crop
+        imageQuality: 85,
+      );
+
+      if (pickedFile != null && mounted) {
+        final croppedFile = await GeneralUtils.cropImage(
+          sourcePath: pickedFile.path,
+          title: context.tr('edit_profile'),
+          isSquare: true,
+        );
+
+        if (croppedFile != null && mounted) {
+          setState(() {
+            _groupImageFile = croppedFile;
+          });
+        }
+
+        if (_groupImageFile != null) _saveGroupImageProfile();
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.tr('failed_to_pick_image')),
+          backgroundColor: AppColors.warning,
+        ),
+      );
+    }
+  }
+
+  Future<void> _saveGroupImageProfile() async {
+    try {
+      final groupProfileViewModel = context.read<GroupProfileViewModel>();
+
+      var success = false;
+      if (_groupImageFile != null && _groupImageFile?.path != null) {
+        success = await groupProfileViewModel.updateConversation(
+          groupImagePath: _groupImageFile!.path,
+        );
+      }
+
+      if (!mounted) return;
+
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              context.tr(
+                groupProfileViewModel.successMessage ??
+                    'conversation_group_image_update_success',
+              ),
+            ),
+            backgroundColor: AppColors.accent,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              context.tr(
+                groupProfileViewModel.errorMessage ??
+                    'conversation_group_image_update_failed',
+              ),
+            ),
+            backgroundColor: AppColors.warning,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.tr(e.toString())),
+          backgroundColor: AppColors.warning,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -136,112 +317,128 @@ class _GroupProfileScreenState extends State<GroupProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // 1. Micro-Rebuild: Avatar Kelompok Terisolasi
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(24),
               color: AppColors.primary,
-              child: Selector<GroupProfileViewModel, (String?, String?)>(
-                selector: (_, vm) =>
-                    (vm.conversationImageUrl, vm.conversationName),
-                builder: (context, data, _) {
-                  final imageUrl = data.$1;
-                  final name = data.$2;
-                  return Column(
-                    children: [
-                      AppAvatar(
-                        imageUrl: imageUrl,
-                        name: name,
-                        radius: 50,
-                        fontSize: 40,
-                        backgroundColor: AppColors.white,
-                      ),
+              child: Column(
+                children: [
+                  Selector<GroupProfileViewModel, (String?, String?)>(
+                    selector: (_, vm) =>
+                        (vm.conversationGroupImage, vm.conversationName),
+                    builder: (context, data, _) {
+                      final imageUrl = data.$1;
+                      final name = data.$2;
+                      return GestureDetector(
+                        onTap: _handleProfileTap,
+                        child: AppAvatar(
+                          localFile: _groupImageFile,
+                          imageUrl: imageUrl,
+                          name: name,
+                          radius: 50,
+                          fontSize: 40,
+                          backgroundColor: AppColors.white,
+                        ),
+                      );
+                    },
+                  ),
 
-                      const SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-                      // 2. Micro-Rebuild: Nama Kelompok Terisolasi
-                      Selector<GroupProfileViewModel, String?>(
-                        selector: (_, vm) => vm.conversationName,
-                        builder: (context, name, _) {
-                          return Text(
-                            name ?? '',
+                  Selector<GroupProfileViewModel, String?>(
+                    selector: (_, vm) => vm.conversationName,
+                    builder: (context, name, _) {
+                      return GestureDetector(
+                        onTap: () => _navigateToEditName(name ?? ''),
+                        child: Text(
+                          name ?? '',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.white,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  Selector<GroupProfileViewModel, (String?, int?)>(
+                    selector: (_, vm) =>
+                        (vm.conversationType, vm.totalParticipants),
+                    builder: (context, data, _) {
+                      final conversationType = data.$1;
+                      final totalParticipants = data.$2 ?? 0;
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            context.tr(conversationType ?? 'group'),
                             style: const TextStyle(
-                              fontSize: 22,
+                              fontSize: 14,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.white,
+                              color: Colors.white,
                             ),
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 8),
-                      Selector<GroupProfileViewModel, (String?, int?)>(
-                        selector: (_, vm) =>
-                            (vm.conversationType, vm.totalParticipants),
-                        builder: (context, data, _) {
-                          final conversationType = data.$1;
-                          final totalParticipants = data.$2 ?? 0;
-                          return Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                context.tr(conversationType ?? 'group'),
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              Container(
-                                margin: const EdgeInsets.symmetric(
-                                  horizontal: 8.0,
-                                ),
-                                width: 4.0,
-                                height: 4.0,
-                                decoration: const BoxDecoration(
-                                  color: AppColors.white,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              Text(
-                                context.tr(
-                                  'number_of_members',
-                                  args: {
-                                    'number': totalParticipants.toString(),
-                                  },
-                                ),
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                    ],
-                  );
-                },
+                          ),
+                          Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 8.0),
+                            width: 4.0,
+                            height: 4.0,
+                            decoration: const BoxDecoration(
+                              color: AppColors.white,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          Text(
+                            context.tr(
+                              'number_of_members',
+                              args: {'number': totalParticipants.toString()},
+                            ),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
 
-            // 3. Micro-Rebuild: Deskripsi Kelompok Terisolasi
             Selector<GroupProfileViewModel, String?>(
               selector: (_, vm) => vm.conversationDescription,
               builder: (context, description, _) {
                 return Padding(
                   padding: const EdgeInsets.all(20),
-                  child: ExpandableTextSection(
-                    title: context.tr('group_description'),
-                    content: description ?? '',
+                  child: Column(
+                    children: [
+                      ExpandableTextSection(
+                        title: context.tr('group_description'),
+                        content: description ?? '',
+                        onEdit: () =>
+                            _navigateToEditDescription(description ?? ''),
+                        emptyContentWidget: GestureDetector(
+                          onTap: () => _navigateToEditDescription(''),
+                          child: Text(
+                            context.tr('add_group_description'),
+                            style: const TextStyle(color: AppColors.accent),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 );
               },
             ),
+
             const Divider(height: 1),
 
-            // Header List Anggota
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
               child: Row(
@@ -272,7 +469,6 @@ class _GroupProfileScreenState extends State<GroupProfileScreen> {
               ),
             ),
 
-            // 4. Micro-Rebuild: Mengunci Rebuild ListView hanya bersandar pada .length
             Selector<GroupProfileViewModel, int>(
               selector: (_, vm) => vm.countLoadedConversationParticipants,
               builder: (context, totalLoaded, _) {

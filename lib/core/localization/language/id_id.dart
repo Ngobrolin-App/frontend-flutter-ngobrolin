@@ -167,6 +167,26 @@ const Map<String, String> idID = {
   'are_you_sure_leave_group': 'Apakah Anda yakin ingin keluar dari grup ini?',
   'leave_group_success': 'Berhasil keluar dari grup',
   'leave_group_failed': 'Gagal keluar dari grup',
+  'add_group_description': 'Tambah deskripsi grup',
+  'group_description_visibility':
+      'Deskripsi grup dapat dilihat oleh anggota grup, orang yang diundang ke grup ini, dan orang yang mengajukan permintaan untuk bergabung ke grup ini.',
+  'conversation_update_success': 'Berhasil memperbarui percakapan',
+  'conversation_update_failed': 'Gagal memperbarui percakapan',
+  'conversation_name_update_success': 'Berhasil memperbarui nama percakapan',
+  'conversation_name_update_failed': 'Gagal memperbarui nama percakapan',
+  'conversation_group_image_update_success': 'Berhasil memperbarui foto grup',
+  'conversation_group_image_update_failed': 'Gagal memperbarui foto grup',
+  'conversation_group_description_update_success':
+      'Berhasil memperbarui deskripsi grup',
+  'conversation_group_description_update_failed':
+      'Gagal memperbarui deskripsi grup',
+  'join_group': 'Gabung ke Grup',
+  'request_to_join_group': 'Minta Bergabung ke Grup',
+  'none_selected': 'Belum ada yang dipilih',
+
+  // General Enums
+  'view_profile_image': 'Lihat Foto Profil',
+  'change_profile_image': 'Ubah Foto Profil',
 
   // Errors
   'error_occurred': 'Terjadi kesalahan',
@@ -191,6 +211,7 @@ const Map<String, String> idID = {
   'yesterday': 'Kemarin',
   'read_more': 'Baca selengkapnya',
   'load_more': 'Muat lebih banyak',
+  'none': 'Tidak ada',
 
   // Pesan khusus block/unblock dengan nama
   'has_been_unblocked': 'telah dibatalkan blokir',
@@ -305,4 +326,6 @@ const Map<String, String> idID = {
   'system_msg_user_left': '{actorName} keluar dari grup',
   'user_typing': '{actorName} sedang mengetik',
   'number_of_members': '{number} anggota',
+  'system_msg_description_changed':
+      '{actorName} mengubah deskripsi grup menjadi "{groupDescription}"',
 };

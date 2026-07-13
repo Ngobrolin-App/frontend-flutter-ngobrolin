@@ -177,7 +177,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             },
                       child: Text(
                         context.tr('forgot_password'),
-                        style: const TextStyle(color: AppColors.primary),
+                        style: const TextStyle(color: AppColors.accent),
                       ),
                     ),
                   ),
@@ -207,7 +207,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Text(
                           context.tr('register'),
                           style: const TextStyle(
-                            color: AppColors.primary,
+                            color: AppColors.accent,
                             fontWeight: FontWeight.bold,
                           ),
                         ),

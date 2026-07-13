@@ -61,7 +61,9 @@ class _ChatScreenState extends State<ChatScreen> {
   late Function(dynamic) _conversationCreatedHandler;
   late Function(dynamic) _typingHandler;
   late Function(dynamic) _stopTypingHandler;
+  late Function(dynamic) _conversationUpdatedHandler;
   late Function(dynamic) _statusHandler;
+  late Function(dynamic) _leftParticipantHandler;
 
   late ChatViewModel _chatViewModel;
   late AuthViewModel _authViewModel;
@@ -246,12 +248,26 @@ class _ChatScreenState extends State<ChatScreen> {
       } catch (_) {}
     };
 
+    _conversationUpdatedHandler = (data) {
+      try {
+        _chatViewModel.handleConversationUpdated(data);
+      } catch (_) {}
+    };
+
+    _leftParticipantHandler = (data) {
+      try {
+        _chatViewModel.handleLeftParticipant(data);
+      } catch (_) {}
+    };
+
     _socketProvider.on('new_message', _newMessageHandler);
     _socketProvider.on('messages_read_status_updated', _readStatusHandler);
     _socketProvider.on('conversation_created', _conversationCreatedHandler);
     _socketProvider.on('user_typing', _typingHandler);
     _socketProvider.on('user_stopped_typing', _stopTypingHandler);
     _socketProvider.on('user_status_changed', _statusHandler);
+    _socketProvider.on('conversation_updated', _conversationUpdatedHandler);
+    _socketProvider.on('left_participant', _leftParticipantHandler);
   }
 
   @override
@@ -279,6 +295,11 @@ class _ChatScreenState extends State<ChatScreen> {
         _socketProvider.off('user_typing', _typingHandler);
         _socketProvider.off('user_stopped_typing', _stopTypingHandler);
         _socketProvider.off('user_status_changed', _statusHandler);
+        _socketProvider.off(
+          'conversation_updated',
+          _conversationUpdatedHandler,
+        );
+        _socketProvider.off('left_participant', _leftParticipantHandler);
       } catch (e) {
         developer.log(
           'ChatScreen - dispose() - Error unregistering socket: $e',
@@ -470,32 +491,43 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         ),
         actions: [
-          if (_chatViewModel.conversationType == ConversationType.private.name)
-            PopupMenuButton<String>(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  bottomLeft: Radius.circular(16),
-                  bottomRight: Radius.circular(16),
-                ),
-              ),
-              color: AppColors.white,
-              onSelected: (value) {
-                if (value == 'block') _showBlockDialog(context);
-              },
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'block',
-                  child: Row(
-                    children: [
-                      Iconify(Ic.round_block, color: AppColors.warning),
-                      const SizedBox(width: 8),
-                      Text(context.tr('block_account')),
-                    ],
+          Selector<ChatViewModel, (String?, bool)>(
+            selector: (_, vm) => (vm.conversationType, vm.isLoading),
+            builder: (context, data, _) {
+              final conversationType = data.$1;
+              final isLoading = data.$2;
+              if ((conversationType != ConversationType.private.name) ||
+                  isLoading) {
+                return const SizedBox();
+              } else {
+                return PopupMenuButton<String>(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(16),
+                      bottomLeft: Radius.circular(16),
+                      bottomRight: Radius.circular(16),
+                    ),
                   ),
-                ),
-              ],
-            ),
+                  color: AppColors.white,
+                  onSelected: (value) {
+                    if (value == 'block') _showBlockDialog(context);
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'block',
+                      child: Row(
+                        children: [
+                          Iconify(Ic.round_block, color: AppColors.warning),
+                          const SizedBox(width: 8),
+                          Text(context.tr('block_account')),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              }
+            },
+          ),
         ],
       ),
       body: Column(
@@ -662,7 +694,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _handleAttachment(BuildContext context) async {
-    final choice = await MediaPickerModal.showPickerBottomSheet(
+    final choice = await MediaPickerModal.showMediaPickerBottomSheet(
       context,
       showFileOption: true,
     );
@@ -673,39 +705,34 @@ class _ChatScreenState extends State<ChatScreen> {
     final picker = ImagePicker();
 
     String? pickedPath;
-    String attachmentType = 'image';
+    String attachmentType = MediaSource.camera.getMediaType;
 
-    if (choice == MediaSource.camera) {
+    final imageSource = choice.getImageSource;
+    final mediaType = choice.getMediaType;
+
+    if (imageSource != null) {
       final picked = await picker.pickImage(
-        source: ImageSource.camera,
+        source: imageSource,
         imageQuality: 80,
       );
       pickedPath = picked?.path;
-      attachmentType = 'image';
-    } else if (choice == MediaSource.gallery) {
-      final picked = await picker.pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 80,
-      );
-      pickedPath = picked?.path;
-      attachmentType = 'image';
-    } else if (choice == MediaSource.file) {
+      attachmentType = mediaType;
+    } else if (imageSource == null && choice == MediaSource.file) {
       final pickedFiles = await FilePicker.platform.pickFiles(
         type: FileType.any,
         allowMultiple: false,
       );
       pickedPath = pickedFiles?.files.first.path;
-      attachmentType = 'file';
+      attachmentType = choice.getMediaType;
     }
 
-    // JIKA FILE/GAMBAR BERHASIL DIAMBIL, MASUK KE PREVIEW SCREEN
     if (pickedPath != null && mounted) {
       final result = await Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => AttachmentPreviewScreen(
             filePath: pickedPath!,
-            fileType: attachmentType, // Lempar tipe filenya ke screen preview
+            fileType: attachmentType,
           ),
         ),
       );

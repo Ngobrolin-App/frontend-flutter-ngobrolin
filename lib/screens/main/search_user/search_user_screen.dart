@@ -99,6 +99,20 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
           ),
           body: Column(
             children: [
+              SizedBox(height: 8),
+              // ActionListTile(
+              //   title: context.tr('join_group'),
+              //   icon: MaterialSymbols.groups,
+              //   onTap: () => viewModel.setSelectingGroupMembers(true),
+              // ),
+              if (viewModel.isSelectingGroupMembers)
+                _buildSelectionHeader(viewModel)
+              else
+                ActionListTile(
+                  title: context.tr('new_group'),
+                  icon: Mdi.account_multiple_plus,
+                  onTap: () => viewModel.setSelectingGroupMembers(true),
+                ),
               _buildSearchBar(),
               Expanded(
                 child: Consumer<SearchUserViewModel>(
@@ -220,21 +234,10 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
       physics: const AlwaysScrollableScrollPhysics(),
       controller: _scrollController,
       children: [
-        // Header Dinamis
-        if (viewModel.isSelectingGroupMembers)
-          _buildSelectionHeader(viewModel)
-        else
-          ActionListTile(
-            title: context.tr('new_group'),
-            icon: Mdi.account_multiple_plus,
-            onTap: () => viewModel.setSelectingGroupMembers(true),
-          ),
-        const Divider(indent: 72),
-        ListView.separated(
+        ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: viewModel.users.length + (viewModel.isLoadingMore ? 1 : 0),
-          separatorBuilder: (_, __) => const Divider(height: 1, indent: 72),
           itemBuilder: (context, index) {
             if (index >= viewModel.users.length) {
               return const Padding(
@@ -327,6 +330,13 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
                   onRemove: () => viewModel.toggleUserSelection(user),
                 );
               },
+            ),
+          ),
+        if (viewModel.selectedGroupMembers.isEmpty)
+          Container(
+            child: Text(
+              context.tr('none_selected'),
+              style: TextStyle(color: AppColors.timestamp),
             ),
           ),
       ],

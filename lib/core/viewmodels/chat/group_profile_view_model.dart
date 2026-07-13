@@ -21,8 +21,8 @@ class GroupProfileViewModel extends BaseViewModel {
   String? _conversationName;
   String? get conversationName => _conversationName;
 
-  String? _conversationImageUrl;
-  String? get conversationImageUrl => _conversationImageUrl;
+  String? _conversationGroupImage;
+  String? get conversationGroupImage => _conversationGroupImage;
 
   // --- TAMBAHAN STATE UNTUK MICRO-REBUILDS DESKRIPSI ---
   String? _conversationDescription;
@@ -77,7 +77,7 @@ class GroupProfileViewModel extends BaseViewModel {
             _conversationDescription = conversation?.groupDescription;
 
             if (conversation?.type == ConversationType.group.name) {
-              _conversationImageUrl = conversation?.groupImage;
+              _conversationGroupImage = conversation?.groupImage;
             }
 
             notifyListeners();
@@ -196,6 +196,58 @@ class GroupProfileViewModel extends BaseViewModel {
           } catch (e) {
             developer.log(
               "GroupProfileViewModel - leaveConversation() error $e",
+              name: 'GroupProfileViewModel',
+            );
+            setError(e.toString());
+            return false;
+          }
+        }) ??
+        false;
+  }
+
+  Future<bool> updateConversation({
+    String? name,
+    String? groupImagePath,
+    String? groupDescription,
+  }) async {
+    if (_conversationId == null) return false;
+
+    return await runBusyFuture(() async {
+          try {
+            String? groupImageUrl;
+
+            // Section A: Evaluates and updates textual parameters or password credentials
+            if (groupImagePath != null) {
+              final result = await _chatRepository.uploadConversationGroupImage(
+                filePath: groupImagePath,
+              );
+
+              groupImageUrl = result.data;
+            }
+            if (name != null ||
+                groupDescription != null ||
+                groupImageUrl != null) {
+              final result = await _chatRepository.updateConversation(
+                conversationId: _conversationId!,
+                name: name,
+                groupDescription: groupDescription,
+                groupImageUrl: groupImageUrl,
+              );
+
+              _conversation = result.data;
+
+              _conversationName = _conversation?.name;
+              _conversationDescription = _conversation?.groupDescription;
+              _conversationGroupImage = _conversation?.groupImage;
+
+              setSuccess(result.message);
+            }
+
+            notifyListeners();
+            return true;
+          } catch (e) {
+            developer.log(
+              "GroupProfileViewModel - updateConversation() error $e",
               name: 'GroupProfileViewModel',
             );
             setError(e.toString());

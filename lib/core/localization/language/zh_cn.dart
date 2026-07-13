@@ -158,6 +158,23 @@ const Map<String, String> zhCN = {
   'are_you_sure_leave_group': '确定要退出此群组吗？',
   'leave_group_success': '已成功退出群组',
   'leave_group_failed': '退出群组失败',
+  'add_group_description': '添加群组描述',
+  'group_description_visibility': '群组描述对群组成员、受邀加入此群组的人员以及申请加入此群组的人员可见。',
+  'conversation_update_success': '会话更新成功',
+  'conversation_update_failed': '会话更新失败',
+  'conversation_name_update_success': '会话名称更新成功',
+  'conversation_name_update_failed': '会话名称更新失败',
+  'conversation_group_image_update_success': '群组图片更新成功',
+  'conversation_group_image_update_failed': '群组图片更新失败',
+  'conversation_group_description_update_success': '群组描述更新成功',
+  'conversation_group_description_update_failed': '群组描述更新失败',
+  'join_group': '加入群组',
+  'request_to_join_group': '申请加入群组',
+  'none_selected': '尚未选择',
+
+  // General Enums
+  'view_profile_image': '查看头像',
+  'change_profile_image': '更换头像',
 
   // Errors
   'error_occurred': '发生错误',
@@ -182,6 +199,7 @@ const Map<String, String> zhCN = {
   'yesterday': '昨天',
   'read_more': '阅读更多',
   'load_more': '加载更多',
+  'none': '无',
 
   // Block/Unblock messages
   'has_been_unblocked': '已取消屏蔽',
@@ -275,4 +293,5 @@ const Map<String, String> zhCN = {
   'system_msg_user_removed': '{actorName} 将 {targetName} 移出了群组',
   'system_msg_user_left': '{actorName} 离开了群组',
   'number_of_members': '{number} 位成员',
+  'system_msg_description_changed': '{actorName} 将群组描述更改为“{groupDescription}”',
 };

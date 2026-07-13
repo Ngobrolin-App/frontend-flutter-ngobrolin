@@ -139,6 +139,8 @@ class GeneralUtils {
     final String actorName = systemMetadata['actorName'] ?? 'Someone';
     final String targetName = systemMetadata['targetName'] ?? 'someone';
     final String groupName = systemMetadata['groupName'] ?? 'Group';
+    final String groupDescription =
+        systemMetadata['groupDescription'] ?? 'Group Description';
 
     switch (systemEventType) {
       case 'GROUP_CREATED':
@@ -163,6 +165,16 @@ class GeneralUtils {
         return context.tr(
           'system_msg_name_changed',
           args: {'actorName': actorName, 'groupName': groupName},
+        );
+
+      case 'GROUP_DESCRIPTION_CHANGED':
+        return context.tr(
+          'system_msg_description_changed',
+          args: {
+            'actorName': actorName,
+            'groupName': groupName,
+            'groupDescription': groupDescription,
+          },
         );
 
       case 'USER_REMOVED':

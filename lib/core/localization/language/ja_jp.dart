@@ -161,6 +161,24 @@ const Map<String, String> jaJP = {
   'are_you_sure_leave_group': 'このグループを退出してもよろしいですか？',
   'leave_group_success': 'グループを退出しました',
   'leave_group_failed': 'グループから退出できませんでした',
+  'add_group_description': 'グループの説明を追加',
+  'group_description_visibility':
+      'グループの説明は、このグループのメンバー、このグループに招待された人、およびこのグループへの参加をリクエストした人に表示されます。',
+  'conversation_update_success': '会話を更新しました',
+  'conversation_update_failed': '会話の更新に失敗しました',
+  'conversation_name_update_success': '会話名を更新しました',
+  'conversation_name_update_failed': '会話名の更新に失敗しました',
+  'conversation_group_image_update_success': 'グループ画像を更新しました',
+  'conversation_group_image_update_failed': 'グループ画像の更新に失敗しました',
+  'conversation_group_description_update_success': 'グループの説明を更新しました',
+  'conversation_group_description_update_failed': 'グループの説明の更新に失敗しました',
+  'join_group': 'グループに参加',
+  'request_to_join_group': 'グループへの参加をリクエスト',
+  'none_selected': 'まだ選択されていません',
+
+  // General Enums
+  'view_profile_image': 'プロフィール画像を見る',
+  'change_profile_image': 'プロフィール画像を変更',
 
   // Errors
   'error_occurred': 'エラーが発生しました',
@@ -189,6 +207,7 @@ const Map<String, String> jaJP = {
   'yesterday': '昨日',
   'read_more': 'もっと読む',
   'load_more': 'さらに読み込む',
+  'none': 'なし',
 
   // Language
   'language': '言語',
@@ -226,7 +245,6 @@ const Map<String, String> jaJP = {
   'access_denied': 'アクセス拒否',
   'conversation_not_found': '会話が見つかりません',
   'can_only_update_group_conversations': 'グループ会話のみ更新可能です',
-  'conversation_update_success': '会話が更新されました',
   'you_are_not_a_participant': 'この会話の参加者ではありません',
   'left_conversation_success': '会話から退出しました',
   'message_sent_success': 'メッセージを送信しました',
@@ -279,4 +297,6 @@ const Map<String, String> jaJP = {
   'system_msg_user_left': '{actorName}がグループから退室しました',
   'user_typing': '{actorName}が入力中',
   'number_of_members': '{number}人のメンバー',
+  'system_msg_description_changed':
+      '{actorName}がグループの説明を「{groupDescription}」に変更しました',
 };

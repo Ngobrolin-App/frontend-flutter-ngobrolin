@@ -1,4 +1,5 @@
 import 'package:ngobrolin_app/core/enums/general_enums.dart';
+import 'package:ngobrolin_app/core/models/conversation_model.dart';
 import 'package:ngobrolin_app/core/models/user_model.dart';
 
 import '../../models/message_model.dart';
@@ -173,40 +174,6 @@ class ChatViewModel extends BaseViewModel {
         }) ??
         false;
   }
-
-  /// Fetches participants metadata linked inside the room roster array.
-  // Future<bool> _loadParticipant() async {
-  //   if (_conversationId == null) return false;
-
-  //   return await runBusyFuture(() async {
-  //         try {
-  //           final result = await _chatRepository.getConversationParticipants(
-  //             conversationId: _conversationId!,
-  //             isIncludeMe: _conversationType != ConversationType.private.name,
-  //           );
-
-  //           final participants = result.data ?? [];
-
-  //           if (_conversationType == ConversationType.private.name &&
-  //               participants.isNotEmpty) {
-  //             _privatePartnerId = participants.first.id;
-  //             _conversationName = participants.first.name;
-  //             _conversationImageUrl = participants.first.avatarUrl;
-  //           }
-
-  //           notifyListeners();
-  //           return true;
-  //         } catch (e) {
-  //           developer.log(
-  //             "ChatViewModel - _loadParticipant() error $e",
-  //             name: 'ChatViewModel',
-  //           );
-  //           setError(e.toString());
-  //           return false;
-  //         }
-  //       }) ??
-  //       false;
-  // }
 
   /// Requests modern messages logs belonging to the active room.
   Future<bool> _loadMessages() async {
@@ -511,5 +478,46 @@ class ChatViewModel extends BaseViewModel {
   void clearChat() {
     _messages = [];
     notifyListeners();
+  }
+
+  void handleConversationUpdated(dynamic data) {
+    try {
+      final rawUpdatedConversation =
+          data['updatedConversation'] as Map<String, dynamic>?;
+
+      ConversationModel? updatedConversation;
+      if (rawUpdatedConversation != null) {
+        updatedConversation = ConversationModel.fromJson(
+          rawUpdatedConversation,
+        );
+        _conversationImageUrl = updatedConversation.groupImage;
+        _conversationName = updatedConversation.name;
+      }
+      notifyListeners();
+    } catch (e) {
+      developer.log(
+        'ChatListViewModel - handleSocketConversationUpdate() error: $e',
+        name: 'ChatListViewModel',
+      );
+      setError(e.toString());
+    }
+  }
+
+  void handleLeftParticipant(dynamic data) {
+    try {
+      final userId = data as String?;
+
+      if (userId != null) {
+        _participants.removeWhere((participant) => participant.id == userId);
+      }
+
+      notifyListeners();
+    } catch (e) {
+      developer.log(
+        'ChatListViewModel - handleSocketConversationUpdate() error: $e',
+        name: 'ChatListViewModel',
+      );
+      setError(e.toString());
+    }
   }
 }

@@ -139,17 +139,45 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
+  void _handleProfileTap() async {
+    final tappedOption = await MediaPickerModal.showProfileTapOptionModal(
+      context,
+      viewProfileImageEnabled:
+          (widget.user.avatarUrl != null) &&
+          (widget.user.avatarUrl?.isNotEmpty ?? false),
+    );
+
+    if (tappedOption == ProfileTapOption.viewProfileImage) {
+      showDialog(
+        context: context,
+        builder: (_) => Dialog(
+          insetPadding: const EdgeInsets.all(16),
+          child: PhotoView(
+            imageProvider: NetworkImage(widget.user.avatarUrl!),
+            initialScale: PhotoViewComputedScale.contained,
+            errorBuilder: (context, error, stackTrace) => ImageErrorPlaceholder(
+              width: double.infinity,
+              height: double.infinity,
+              iconSize: 48,
+              errorMessage: context.tr('failed_to_load_image'),
+            ),
+          ),
+        ),
+      );
+    } else {
+      _handleImageSelection();
+    }
+  }
+
   void _handleImageSelection() async {
     // Call the helper, file option is hidden by default
-    final source = await MediaPickerModal.showPickerBottomSheet(context);
+    final source = await MediaPickerModal.showMediaPickerBottomSheet(context);
 
     if (source == null) return;
 
-    final imageSource = source == MediaSource.camera
-        ? ImageSource.camera
-        : ImageSource.gallery;
+    final imageSource = source.getImageSource;
 
-    _pickAndCropImage(imageSource);
+    if (imageSource != null) _pickAndCropImage(imageSource);
   }
 
   Future<void> _pickAndCropImage(ImageSource source) async {
@@ -198,58 +226,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               children: [
                 // Profile picture section
                 Center(
-                  child: Stack(
-                    children: [
-                      GestureDetector(
-                        onTap: widget.user.avatarUrl != null
-                            ? () {
-                                showDialog(
-                                  context: context,
-                                  builder: (_) => Dialog(
-                                    insetPadding: const EdgeInsets.all(16),
-                                    child: PhotoView(
-                                      imageProvider: NetworkImage(
-                                        widget.user.avatarUrl!,
-                                      ),
-                                      initialScale:
-                                          PhotoViewComputedScale.contained,
-                                      errorBuilder:
-                                          (context, error, stackTrace) =>
-                                              ImageErrorPlaceholder(
-                                                width: double.infinity,
-                                                height: double.infinity,
-                                                iconSize: 48,
-                                                errorMessage: context.tr(
-                                                  'failed_to_load_image',
-                                                ),
-                                              ),
-                                    ),
-                                  ),
-                                );
-                              }
-                            : null,
-                        child: AppAvatar(
-                          localFile: _imageFile, // Inject file lokal di sini
-                          imageUrl: widget.user.avatarUrl,
-                          name: widget.user.name,
-                          radius: 60,
-                          fontSize: 50,
-                          backgroundColor: AppColors.lightGrey,
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: AppIconButton(
-                          onTap: _handleImageSelection,
-                          icon: const Iconify(
-                            MaterialSymbols.android_camera,
-                            color: AppColors.white,
-                            size: 20,
-                          ),
-                        ),
-                      ),
-                    ],
+                  child: GestureDetector(
+                    onTap: _handleProfileTap,
+                    child: AppAvatar(
+                      localFile: _imageFile, // Inject file lokal di sini
+                      imageUrl: widget.user.avatarUrl,
+                      name: widget.user.name,
+                      radius: 60,
+                      fontSize: 50,
+                      backgroundColor: AppColors.lightGrey,
+                    ),
                   ),
                 ),
 

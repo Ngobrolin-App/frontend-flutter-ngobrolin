@@ -121,6 +121,38 @@ class ChatRepository {
     );
   }
 
+  Future<ApiResponse<ConversationModel>> updateConversation({
+    required String conversationId,
+    String? name,
+    String? groupDescription,
+    String? groupImageUrl,
+  }) async {
+    final data = <String, dynamic>{'conversationId': conversationId};
+
+    if (name != null) {
+      data['name'] = name;
+    }
+    if (groupDescription != null) {
+      data['groupDescription'] = groupDescription;
+    }
+    if (groupImageUrl != null) {
+      data['groupImage'] = groupImageUrl;
+    }
+
+    return _apiService.post<ApiResponse<ConversationModel>>(
+      '/conversations/update',
+      data: data,
+      parser: (response) {
+        return ApiResponse<ConversationModel>.fromJson(
+          response,
+          (data) => ConversationModel.fromJson(
+            data as Map<String, dynamic>? ?? <String, dynamic>{},
+          ),
+        );
+      },
+    );
+  }
+
   Future<ApiResponse<ConversationModel>> getPrivateConversationByPartnerId(
     String partnerId,
   ) async {

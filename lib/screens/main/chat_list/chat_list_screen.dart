@@ -70,7 +70,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
         'ChatListScreen - _conversationUpdatedHandler: $data',
         name: 'ChatListScreen',
       );
-      final currentUserId = authViewModel.user?.id;
+      final currentUserId = authViewModel.currentUserId;
       chatListViewModel.handleSocketConversationUpdate(data, currentUserId);
     };
 
@@ -278,20 +278,13 @@ class _ChatListScreenState extends State<ChatListScreen> {
             onRefresh: () async {
               await chatListViewModel.fetchChatList();
             },
-            child: ListView.separated(
+            child: ListView.builder(
               physics: const AlwaysScrollableScrollPhysics(),
               controller: _scrollController,
               // Tambahkan 1 item tambahan di akhir jika masih ada data (hasMore) untuk menampung loading indicator
               itemCount: chatListViewModel.hasMore
                   ? chatList.length + 1
                   : chatList.length,
-              separatorBuilder: (context, index) {
-                // Jangan tampilkan divider untuk item loading indicator paling bawah
-                if (index >= chatList.length - 1) {
-                  return const SizedBox.shrink();
-                }
-                return const Divider(height: 1, indent: 72);
-              },
               itemBuilder: (context, index) {
                 // Cek jika index berada di posisi item tambahan paling bawah
                 if (index == chatList.length) {

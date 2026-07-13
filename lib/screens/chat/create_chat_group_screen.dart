@@ -53,15 +53,13 @@ class _CreateChatGroupScreenState extends State<CreateChatGroupScreen> {
 
   void _handleImageSelection() async {
     // Call the helper, file option is hidden by default
-    final source = await MediaPickerModal.showPickerBottomSheet(context);
+    final source = await MediaPickerModal.showMediaPickerBottomSheet(context);
 
     if (source == null) return;
 
-    final imageSource = source == MediaSource.camera
-        ? ImageSource.camera
-        : ImageSource.gallery;
+    final imageSource = source.getImageSource;
 
-    _pickAndCropImage(imageSource);
+    if (imageSource != null) _pickAndCropImage(imageSource);
   }
 
   Future<void> _pickAndCropImage(ImageSource source) async {
