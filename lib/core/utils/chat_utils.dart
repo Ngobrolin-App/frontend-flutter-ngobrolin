@@ -1,90 +1,9 @@
-import 'dart:io';
-
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:image_cropper/image_cropper.dart';
 import 'package:ngobrolin_app/core/localization/app_localizations.dart';
 import 'package:ngobrolin_app/core/models/message_model.dart';
-import 'package:ngobrolin_app/core/repositories/settings_repository.dart';
-import 'package:ngobrolin_app/theme/app_colors.dart';
-import 'package:open_file/open_file.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:mime/mime.dart';
-import 'package:path/path.dart' as path;
 import 'package:intl/intl.dart';
 
-class GeneralUtils {
-  static Future<void> downloadAndOpen(BuildContext context, String url) async {
-    final dir = await getTemporaryDirectory();
-    final segs = Uri.parse(url).pathSegments;
-    final name = segs.isNotEmpty
-        ? segs.last
-        : 'file_${DateTime.now().millisecondsSinceEpoch}';
-    final path = '${dir.path}/$name';
-    await Dio().download(url, path);
-    await OpenFile.open(path);
-  }
-
-  static Future<Map<String, dynamic>> getFileDetails(File file) async {
-    return {
-      'path': file.path,
-      'size': await file.length(),
-      'mimeType': lookupMimeType(file.path) ?? 'application/octet-stream',
-      'fileName': path.basename(file.path),
-    };
-  }
-
-  static Future<File?> cropImage({
-    required String sourcePath,
-    required String title,
-    bool isSquare = false,
-  }) async {
-    final presets = isSquare
-        ? [CropAspectRatioPreset.square]
-        : [
-            CropAspectRatioPreset.original,
-            CropAspectRatioPreset.square,
-            CropAspectRatioPreset.ratio3x2,
-            CropAspectRatioPreset.ratio4x3,
-            CropAspectRatioPreset.ratio16x9,
-          ];
-
-    try {
-      final croppedFile = await ImageCropper().cropImage(
-        sourcePath: sourcePath,
-        uiSettings: [
-          AndroidUiSettings(
-            toolbarTitle: title,
-            toolbarColor: AppColors.black,
-            toolbarWidgetColor: AppColors.white,
-            activeControlsWidgetColor: AppColors.accent,
-            initAspectRatio: isSquare
-                ? CropAspectRatioPreset.square
-                : CropAspectRatioPreset.original,
-            lockAspectRatio: isSquare,
-            hideBottomControls: false,
-            aspectRatioPresets: presets,
-          ),
-          IOSUiSettings(
-            title: title,
-            doneButtonTitle: 'Selesai',
-            cancelButtonTitle: 'Batal',
-            aspectRatioLockEnabled: isSquare,
-            resetAspectRatioEnabled: !isSquare,
-            aspectRatioPresets: presets,
-          ),
-        ],
-      );
-
-      if (croppedFile != null) {
-        return File(croppedFile.path);
-      }
-    } catch (e) {
-      debugPrint('GeneralUtils - cropImage error: $e');
-    }
-    return null;
-  }
-
+class ChatUtils {
   static String getChatDateHeader(
     DateTime messageDate,
     BuildContext context, {
@@ -108,7 +27,7 @@ class GeneralUtils {
       if (showTodayTime) {
         // Gunakan 'HH:mm' untuk format 24 jam (misal: 15:30)
         // Gunakan 'hh:mm a' jika ingin format 12 jam (misal: 03:30 PM)
-        return DateFormat('HH:mm', localeCode).format(messageDate);
+        return context.loc.formatTime(messageDate);
       }
       return context.tr('today');
     } else if (normalizedMessageDate == yesterday) {
@@ -137,6 +56,8 @@ class GeneralUtils {
 
     // Ekstraksi nilai seragam berdasarkan Kontrak Blueprint
     final String actorName = systemMetadata['actorName'] ?? 'Someone';
+    final String addedUserNames =
+        systemMetadata['addedUserNames'] ?? 'Some people';
     final String targetName = systemMetadata['targetName'] ?? 'someone';
     final String groupName = systemMetadata['groupName'] ?? 'Group';
     final String groupDescription =
@@ -153,6 +74,12 @@ class GeneralUtils {
         return context.tr(
           'system_msg_user_added',
           args: {'actorName': actorName, 'targetName': targetName},
+        );
+
+      case 'USERS_ADDED':
+        return context.tr(
+          'system_msg_user_added',
+          args: {'actorName': actorName, 'targetName': addedUserNames},
         );
 
       case 'GROUP_IMAGE_CHANGED':

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ngobrolin_app/core/models/message_model.dart';
+import 'package:ngobrolin_app/core/utils/chat_utils.dart';
 import 'package:ngobrolin_app/theme/app_colors.dart';
-import 'package:ngobrolin_app/core/utils/general_utils.dart';
 
 class ChatSystemMessageBadge extends StatelessWidget {
   final MessageModel message;
@@ -19,7 +19,7 @@ class ChatSystemMessageBadge extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
-          GeneralUtils.getSystemMessageText(message, context),
+          ChatUtils.getSystemMessageText(message, context),
           textAlign: TextAlign.center,
           maxLines: 3,
           style: TextStyle(

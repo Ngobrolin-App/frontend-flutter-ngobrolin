@@ -182,6 +182,14 @@ const Map<String, String> enUS = {
   'join_group': 'Join Group',
   'request_to_join_group': 'Request to Join Group',
   'none_selected': 'Nothing selected',
+  'select_users': 'Select Users',
+  'select_add_new_members': 'Select Members to Add',
+  'select_users_to_forward_message': 'Select users to forward the message',
+  'already_member': 'Already a member',
+  'member': 'Member',
+  'add_member_success': 'Member added successfully',
+  'add_member_failed': 'Failed to add member',
+  'participants_added_success': 'Participants added successfully',
 
   // General Enums
   'view_profile_image': 'View Profile Image',
@@ -197,6 +205,7 @@ const Map<String, String> enUS = {
   "image_unavailable": "Image unavailable",
   "failed_to_pick_image": "Failed to pick image",
   'no_file_uploaded': 'No file uploaded',
+  'permission_denied': 'Permission denied',
 
   // Misc
   'cancel': 'Cancel',
@@ -304,9 +313,19 @@ const Map<String, String> enUS = {
 
   // PERMISSION
   'permission_request': 'Permission Request',
+
   'notification_permission_request': 'Notification Permission Request',
   'notification_permission_request_desc':
       'To make sure you don\'t miss any important chats from your friends, allow Ngobrolin to send notifications to your phone.',
+
+  'camera_permission_request': 'Camera permission request',
+  'camera_permission_request_desc':
+      'Allow Ngobrolin to access your camera so you can take photos and share them in chats.',
+
+  'media_permission_request': 'Files, Photos & Videos permission request',
+  'media_permission_request_desc':
+      'Allow Ngobrolin to access your files, photos, and videos so you can share them in chats.',
+
   'later': 'Later',
   'enable': 'Enable',
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ngobrolin_app/core/utils/general_utils.dart';
 import 'package:ngobrolin_app/core/viewmodels/auth/auth_view_model.dart';
+import 'package:ngobrolin_app/core/widgets/buttons/secondary_button.dart';
 import 'package:ngobrolin_app/core/widgets/cards/app_avatar.dart';
 import 'package:ngobrolin_app/core/widgets/states/image_error_placeholder.dart';
 import 'package:ngobrolin_app/core/widgets/texts/expandable_text_section.dart';
@@ -281,31 +281,17 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       ),
                     ),
                   const SizedBox(height: 16),
-                  OutlinedButton.icon(
+                  SecondaryButton(
+                    text: isBlocked
+                        ? context.tr('unblock_user')
+                        : context.tr('block_account'),
                     onPressed: _toggleBlockUser,
-                    icon: Icon(
-                      isBlocked ? Icons.person_add : Icons.block,
-                      color: isBlocked ? AppColors.primary : AppColors.warning,
-                    ),
-                    label: Text(
-                      isBlocked
-                          ? context.tr('unblock_user')
-                          : context.tr('block_account'),
-                      style: TextStyle(
-                        color: isBlocked
-                            ? AppColors.primary
-                            : AppColors.warning,
-                      ),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(
-                        color: isBlocked
-                            ? AppColors.primary
-                            : AppColors.warning,
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      minimumSize: const Size(double.infinity, 50),
-                    ),
+                    textColor: isBlocked
+                        ? AppColors.primary
+                        : AppColors.warning,
+                    borderColor: isBlocked
+                        ? AppColors.primary
+                        : AppColors.warning,
                   ),
                 ],
               ),

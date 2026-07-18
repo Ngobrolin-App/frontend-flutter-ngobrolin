@@ -1,7 +1,6 @@
 import 'package:ngobrolin_app/core/enums/general_enums.dart';
 import 'package:ngobrolin_app/core/models/conversation_model.dart';
 import 'package:ngobrolin_app/core/models/conversation_participant_model.dart';
-import 'package:ngobrolin_app/core/models/user_model.dart';
 import 'package:ngobrolin_app/core/repositories/chat_repository.dart';
 import 'package:ngobrolin_app/core/viewmodels/base_view_model.dart';
 import 'dart:developer' as developer;
@@ -34,6 +33,10 @@ class GroupProfileViewModel extends BaseViewModel {
   List<ConversationParticipantModel> _conversationParticipants = [];
   List<ConversationParticipantModel> get conversationParticipants =>
       _conversationParticipants;
+
+  List<String> get conversationParticipantsIds => _conversationParticipants
+      .map((participant) => participant.userId)
+      .toList();
 
   int get countLoadedConversationParticipants =>
       _conversationParticipants.length;
@@ -207,6 +210,40 @@ class GroupProfileViewModel extends BaseViewModel {
         false;
   }
 
+  Future<bool> addConversationParticipants({
+    required List<String> newParticipanstIds,
+  }) async {
+    if (_conversationId == null ||
+        (_conversationId?.isEmpty ?? true) ||
+        newParticipanstIds.isEmpty) {
+      return false;
+    }
+
+    return await runBusyFuture(() async {
+          try {
+            var success = true;
+
+            final result = await _chatRepository.addConversationParticipants(
+              conversationId: _conversationId!,
+              newParticipantsIds: newParticipanstIds,
+            );
+            success = result.isSuccess;
+            setSuccess(result.message);
+
+            notifyListeners();
+            return success;
+          } catch (e) {
+            developer.log(
+              "GroupProfileViewModel - addConversationParticipants() error $e",
+              name: 'GroupProfileViewModel',
+            );
+            setError(e.toString());
+            return false;
+          }
+        }) ??
+        false;
+  }
+
   Future<bool> updateConversation({
     String? name,
     String? groupImagePath,
@@ -303,6 +340,34 @@ class GroupProfileViewModel extends BaseViewModel {
     } catch (e) {
       developer.log(
         'GroupProfileViewModel - handleLeftParticipant() error: $e',
+        name: 'GroupProfileViewModel',
+      );
+      setError(e.toString());
+    }
+  }
+
+  void handleParticipantsAdded(dynamic data) {
+    try {
+      final rawParticipantsAdded = data as Map<String, dynamic>?;
+
+      final rawAddedParticipants = List<Map<String, dynamic>>.from(
+        rawParticipantsAdded?['addedParticipants'] ?? [],
+      );
+
+      List<ConversationParticipantModel> addedCovParticipants =
+          rawAddedParticipants
+              .map(
+                (convParticipant) =>
+                    ConversationParticipantModel.fromJson(convParticipant),
+              )
+              .toList();
+
+      _conversationParticipants.addAll(addedCovParticipants);
+
+      notifyListeners();
+    } catch (e) {
+      developer.log(
+        'GroupProfileViewModel - handleParticipantsAdded() error: $e',
         name: 'GroupProfileViewModel',
       );
       setError(e.toString());

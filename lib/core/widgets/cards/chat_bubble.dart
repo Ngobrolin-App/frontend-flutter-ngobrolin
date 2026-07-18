@@ -6,15 +6,13 @@ import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/material_symbols.dart';
 import 'package:iconify_flutter/icons/mdi.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:iconify_flutter/icons/system_uicons.dart';
 import 'package:ngobrolin_app/core/enums/general_enums.dart';
+import 'package:ngobrolin_app/core/utils/media_utils.dart';
 import 'package:ngobrolin_app/core/widgets/cards/reply_message.dart';
 import 'package:ngobrolin_app/core/widgets/states/image_error_placeholder.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:provider/provider.dart';
 import 'package:iconify_flutter/icons/ion.dart';
-
-import 'package:ngobrolin_app/core/utils/general_utils.dart';
 import 'package:ngobrolin_app/core/viewmodels/chat/chat_view_model.dart';
 import '../../../theme/app_colors.dart';
 import '../../localization/app_localizations.dart';
@@ -152,7 +150,7 @@ class ChatBubble extends StatelessWidget {
         );
         break;
       case 'download':
-        GeneralUtils.downloadAndOpen(context, message.mediaUrl ?? '');
+        MediaUtils.downloadAndOpen(context, message.mediaUrl ?? '');
         break;
       case 'forward':
         break;
@@ -365,7 +363,7 @@ class ChatBubble extends StatelessWidget {
         children: [
           InkWell(
             onTap: () =>
-                GeneralUtils.downloadAndOpen(context, message.mediaUrl ?? ''),
+                MediaUtils.downloadAndOpen(context, message.mediaUrl ?? ''),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [

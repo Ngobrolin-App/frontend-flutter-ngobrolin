@@ -4,18 +4,15 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
-import 'package:image_cropper/image_cropper.dart';
 import 'package:ngobrolin_app/core/enums/general_enums.dart';
+import 'package:ngobrolin_app/core/localization/app_localizations.dart';
 import 'package:ngobrolin_app/core/models/message_model.dart';
-import 'package:ngobrolin_app/core/utils/general_utils.dart';
+import 'package:ngobrolin_app/core/utils/media_utils.dart';
 import 'package:ngobrolin_app/core/viewmodels/chat/chat_view_model.dart';
 import 'package:ngobrolin_app/core/widgets/cards/reply_message.dart';
 import 'package:ngobrolin_app/core/widgets/inputs/chat_input_bar.dart';
 import 'package:provider/provider.dart';
-import 'package:path/path.dart' as path; // WAJIB TAMBAHKAN INI
-
-import '../../core/localization/app_localizations.dart';
-import '../../theme/app_colors.dart';
+import 'package:path/path.dart' as path;
 
 class AttachmentPreviewScreen extends StatefulWidget {
   final String filePath;
@@ -62,7 +59,7 @@ class _AttachmentPreviewScreenState extends State<AttachmentPreviewScreen> {
   Future<void> _cropImage() async {
     if (!_isImage) return;
     try {
-      final croppedFile = await GeneralUtils.cropImage(
+      final croppedFile = await MediaUtils.cropImage(
         sourcePath: _currentFilePath,
         title: context.tr('crop_image'),
         isSquare: false,
@@ -93,7 +90,7 @@ class _AttachmentPreviewScreenState extends State<AttachmentPreviewScreen> {
       }
 
       if (mounted) {
-        final fileDetails = await GeneralUtils.getFileDetails(finalFile);
+        final fileDetails = await MediaUtils.getFileDetails(finalFile);
 
         final dataToSend = {
           'mediaFile': finalFile,

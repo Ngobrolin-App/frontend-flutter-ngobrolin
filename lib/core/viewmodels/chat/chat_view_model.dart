@@ -1,16 +1,17 @@
 import 'package:ngobrolin_app/core/enums/general_enums.dart';
 import 'package:ngobrolin_app/core/models/conversation_model.dart';
+import 'package:ngobrolin_app/core/models/conversation_participant_model.dart';
 import 'package:ngobrolin_app/core/models/user_model.dart';
+import 'package:ngobrolin_app/core/repositories/settings_repository.dart';
 
 import '../../models/message_model.dart';
 import '../../repositories/chat_repository.dart';
 import '../base_view_model.dart';
 import 'dart:developer' as developer;
 
-/// ViewModel managing active single or group chat interactions, pagination logs,
-/// attachment deliveries, and incoming stream normalization.
 class ChatViewModel extends BaseViewModel {
   final ChatRepository _chatRepository;
+  final SettingsRepository _settingsRepository;
 
   List<MessageModel> _messages = [];
   List<MessageModel> get messages => _messages;
@@ -59,8 +60,11 @@ class ChatViewModel extends BaseViewModel {
   bool _hasMore = true;
   bool get hasMore => _hasMore;
 
-  ChatViewModel({ChatRepository? chatRepository})
-    : _chatRepository = chatRepository ?? ChatRepository();
+  ChatViewModel({
+    ChatRepository? chatRepository,
+    SettingsRepository? settingsRepository,
+  }) : _chatRepository = chatRepository ?? ChatRepository(),
+       _settingsRepository = settingsRepository ?? SettingsRepository();
 
   /// Synchronously initializes basic UI meta placeholders before executing background fetches.
   void initChat({
@@ -92,6 +96,24 @@ class ChatViewModel extends BaseViewModel {
     if (_conversationId != null && _conversationId!.isNotEmpty) {
       await _getConversationDataOnly();
       await _loadMessages();
+    }
+
+    if (_conversationType == ConversationType.private.name &&
+        _privatePartnerId.isNotEmpty) {
+      await _checkBlockStatus();
+    }
+  }
+
+  Future<bool> _checkBlockStatus() async {
+    try {
+      return await _settingsRepository.isUserBlocked(_privatePartnerId);
+    } catch (e) {
+      developer.log(
+        'ChatViewModel - _checkBlockStatus() error: $e',
+        name: 'ChatViewModel',
+      );
+      setError(e.toString());
+      return false;
     }
   }
 
@@ -143,6 +165,10 @@ class ChatViewModel extends BaseViewModel {
             final result = await _chatRepository.getConversationById(
               conversationId: _conversationId!,
               isShowParticipants: true,
+              isParticipantsIncludeMe:
+                  (_conversationType == ConversationType.group.name)
+                  ? true
+                  : false,
             );
             final conversation = result.data;
 
@@ -515,6 +541,44 @@ class ChatViewModel extends BaseViewModel {
     } catch (e) {
       developer.log(
         'ChatViewModel - handleLeftParticipant() error: $e',
+        name: 'ChatViewModel',
+      );
+      setError(e.toString());
+    }
+  }
+
+  void handleParticipantsAdded(dynamic data) {
+    try {
+      final rawParticipantsAdded = data as Map<String, dynamic>?;
+
+      final rawAddedParticipants = List<Map<String, dynamic>>.from(
+        rawParticipantsAdded?['addedParticipants'] ?? [],
+      );
+
+      List<ConversationParticipantModel> addedCovParticipants =
+          rawAddedParticipants
+              .map(
+                (convParticipant) =>
+                    ConversationParticipantModel.fromJson(convParticipant),
+              )
+              .toList();
+
+      List<UserModel> addedUserParticipants = addedCovParticipants
+          .map((convParticipant) => convParticipant.user)
+          .whereType<UserModel>()
+          .toList();
+
+      if (addedUserParticipants.isNotEmpty) {
+        _participants.addAll(addedUserParticipants);
+      }
+      developer.log(
+        'ChatViewModel - handleParticipantsAdded - participantNamesText : $participantNamesText',
+      );
+
+      notifyListeners();
+    } catch (e) {
+      developer.log(
+        'ChatViewModel - handleParticipantsAdded() error: $e',
         name: 'ChatViewModel',
       );
       setError(e.toString());

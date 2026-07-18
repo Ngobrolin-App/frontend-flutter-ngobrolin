@@ -6,9 +6,11 @@ import 'package:ngobrolin_app/core/enums/general_enums.dart';
 import 'package:ngobrolin_app/core/localization/app_localizations.dart';
 import 'package:ngobrolin_app/core/models/conversation_participant_model.dart';
 import 'package:ngobrolin_app/core/providers/socket_provider.dart';
-import 'package:ngobrolin_app/core/utils/general_utils.dart';
+import 'package:ngobrolin_app/core/utils/media_utils.dart';
+import 'package:ngobrolin_app/core/utils/permission_utils.dart';
 import 'package:ngobrolin_app/core/viewmodels/auth/auth_view_model.dart';
 import 'package:ngobrolin_app/core/viewmodels/chat/group_profile_view_model.dart';
+import 'package:ngobrolin_app/core/viewmodels/search/search_user_view_model.dart';
 import 'package:ngobrolin_app/core/widgets/buttons/load_more_list_button.dart';
 import 'package:ngobrolin_app/core/widgets/cards/action_list_tile.dart';
 import 'package:ngobrolin_app/core/widgets/cards/app_avatar.dart';
@@ -42,6 +44,7 @@ class _GroupProfileScreenState extends State<GroupProfileScreen> {
 
   late Function(dynamic) _conversationUpdatedHandler;
   late Function(dynamic) _leftParticipantHandler;
+  late Function(dynamic) _participantsAddedHandler;
 
   @override
   void initState() {
@@ -69,8 +72,12 @@ class _GroupProfileScreenState extends State<GroupProfileScreen> {
       groupProfileViewModel.handleLeftParticipant(data);
     };
 
+    _participantsAddedHandler = (data) {
+      groupProfileViewModel.handleParticipantsAdded(data);
+    };
     _socketProvider.on('conversation_updated', _conversationUpdatedHandler);
     _socketProvider.on('left_participant', _leftParticipantHandler);
+    _socketProvider.on('participants_added', _participantsAddedHandler);
   }
 
   @override
@@ -80,6 +87,7 @@ class _GroupProfileScreenState extends State<GroupProfileScreen> {
     try {
       _socketProvider.off('conversation_updated', _conversationUpdatedHandler);
       _socketProvider.off('left_participant', _leftParticipantHandler);
+      _socketProvider.off('participants_added', _participantsAddedHandler);
     } catch (e) {
       developer.log(
         'GroupProfileScreen - dispose() - Error unregistering socket: $e',
@@ -128,7 +136,6 @@ class _GroupProfileScreenState extends State<GroupProfileScreen> {
     final success = await groupProfileViewModel.leaveConversation(
       conversationId: conversationId,
     );
-    developer.log('leavegroup - $success', name: 'WWWWW');
 
     if (success) {
       Navigator.of(
@@ -242,10 +249,28 @@ class _GroupProfileScreenState extends State<GroupProfileScreen> {
     final source = await MediaPickerModal.showMediaPickerBottomSheet(context);
 
     if (source == null) return;
+    bool isGranted = false;
 
-    final imageSource = source.getImageSource;
+    if (source == MediaSource.camera) {
+      if (!mounted) return;
+      isGranted = await PermissionUtils.checkAndRequestCamera(context);
+    } else if (source == MediaSource.gallery) {
+      if (!mounted) return;
+      isGranted = await PermissionUtils.checkAndRequestMedia(context);
+    }
+    if (isGranted) {
+      final imageSource = source.getImageSource;
 
-    if (imageSource != null) _pickAndCropImage(imageSource);
+      if (imageSource != null) _pickAndCropImage(imageSource);
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.tr('permission_denied')),
+          backgroundColor: AppColors.warning, // Assuming warning is red/orange
+        ),
+      );
+    }
   }
 
   Future<void> _pickAndCropImage(ImageSource source) async {
@@ -258,7 +283,7 @@ class _GroupProfileScreenState extends State<GroupProfileScreen> {
       );
 
       if (pickedFile != null && mounted) {
-        final croppedFile = await GeneralUtils.cropImage(
+        final croppedFile = await MediaUtils.cropImage(
           sourcePath: pickedFile.path,
           title: context.tr('edit_profile'),
           isSquare: true,
@@ -492,6 +517,65 @@ class _GroupProfileScreenState extends State<GroupProfileScreen> {
                   ),
                 ],
               ),
+            ),
+
+            ActionListTile(
+              title: context.tr('add_members'),
+              icon: MaterialSymbols.person_add_rounded,
+              onTap: () async {
+                final groupProfileViewModel = context
+                    .read<GroupProfileViewModel>();
+
+                final existingParticipants =
+                    groupProfileViewModel.conversationParticipantsIds;
+
+                final result = await Navigator.pushNamed(
+                  context,
+                  AppRoutes.searchUser,
+                  arguments: {
+                    'userSelectionAction': UserSelectionAction.addNewMembers,
+                    'excludeUsers': existingParticipants,
+                  },
+                );
+
+                if (result != null &&
+                    result is List<String> &&
+                    result.isNotEmpty) {
+                  if (!mounted) return;
+
+                  final selectedUserIds = result;
+
+                  final success = await groupProfileViewModel
+                      .addConversationParticipants(
+                        newParticipanstIds: selectedUserIds,
+                      );
+
+                  if (!mounted) return;
+
+                  final searchUserViewModel = context
+                      .read<SearchUserViewModel>();
+                  searchUserViewModel.setSearchQuery();
+                  searchUserViewModel.resetUserSelection();
+
+                  // 7. Berikan notifikasi sukses/gagal via SnackBar
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        context.tr(
+                          success
+                              ? (groupProfileViewModel.successMessage ??
+                                    'add_member_success')
+                              : (groupProfileViewModel.errorMessage ??
+                                    'add_member_failed'),
+                        ),
+                      ),
+                      backgroundColor: success
+                          ? AppColors.accent
+                          : AppColors.warning,
+                    ),
+                  );
+                }
+              },
             ),
 
             Selector<GroupProfileViewModel, int>(

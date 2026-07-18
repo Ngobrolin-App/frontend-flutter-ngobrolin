@@ -158,6 +158,7 @@ class AuthRepository {
   /// Verifies if an operational token exists locally inside the preference layers.
   Future<bool> isAuthenticated() async {
     final token = await getToken();
+
     return token != null && token.isNotEmpty;
   }
 }

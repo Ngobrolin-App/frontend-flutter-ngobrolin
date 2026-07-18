@@ -6,7 +6,8 @@ import 'package:iconify_flutter/icons/material_symbols.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:ngobrolin_app/core/enums/general_enums.dart';
 import 'package:ngobrolin_app/core/localization/app_localizations.dart';
-import 'package:ngobrolin_app/core/utils/general_utils.dart';
+import 'package:ngobrolin_app/core/utils/media_utils.dart';
+import 'package:ngobrolin_app/core/utils/permission_utils.dart';
 import 'package:ngobrolin_app/core/viewmodels/auth/auth_view_model.dart';
 import 'package:ngobrolin_app/core/viewmodels/chat/chat_view_model.dart';
 import 'package:ngobrolin_app/core/viewmodels/search/search_user_view_model.dart';
@@ -55,9 +56,29 @@ class _CreateChatGroupScreenState extends State<CreateChatGroupScreen> {
 
     if (source == null) return;
 
-    final imageSource = source.getImageSource;
+    bool isGranted = false;
 
-    if (imageSource != null) _pickAndCropImage(imageSource);
+    if (source == MediaSource.camera) {
+      if (!mounted) return;
+      isGranted = await PermissionUtils.checkAndRequestCamera(context);
+    } else if (source == MediaSource.gallery) {
+      if (!mounted) return;
+      isGranted = await PermissionUtils.checkAndRequestMedia(context);
+    }
+
+    if (isGranted) {
+      final imageSource = source.getImageSource;
+
+      if (imageSource != null) _pickAndCropImage(imageSource);
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.tr('permission_denied')),
+          backgroundColor: AppColors.warning, // Assuming warning is red/orange
+        ),
+      );
+    }
   }
 
   Future<void> _pickAndCropImage(ImageSource source) async {
@@ -70,7 +91,7 @@ class _CreateChatGroupScreenState extends State<CreateChatGroupScreen> {
       );
 
       if (pickedFile != null && mounted) {
-        final croppedFile = await GeneralUtils.cropImage(
+        final croppedFile = await MediaUtils.cropImage(
           sourcePath: pickedFile.path,
           title: context.tr('edit_profile'),
           isSquare: true,
@@ -115,7 +136,7 @@ class _CreateChatGroupScreenState extends State<CreateChatGroupScreen> {
                       : () async {
                           final participantIds = context
                               .read<SearchUserViewModel>()
-                              .selectedGroupMembers
+                              .selectedUsers
                               .map((user) => user.id)
                               .toList();
 
@@ -161,7 +182,7 @@ class _CreateChatGroupScreenState extends State<CreateChatGroupScreen> {
 
                             final searchUserViewModel = context
                                 .read<SearchUserViewModel>();
-                            searchUserViewModel.resetGroupSelection();
+                            searchUserViewModel.resetUserSelection();
                             final conversationId = chatViewModel.conversationId;
                             if (conversationId != null) {
                               Navigator.of(context).pushNamed(
@@ -247,8 +268,7 @@ class _CreateChatGroupScreenState extends State<CreateChatGroupScreen> {
                     const SizedBox(height: 16),
                     Selector<SearchUserViewModel, List<dynamic>>(
                       // Sesuaikan tipe List dengan model User kamu
-                      selector: (context, viewModel) =>
-                          viewModel.selectedGroupMembers,
+                      selector: (context, viewModel) => viewModel.selectedUsers,
                       builder: (context, selectedMembers, child) {
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

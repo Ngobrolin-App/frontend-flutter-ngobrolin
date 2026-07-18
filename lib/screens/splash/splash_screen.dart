@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:ngobrolin_app/core/viewmodels/auth/auth_view_model.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/providers/socket_provider.dart';
 import '../../routes/app_routes.dart';
 import '../../theme/app_colors.dart';
@@ -16,69 +15,82 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  late SocketProvider _socketProvider;
+  late Function(dynamic) _socketAuthenticatedHandler;
+  late Function(dynamic) _socketAuthErrorHandler;
+
   @override
   void initState() {
     super.initState();
-    _checkAuthAndNavigate();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAuthAndNavigate();
+    });
+  }
+
+  @override
+  void dispose() {
+    try {
+      _socketProvider.off('authenticated', _socketAuthenticatedHandler);
+      _socketProvider.off('auth_error', _socketAuthErrorHandler);
+    } catch (e) {
+      developer.log('SplashScreen - dispose() error: $e', name: 'SplashScreen');
+    }
+    super.dispose();
   }
 
   Future<void> _checkAuthAndNavigate() async {
-    // Simulate loading time
-    await Future.delayed(const Duration(seconds: 3));
-
     try {
       if (!mounted) return;
+
       final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-      final socketProvider = Provider.of<SocketProvider>(
-        context,
-        listen: false,
-      );
-      await authViewModel.checkAuthStatus();
+      _socketProvider = Provider.of<SocketProvider>(context, listen: false);
+
+      final isAuthValid = await authViewModel.checkAuthStatus();
 
       developer.log(
-        'SplashScreen -Auth status: ${authViewModel.authenticated}',
-      );
-      developer.log(
-        'SplashScreen -Socket connected: ${socketProvider.connected}',
-      );
-      developer.log(
-        'SplashScreen -Socket authenticated: ${socketProvider.authenticated}',
+        'SplashScreen isAuthValid: $isAuthValid',
+        name: 'SplashScreen',
       );
 
-      if (authViewModel.authenticated &&
-          socketProvider.connected &&
-          socketProvider.authenticated) {
+      if (!mounted) return;
+
+      if (!isAuthValid) {
+        developer.log('SplashScreen - API Auth failed. Redirecting to Login.');
+        Navigator.of(
+          context,
+        ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
+        return;
+      }
+
+      await _socketProvider.init();
+
+      _socketAuthenticatedHandler = (data) {
+        developer.log('SplashScreen - Socket Authenticated');
         if (mounted) {
           Navigator.of(
             context,
           ).pushNamedAndRemoveUntil(AppRoutes.main, (route) => false);
         }
-      } else {
-        final isFirstTime = await _isFirstTimeUser();
-        if (!mounted) return;
+      };
 
-        final targetRoute = isFirstTime
-            ? AppRoutes.onboarding
-            : AppRoutes.login;
-        Navigator.of(
-          context,
-        ).pushNamedAndRemoveUntil(targetRoute, (route) => false);
-      }
+      _socketAuthErrorHandler = (data) {
+        developer.log('SplashScreen - Socket Auth Error: $data');
+        if (mounted) {
+          Navigator.of(
+            context,
+          ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
+        }
+      };
+
+      _socketProvider.on('authenticated', _socketAuthenticatedHandler);
+      _socketProvider.on('auth_error', _socketAuthErrorHandler);
     } catch (e) {
+      developer.log('SplashScreen - Fatal Error: $e');
       if (mounted) {
         Navigator.of(
           context,
         ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
       }
-    }
-  }
-
-  Future<bool> _isFirstTimeUser() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      return !(prefs.getBool('onboarding_completed') ?? false);
-    } catch (_) {
-      return false;
     }
   }
 

@@ -4,13 +4,11 @@ import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/material_symbols.dart';
 import 'package:ngobrolin_app/core/enums/general_enums.dart';
 import 'package:ngobrolin_app/core/models/chat_list_item_model.dart';
-import 'package:ngobrolin_app/core/utils/general_utils.dart';
+import 'package:ngobrolin_app/core/utils/chat_utils.dart';
 import 'package:ngobrolin_app/core/viewmodels/auth/auth_view_model.dart';
-import 'package:ngobrolin_app/core/viewmodels/chat/chat_view_model.dart';
 import 'package:provider/provider.dart';
 import '../../../theme/app_colors.dart';
 import '../../localization/app_localizations.dart';
-import 'dart:developer' as developer;
 
 class ChatListItem extends StatelessWidget {
   final ChatListItemModel chat;
@@ -128,7 +126,7 @@ class ChatListItem extends StatelessWidget {
         ),
         if (dateTime != null)
           Text(
-            GeneralUtils.getChatDateHeader(
+            ChatUtils.getChatDateHeader(
               dateTime,
               context,
               showTodayTime: true,
@@ -185,7 +183,7 @@ class ChatListItem extends StatelessWidget {
 
       case 'system':
         if (lastMessage != null) {
-          text = GeneralUtils.getSystemMessageText(lastMessage, context);
+          text = ChatUtils.getSystemMessageText(lastMessage, context);
         }
         break;
     }

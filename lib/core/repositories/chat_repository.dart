@@ -201,6 +201,20 @@ class ChatRepository {
     );
   }
 
+  Future<ApiResponse> addConversationParticipants({
+    required String conversationId,
+    required List<String> newParticipantsIds,
+  }) async {
+    return await _apiService.post<ApiResponse>(
+      '/conversations/add-participants',
+      data: {
+        'conversationId': conversationId,
+        'participantIds': newParticipantsIds,
+      },
+      parser: (response) => ApiResponse.fromJson(response, null),
+    );
+  }
+
   Future<ApiResponse<PaginatedResult<ConversationParticipantModel>>>
   getConversationParticipants({
     int page = 1,

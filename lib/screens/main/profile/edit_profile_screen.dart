@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:ngobrolin_app/core/enums/general_enums.dart';
-import 'package:ngobrolin_app/core/utils/general_utils.dart';
+import 'package:ngobrolin_app/core/utils/media_utils.dart';
+import 'package:ngobrolin_app/core/utils/permission_utils.dart';
 import 'package:ngobrolin_app/core/viewmodels/profile/profile_view_model.dart';
 import 'package:ngobrolin_app/core/models/user_model.dart';
 import 'package:ngobrolin_app/core/widgets/cards/app_avatar.dart';
@@ -172,9 +173,29 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     if (source == null) return;
 
-    final imageSource = source.getImageSource;
+    bool isGranted = false;
 
-    if (imageSource != null) _pickAndCropImage(imageSource);
+    if (source == MediaSource.camera) {
+      if (!mounted) return;
+      isGranted = await PermissionUtils.checkAndRequestCamera(context);
+    } else if (source == MediaSource.gallery) {
+      if (!mounted) return;
+      isGranted = await PermissionUtils.checkAndRequestMedia(context);
+    }
+    if (isGranted) {
+      final imageSource = source.getImageSource;
+      if (imageSource != null) {
+        await _pickAndCropImage(imageSource);
+      }
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.tr('permission_denied')),
+          backgroundColor: AppColors.warning, // Assuming warning is red/orange
+        ),
+      );
+    }
   }
 
   Future<void> _pickAndCropImage(ImageSource source) async {
@@ -182,15 +203,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     try {
       final pickedFile = await picker.pickImage(
         source: source,
-        maxWidth: 1080, // Resolusi aman sebelum di-crop
+        maxWidth: 1080, // Safe resolution before cropping
         imageQuality: 85,
       );
 
       if (pickedFile != null && mounted) {
-        final croppedFile = await GeneralUtils.cropImage(
+        final croppedFile = await MediaUtils.cropImage(
           sourcePath: pickedFile.path,
           title: context.tr('edit_profile'),
-          isSquare: true,
+          isSquare: true, // Specifically for avatar/profile
         );
 
         if (croppedFile != null && mounted) {

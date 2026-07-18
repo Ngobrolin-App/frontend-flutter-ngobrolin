@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/material_symbols.dart';
 import 'package:iconify_flutter/icons/mdi.dart';
+import 'package:ngobrolin_app/core/enums/general_enums.dart';
 import 'package:ngobrolin_app/core/widgets/buttons/primary_button.dart';
 import 'package:provider/provider.dart';
 
@@ -17,16 +18,20 @@ import '../../../routes/app_routes.dart';
 import '../../../theme/app_colors.dart';
 
 class SearchUserScreen extends StatefulWidget {
-  const SearchUserScreen({super.key});
+  final UserSelectionAction? userSelectionAction;
+  final List<String>? excludeUsers;
+  const SearchUserScreen({
+    super.key,
+    this.userSelectionAction,
+    this.excludeUsers = const [],
+  });
 
   @override
   State<SearchUserScreen> createState() => _SearchUserScreenState();
 }
 
 class _SearchUserScreenState extends State<SearchUserScreen> {
-  bool _isInit = false;
   late SearchUserViewModel _searchUserViewModel;
-
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   Timer? _debounce;
@@ -35,21 +40,15 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-  }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_isInit) {
-      _searchUserViewModel = Provider.of<SearchUserViewModel>(
-        context,
-        listen: false,
-      );
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _searchUserViewModel.setSearchQuery('');
-      });
-      _isInit = true;
-    }
+    _searchUserViewModel = context.read<SearchUserViewModel>();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _searchUserViewModel.setSearchQuery();
+        _searchUserViewModel.setUserSelectionAction(widget.userSelectionAction);
+      }
+    });
   }
 
   @override
@@ -74,14 +73,13 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
   void _updateSearchQuery(String query) {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 400), () {
-      if (mounted) _searchUserViewModel.setSearchQuery(query);
+      if (mounted) _searchUserViewModel.setSearchQuery(query: query);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Consumer<SearchUserViewModel>(
-      // Bungkus Scaffold dengan Consumer
       builder: (context, viewModel, _) {
         return Scaffold(
           appBar: AppBar(
@@ -99,76 +97,72 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
           ),
           body: Column(
             children: [
-              SizedBox(height: 8),
-              // ActionListTile(
-              //   title: context.tr('join_group'),
-              //   icon: MaterialSymbols.groups,
-              //   onTap: () => viewModel.setSelectingGroupMembers(true),
-              // ),
-              if (viewModel.isSelectingGroupMembers)
+              const SizedBox(height: 8),
+              if (viewModel.userSelectionAction != null)
                 _buildSelectionHeader(viewModel)
               else
                 ActionListTile(
                   title: context.tr('new_group'),
                   icon: Mdi.account_multiple_plus,
-                  onTap: () => viewModel.setSelectingGroupMembers(true),
+                  onTap: () => viewModel.setUserSelectionAction(
+                    UserSelectionAction.createNewGroup,
+                  ),
                 ),
               _buildSearchBar(),
+
               Expanded(
-                child: Consumer<SearchUserViewModel>(
-                  builder: (context, viewModel, _) {
-                    return RefreshIndicator(
-                      onRefresh: () async =>
-                          viewModel.setSearchQuery(_searchController.text),
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          if (viewModel.isLoading) {
-                            return SingleChildScrollView(
-                              physics: const AlwaysScrollableScrollPhysics(),
-                              child: SizedBox(
-                                height: constraints
-                                    .maxHeight, // Memaksa tinggi seukuran sisa layar
-                                child: const Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                              ),
-                            );
-                          }
-
-                          if (viewModel.users.isEmpty) {
-                            return SingleChildScrollView(
-                              physics: const AlwaysScrollableScrollPhysics(),
-                              child: SizedBox(
-                                height: constraints
-                                    .maxHeight, // Memaksa tinggi seukuran sisa layar
-                                child: EmptyState(
-                                  title: context.tr('no_users_found'),
-                                ),
-                              ),
-                            );
-                          }
-
-                          return _buildUserList(viewModel);
-                        },
-                      ),
-                    );
-                  },
+                child: RefreshIndicator(
+                  onRefresh: () async =>
+                      viewModel.setSearchQuery(query: _searchController.text),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      if (viewModel.isLoading) {
+                        return SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          child: SizedBox(
+                            height: constraints.maxHeight,
+                            child: const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          ),
+                        );
+                      }
+                      if (viewModel.users.isEmpty) {
+                        return SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          child: SizedBox(
+                            height: constraints.maxHeight,
+                            child: EmptyState(
+                              title: context.tr('no_users_found'),
+                            ),
+                          ),
+                        );
+                      }
+                      return _buildUserList(viewModel);
+                    },
+                  ),
                 ),
               ),
             ],
           ),
           floatingActionButton:
-              viewModel.isSelectingGroupMembers &&
-                  viewModel.selectedGroupMembers.isNotEmpty
+              (viewModel.userSelectionAction != null) &&
+                  viewModel.selectedUsers.isNotEmpty
               ? Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: PrimaryButton(
                     text: context.tr('continue'),
                     onPressed: () {
-                      Navigator.of(context).pushNamed(
-                        AppRoutes.createChatGroup,
-                        arguments: {'members': viewModel.selectedGroupMembers},
-                      );
+                      if (viewModel.userSelectionAction ==
+                          UserSelectionAction.createNewGroup) {
+                        Navigator.of(context).pushNamed(
+                          AppRoutes.createChatGroup,
+                          arguments: {'members': viewModel.selectedUsers},
+                        );
+                      } else if (viewModel.userSelectionAction ==
+                          UserSelectionAction.addNewMembers) {
+                        Navigator.pop(context, viewModel.selectedUsersIds);
+                      }
                     },
                   ),
                 )
@@ -245,47 +239,67 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
                 child: Center(child: CircularProgressIndicator()),
               );
             }
+
             final user = viewModel.users[index];
-            final isSelected = viewModel.selectedGroupMembers.any(
+            final isSelected = viewModel.selectedUsers.any(
               (u) => u.id == user.id,
             );
+
+            final bool isExcluded =
+                widget.excludeUsers?.contains(user.id) ?? false;
+
             return UserListItem(
               user: user,
-              onTap: () {
-                if (viewModel.isSelectingGroupMembers) {
-                  viewModel.toggleUserSelection(user);
-                } else {
-                  Navigator.of(context).pushNamed(
-                    AppRoutes.userProfile,
-                    arguments: {'userId': user.id},
-                  );
-                }
-              },
-              actionWidget: viewModel.isSelectingGroupMembers
-                  ? Icon(
-                      isSelected
-                          ? Icons.check_circle
-                          : Icons.radio_button_unchecked,
-                      color: AppColors.primary,
-                    )
-                  : !user.isPrivate
-                  ? MiniIconTextButton(
-                      onTap: () => Navigator.of(context).pushNamed(
-                        AppRoutes.chat,
-                        arguments: {
-                          'userId': user.id,
-                          'name': user.name,
-                          'avatarUrl': user.avatarUrl,
-                        },
-                      ),
-                      icon: const Iconify(
-                        Mdi.message_plus_outline,
-                        color: Colors.white,
-                        size: 16,
-                      ),
-                      text: context.tr('message'),
-                    )
-                  : null,
+              onTap: isExcluded
+                  ? null
+                  : () {
+                      if (viewModel.userSelectionAction != null) {
+                        viewModel.toggleUserSelection(user);
+                      } else {
+                        Navigator.of(context).pushNamed(
+                          AppRoutes.userProfile,
+                          arguments: {'userId': user.id},
+                        );
+                      }
+                    },
+              actionWidget: viewModel.userSelectionAction != null
+                  ? (isExcluded
+                        ? Text(
+                            context.tr(
+                              viewModel.userSelectionAction ==
+                                      UserSelectionAction.addNewMembers
+                                  ? 'member'
+                                  : '',
+                            ),
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 12,
+                            ),
+                          )
+                        : Icon(
+                            isSelected
+                                ? Icons.check_circle
+                                : Icons.radio_button_unchecked,
+                            color: AppColors.primary,
+                          ))
+                  : (!user.isPrivate
+                        ? MiniIconTextButton(
+                            onTap: () => Navigator.of(context).pushNamed(
+                              AppRoutes.chat,
+                              arguments: {
+                                'userId': user.id,
+                                'name': user.name,
+                                'avatarUrl': user.avatarUrl,
+                              },
+                            ),
+                            icon: const Iconify(
+                              Mdi.message_plus_outline,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                            text: context.tr('message'),
+                          )
+                        : null),
             );
           },
         ),
@@ -302,29 +316,32 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                context.tr('select_new_group_members'),
+                context.tr(
+                  viewModel.userSelectionAction?.getSelectingTranslanteKey ??
+                      'select_user',
+                ),
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
               ),
               InkWell(
-                onTap: () => viewModel.setSelectingGroupMembers(false),
+                onTap: () => viewModel.resetUserSelection(),
                 child: Text(context.tr('cancel')),
               ),
             ],
           ),
         ),
-        if (viewModel.selectedGroupMembers.isNotEmpty)
+        if (viewModel.selectedUsers.isNotEmpty)
           SizedBox(
             height: 100,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 8),
-              itemCount: viewModel.selectedGroupMembers.length,
+              itemCount: viewModel.selectedUsers.length,
               separatorBuilder: (_, __) => const SizedBox(width: 4),
               itemBuilder: (context, index) {
-                final user = viewModel.selectedGroupMembers[index];
+                final user = viewModel.selectedUsers[index];
                 return CircleUserItemSelected(
                   user: user,
                   onRemove: () => viewModel.toggleUserSelection(user),
@@ -332,12 +349,10 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
               },
             ),
           ),
-        if (viewModel.selectedGroupMembers.isEmpty)
-          Container(
-            child: Text(
-              context.tr('none_selected'),
-              style: TextStyle(color: AppColors.timestamp),
-            ),
+        if (viewModel.selectedUsers.isEmpty)
+          Text(
+            context.tr('none_selected'),
+            style: TextStyle(color: AppColors.timestamp),
           ),
       ],
     );

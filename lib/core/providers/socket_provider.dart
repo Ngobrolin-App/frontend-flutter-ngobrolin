@@ -42,10 +42,7 @@ class SocketProvider extends ChangeNotifier {
       developer.log('SocketProvider: connected', name: 'SocketProvider');
       _connected = true;
 
-      // Gunakan fallback emit ini HANYA JIKA backend tidak membaca extraHeaders saat handshake
-      if (authToken != null && authToken.isNotEmpty) {
-        _socket.emit('authenticate', {'token': authToken});
-      }
+      _socket.emit('authenticate', {'token': authToken});
 
       notifyListeners();
     });
@@ -81,7 +78,6 @@ class SocketProvider extends ChangeNotifier {
         'SocketProvider: auth_error - $data',
         name: 'SocketProvider',
       );
-      _connected = false;
       _authenticated = false;
       notifyListeners();
     });

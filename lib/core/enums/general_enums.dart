@@ -43,6 +43,17 @@ enum ReplyMessageLayout { bubble, composer }
 
 enum ConversationType { private, group }
 
+extension ConversationTypeX on ConversationType {
+  bool get isShowParticipantsIncludeMe {
+    switch (this) {
+      case ConversationType.private:
+        return false;
+      case ConversationType.group:
+        return true;
+    }
+  }
+}
+
 enum UserStatus { online, offline }
 
 enum MessageType { text, image, file, audio, video, system }
@@ -63,3 +74,18 @@ extension ProfileTapOptionX on ProfileTapOption {
 }
 
 // ==================
+
+enum UserSelectionAction { createNewGroup, forwardMessage, addNewMembers }
+
+extension UserSelectionActionX on UserSelectionAction {
+  String get getSelectingTranslanteKey {
+    switch (this) {
+      case UserSelectionAction.createNewGroup:
+        return 'select_new_group_members';
+      case UserSelectionAction.forwardMessage:
+        return 'select_users_to_forward_message';
+      case UserSelectionAction.addNewMembers:
+        return 'select_add_new_members';
+    }
+  }
+}

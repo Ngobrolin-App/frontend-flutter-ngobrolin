@@ -175,6 +175,14 @@ const Map<String, String> jaJP = {
   'join_group': 'グループに参加',
   'request_to_join_group': 'グループへの参加をリクエスト',
   'none_selected': 'まだ選択されていません',
+  'select_users': 'ユーザーを選択',
+  'select_add_new_members': '追加するメンバーを選択',
+  'select_users_to_forward_message': 'メッセージを転送するユーザーを選択',
+  'already_member': 'すでにメンバーです',
+  'member': 'メンバー',
+  'add_member_success': 'メンバーを追加しました',
+  'add_member_failed': 'メンバーの追加に失敗しました',
+  'participants_added_success': '参加者を追加しました',
 
   // General Enums
   'view_profile_image': 'プロフィール画像を見る',
@@ -190,6 +198,7 @@ const Map<String, String> jaJP = {
   "image_unavailable": "画像を利用できません",
   "failed_to_pick_image": "画像を選択できませんでした",
   'no_file_uploaded': 'ファイルがアップロードされていません',
+  'permission_denied': '権限が拒否されました',
 
   // Misc
   'cancel': 'キャンセル',
@@ -282,9 +291,19 @@ const Map<String, String> jaJP = {
 
   // PERMISSION
   'permission_request': '権限のリクエスト',
+
   'notification_permission_request': '通知権限のリクエスト',
   'notification_permission_request_desc':
       '友達からの重要なチャットを見逃さないように、Ngobrolinに通知を送信する許可を与えてください。',
+
+  'camera_permission_request': 'カメラ権限のリクエスト',
+  'camera_permission_request_desc':
+      'チャットで写真を撮影して共有できるように、Ngobrolin にカメラへのアクセスを許可してください。',
+
+  'media_permission_request': 'ファイル・写真・動画へのアクセス権限',
+  'media_permission_request_desc':
+      'チャットでファイル、写真、動画を共有できるように、Ngobrolin にそれらへのアクセスを許可してください。',
+
   'later': '後で',
   'enable': '有効にする',
 

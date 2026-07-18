@@ -171,6 +171,14 @@ const Map<String, String> zhCN = {
   'join_group': '加入群组',
   'request_to_join_group': '申请加入群组',
   'none_selected': '尚未选择',
+  'select_users': '选择用户',
+  'select_add_new_members': '选择要添加的成员',
+  'select_users_to_forward_message': '选择要转发消息的用户',
+  'already_member': '已是成员',
+  'member': '成员',
+  'add_member_success': '成员添加成功',
+  'add_member_failed': '添加成员失败',
+  'participants_added_success': '参与者添加成功',
 
   // General Enums
   'view_profile_image': '查看头像',
@@ -186,6 +194,7 @@ const Map<String, String> zhCN = {
   "image_unavailable": "图片不可用",
   "failed_to_pick_image": "无法选择图片",
   'no_file_uploaded': '未上传文件',
+  'permission_denied': '权限被拒绝',
 
   // Misc
   'cancel': '取消',
@@ -279,9 +288,17 @@ const Map<String, String> zhCN = {
 
   // PERMISSION
   'permission_request': '权限请求',
+
   'notification_permission_request': '通知权限请求',
   'notification_permission_request_desc':
       '为了不错过朋友的重要聊天，请允许 Ngobrolin 向您的手机发送通知。',
+
+  'camera_permission_request': '相机权限请求',
+  'camera_permission_request_desc': '请允许 Ngobrolin 访问您的相机，以便拍摄照片并在聊天中分享。',
+
+  'media_permission_request': '文件、照片和视频权限请求',
+  'media_permission_request_desc': '请允许 Ngobrolin 访问您的文件、照片和视频，以便在聊天中分享。',
+
   'later': '稍后',
   'enable': '开启',
 

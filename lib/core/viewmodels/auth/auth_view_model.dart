@@ -9,6 +9,7 @@ import 'dart:developer' as developer;
 /// ViewModel responsible for managing authentication states and device token registrations.
 class AuthViewModel extends BaseViewModel {
   final AuthRepository _authRepository;
+  final UserRepository _userRepository;
 
   String? _token;
   String? get token => _token;
@@ -21,27 +22,50 @@ class AuthViewModel extends BaseViewModel {
 
   String? get currentUserId => _user?.id;
 
-  AuthViewModel({AuthRepository? authRepository})
-    : _authRepository = authRepository ?? AuthRepository() {
+  AuthViewModel({
+    AuthRepository? authRepository,
+    UserRepository? userRepository,
+  }) : _authRepository = authRepository ?? AuthRepository(),
+       _userRepository = userRepository ?? UserRepository() {
     checkAuthStatus();
   }
 
   /// Checks the local authentication persistency status during startup.
-  Future<void> checkAuthStatus() async {
+  Future<bool> checkAuthStatus() async {
     setLoading(true);
     try {
-      _authenticated = await _authRepository.isAuthenticated();
-      if (_authenticated) {
-        _token = await _authRepository.getToken();
-        _user = await _authRepository.getCurrentUser();
+      final hasToken = await _authRepository.isAuthenticated();
+
+      if (!hasToken) {
+        _authenticated = false;
+        _token = null;
+        _user = null;
+        notifyListeners();
+        return false;
       }
-      notifyListeners();
+
+      _token = await _authRepository.getToken();
+
+      final result = await _userRepository.getCurrentProfile();
+      if (result.isSuccess && result.data != null) {
+        _authenticated = true;
+        _user = result.data;
+        notifyListeners();
+        return true;
+      }
+
+      return false;
     } catch (e) {
       developer.log(
         'AuthViewModel - checkAuthStatus() error: $e',
         name: 'AuthViewModel',
       );
+      _authenticated = false;
+      _token = null;
+      _user = null;
       setError(e.toString());
+      notifyListeners();
+      return false;
     } finally {
       setLoading(false);
     }

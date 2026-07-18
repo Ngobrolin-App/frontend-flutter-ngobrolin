@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:ngobrolin_app/core/utils/chat_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:ngobrolin_app/theme/app_colors.dart';
-import 'package:ngobrolin_app/core/utils/general_utils.dart';
 import 'package:ngobrolin_app/core/viewmodels/settings/settings_view_model.dart';
 
 class ChatDateBadge extends StatelessWidget {
@@ -23,7 +23,7 @@ class ChatDateBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
-        GeneralUtils.getChatDateHeader(date, context, localeCode: localeCode),
+        ChatUtils.getChatDateHeader(date, context, localeCode: localeCode),
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w500,

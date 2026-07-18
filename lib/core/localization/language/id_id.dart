@@ -183,6 +183,14 @@ const Map<String, String> idID = {
   'join_group': 'Gabung ke Grup',
   'request_to_join_group': 'Minta Bergabung ke Grup',
   'none_selected': 'Belum ada yang dipilih',
+  'select_users': 'Pilih Pengguna',
+  'select_add_new_members': 'Pilih Anggota yang Akan Ditambahkan',
+  'select_users_to_forward_message': 'Pilih pengguna untuk meneruskan pesan',
+  'already_member': 'Sudah menjadi anggota',
+  'member': 'Anggota',
+  'add_member_success': 'Anggota berhasil ditambahkan',
+  'add_member_failed': 'Gagal menambahkan anggota',
+  'participants_added_success': 'Peserta berhasil ditambahkan',
 
   // General Enums
   'view_profile_image': 'Lihat Foto Profil',
@@ -198,6 +206,7 @@ const Map<String, String> idID = {
   "image_unavailable": "Gambar tidak tersedia",
   "failed_to_pick_image": "Gagal memilih gambar",
   'no_file_uploaded': 'Tidak ada file yang diunggah',
+  'permission_denied': 'Izin ditolak',
 
   // Misc
   'cancel': 'Batal',
@@ -310,9 +319,19 @@ const Map<String, String> idID = {
 
   // PERMISSION
   'permission_request': 'Permintaan Izin',
+
   'notification_permission_request': 'Permintaan izin notifikasi',
   'notification_permission_request_desc':
       'Agar tidak ketinggalan chat penting dari teman-teman, izinkan Ngobrolin untuk mengirimkan notifikasi ke HP Anda.',
+
+  'camera_permission_request': 'Permintaan izin kamera',
+  'camera_permission_request_desc':
+      'Izinkan Ngobrolin mengakses kamera agar Anda dapat mengambil foto dan membagikannya di chat.',
+
+  'media_permission_request': 'Permintaan izin File, Foto & Video',
+  'media_permission_request_desc':
+      'Izinkan Ngobrolin mengakses file, foto, dan video agar Anda dapat membagikannya di chat.',
+
   'later': 'Nanti saja',
   'enable': 'Aktifkan',
 

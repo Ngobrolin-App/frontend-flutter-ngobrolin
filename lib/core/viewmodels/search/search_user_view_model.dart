@@ -1,3 +1,5 @@
+import 'package:ngobrolin_app/core/enums/general_enums.dart';
+
 import '../../models/user_model.dart';
 import '../../repositories/user_repository.dart';
 import '../base_view_model.dart';
@@ -22,23 +24,20 @@ class SearchUserViewModel extends BaseViewModel {
   bool get isLoadingMore => _isLoadingMore;
   bool get hasMore => _hasMore;
 
-  bool _isSelectingGroupMembers = false;
-  bool get isSelectingGroupMembers => _isSelectingGroupMembers;
+  UserSelectionAction? _userSelectionAction;
+  UserSelectionAction? get userSelectionAction => _userSelectionAction;
 
-  List<UserModel> _selectedGroupMembers = [];
-  List<UserModel> get selectedGroupMembers => _selectedGroupMembers;
+  final List<UserModel> _selectedUsers = [];
+  List<UserModel> get selectedUsers => _selectedUsers;
+
+  List<String> get selectedUsersIds =>
+      _selectedUsers.map((user) => user.id).toList();
 
   SearchUserViewModel({UserRepository? userRepository})
     : _userRepository = userRepository ?? UserRepository();
 
-  void resetGroupSelection() {
-    _isSelectingGroupMembers = false;
-    _selectedGroupMembers.clear();
-    notifyListeners();
-  }
-
   /// Sets the real-time search criteria string and resets query indices.
-  void setSearchQuery(String query) {
+  void setSearchQuery({String query = ''}) {
     _searchQuery = query;
     _page = 1;
     _hasMore = true;
@@ -116,17 +115,23 @@ class SearchUserViewModel extends BaseViewModel {
     }
   }
 
-  void setSelectingGroupMembers(bool value) {
-    _isSelectingGroupMembers = value;
-    if (!value) _selectedGroupMembers.clear();
+  void setUserSelectionAction(UserSelectionAction? value) {
+    _userSelectionAction = value;
+    if (value == null) _selectedUsers.clear();
+    notifyListeners();
+  }
+
+  void resetUserSelection() {
+    _userSelectionAction = null;
+    _selectedUsers.clear();
     notifyListeners();
   }
 
   void toggleUserSelection(UserModel user) {
-    if (_selectedGroupMembers.any((u) => u.id == user.id)) {
-      _selectedGroupMembers.removeWhere((u) => u.id == user.id);
+    if (_selectedUsers.any((u) => u.id == user.id)) {
+      _selectedUsers.removeWhere((u) => u.id == user.id);
     } else {
-      _selectedGroupMembers.add(user);
+      _selectedUsers.add(user);
     }
     notifyListeners();
   }

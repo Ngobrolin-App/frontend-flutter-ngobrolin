@@ -29,7 +29,11 @@
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
 	<key>NSUserNotificationsUsageDescription</key>
-	<string>Izinkan notifikasi agar Anda tidak ketinggalan pesan dari teman Anda di Ngobrolin.</string>
+	<string>Allow notifications so you don't miss messages from your friends on Chat.</string>
+	<key>NSCameraUsageDescription</key>
+    <string>Chatting requires camera access to take profile photos or send images.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Chatting requires gallery access to send photos and videos.</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

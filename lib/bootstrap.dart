@@ -213,34 +213,6 @@ class _MyAppState extends State<MyApp> {
         }
       }
     });
-
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final socketProvider = Provider.of<SocketProvider>(
-        context,
-        listen: false,
-      );
-      try {
-        await socketProvider.init();
-      } catch (_) {
-        return;
-      }
-      // final chatListViewModel = Provider.of<ChatListViewModel>(
-      //   context,
-      //   listen: false,
-      // );
-
-      // try {
-      //   final fetched = await chatListViewModel.fetchChatList();
-      //   if (fetched) {
-      //     for (final chat in chatListViewModel.chatList) {
-      //       final convId = chat.id as String?;
-      //       if (convId != null) {
-      //         socketProvider.joinConversation(convId);
-      //       }
-      //     }
-      //   }
-      // } catch (_) {}
-    });
   }
 
   @override

@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:ngobrolin_app/core/enums/general_enums.dart';
 import 'package:ngobrolin_app/core/models/message_model.dart';
-import 'package:ngobrolin_app/core/utils/general_utils.dart';
+import 'package:ngobrolin_app/core/utils/permission_utils.dart';
 import 'package:ngobrolin_app/core/viewmodels/auth/auth_view_model.dart';
 import 'package:ngobrolin_app/core/widgets/cards/app_avatar.dart';
 import 'package:ngobrolin_app/core/widgets/cards/chat_date_badge.dart';
@@ -14,7 +14,6 @@ import 'package:ngobrolin_app/core/widgets/modals/media_picker_modal.dart';
 import 'package:provider/provider.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/ic.dart';
-import 'package:iconify_flutter/icons/material_symbols.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:ngobrolin_app/core/widgets/states/empty_state.dart';
@@ -52,7 +51,7 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _joinedRoom = false;
   bool _isInit = false;
   Timer? _typingTimer;
-  Map<String, GlobalKey> _messageKeys = {};
+  final Map<String, GlobalKey> _messageKeys = {};
 
   // Socket Handlers
   late Function(dynamic) _newMessageHandler;
@@ -63,6 +62,7 @@ class _ChatScreenState extends State<ChatScreen> {
   late Function(dynamic) _conversationUpdatedHandler;
   late Function(dynamic) _statusHandler;
   late Function(dynamic) _leftParticipantHandler;
+  late Function(dynamic) _participantsAddedHandler;
 
   late ChatViewModel _chatViewModel;
   late AuthViewModel _authViewModel;
@@ -259,6 +259,12 @@ class _ChatScreenState extends State<ChatScreen> {
       } catch (_) {}
     };
 
+    _participantsAddedHandler = (data) {
+      try {
+        _chatViewModel.handleParticipantsAdded(data);
+      } catch (_) {}
+    };
+
     _socketProvider.on('new_message', _newMessageHandler);
     _socketProvider.on('messages_read_status_updated', _readStatusHandler);
     _socketProvider.on('conversation_created', _conversationCreatedHandler);
@@ -267,6 +273,7 @@ class _ChatScreenState extends State<ChatScreen> {
     _socketProvider.on('user_status_changed', _statusHandler);
     _socketProvider.on('conversation_updated', _conversationUpdatedHandler);
     _socketProvider.on('left_participant', _leftParticipantHandler);
+    _socketProvider.on('participants_added', _participantsAddedHandler);
   }
 
   @override
@@ -299,6 +306,7 @@ class _ChatScreenState extends State<ChatScreen> {
           _conversationUpdatedHandler,
         );
         _socketProvider.off('left_participant', _leftParticipantHandler);
+        _socketProvider.off('participants_added', _participantsAddedHandler);
       } catch (e) {
         developer.log(
           'ChatScreen - dispose() - Error unregistering socket: $e',
@@ -430,7 +438,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     // OPTIMASI: Lokalisasi rebuild sub-komponen status/typing via Selector
                     Selector<
                       ChatViewModel,
-                      (bool, String?, String, String?, String)
+                      (bool, String?, String, String?, String, int)
                     >(
                       selector: (_, vm) => (
                         vm.isParticipantTyping,
@@ -438,6 +446,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         vm.privatePartnerStatus,
                         vm.conversationType,
                         vm.participantNamesText,
+                        vm.participants.length,
                       ),
                       builder: (context, state, _) {
                         final isParticipantTyping = state.$1;
@@ -699,6 +708,31 @@ class _ChatScreenState extends State<ChatScreen> {
     );
 
     if (!mounted || choice == null) return;
+
+    bool isGranted = false;
+    if (choice == MediaSource.camera) {
+      if (!mounted) return;
+      isGranted = await PermissionUtils.checkAndRequestCamera(context);
+    } else if (choice == MediaSource.gallery) {
+      if (!mounted) return;
+      isGranted = await PermissionUtils.checkAndRequestMedia(context);
+    } else if (choice == MediaSource.file) {
+      if (!mounted) return;
+      isGranted = await PermissionUtils.checkAndRequestMedia(context);
+    }
+
+    if (!isGranted) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.tr('permission_denied')),
+            backgroundColor:
+                AppColors.warning, // Assuming warning is red/orange
+          ),
+        );
+      }
+      return;
+    }
 
     final chatVM = Provider.of<ChatViewModel>(context, listen: false);
     final picker = ImagePicker();
