@@ -326,15 +326,20 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 ),
                 Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Selector<UserProfileViewModel, bool>(
-                    selector: (_, vm) => vm.isBlocked,
-                    builder: (context, isBlocked, _) {
+                  child: Selector<UserProfileViewModel, (bool, BlockUserStatus?)>(
+                    selector: (_, vm) => (vm.isBlocked, vm.blockUserStatus),
+                    builder: (context, data, _) {
                       // Ambil logic auth pakai read supaya nggak re-render screen
+                      final isBlocked = data.$1;
+                      final blockUserStatus = data.$2;
                       final authViewModel = context.read<AuthViewModel>();
                       final currentUserId = authViewModel.user?.id;
                       final isSelf = currentUserId == user.id;
                       final isPrivate = user.isPrivate;
-                      final canStartChat = !isBlocked && (!isPrivate || isSelf);
+                      final canStartChat =
+                          !isBlocked &&
+                          (!isPrivate || isSelf) &&
+                          (blockUserStatus == null);
 
                       return Column(
                         children: [
