@@ -216,7 +216,7 @@ class ChatListItem extends StatelessWidget {
                           : MaterialSymbols.done_rounded,
                       size: 14,
                       color: lastMessageIsReadStatus
-                          ? Colors.blue
+                          ? AppColors.messageRead
                           : AppColors.timestamp,
                     ),
                     SizedBox(width: 2),
@@ -264,7 +264,7 @@ class ChatListItem extends StatelessWidget {
         child: Text(
           chat.unreadCount.toString(),
           style: const TextStyle(
-            color: Colors.white,
+            color: AppColors.white,
             fontSize: 12,
             fontWeight: FontWeight.bold,
           ),

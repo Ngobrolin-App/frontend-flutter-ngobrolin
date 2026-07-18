@@ -93,7 +93,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppColors.primary),
       ),
@@ -125,7 +125,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             errorBuilder: (context, error, stackTrace) => const Icon(
               Icons.image_not_supported,
               size: 100,
-              color: Colors.grey,
+              color: AppColors.grey,
             ),
           ),
           const SizedBox(height: 16),
@@ -199,7 +199,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         const SizedBox(height: 48),
-        const Icon(Icons.check_circle_outline, size: 100, color: Colors.green),
+        const Icon(
+          Icons.check_circle_outline,
+          size: 100,
+          color: AppColors.accent,
+        ),
         const SizedBox(height: 24),
         Text(
           context.tr('password_reset_success'),

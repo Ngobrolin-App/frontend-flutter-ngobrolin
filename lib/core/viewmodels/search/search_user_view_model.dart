@@ -10,6 +10,8 @@ import 'dart:developer' as developer;
 class SearchUserViewModel extends BaseViewModel {
   final UserRepository _userRepository;
 
+  static const String _logName = 'SearchUserViewModel';
+
   List<UserModel> _users = [];
   List<UserModel> get users => _users;
 
@@ -47,8 +49,8 @@ class SearchUserViewModel extends BaseViewModel {
 
   /// Queries the API engine to gather matching user records matching page 1.
   Future<bool> searchUsers() async {
-    return await runBusyFuture(() async {
-          try {
+    return await runBusyFuture(
+          () async {
             final result = await _userRepository.searchUsers(
               _searchQuery,
               page: _page,
@@ -66,21 +68,17 @@ class SearchUserViewModel extends BaseViewModel {
 
             notifyListeners();
             return true;
-          } catch (e) {
-            developer.log(
-              'SearchUserViewModel - searchUsers() error: $e',
-              name: 'SearchUserViewModel',
-            );
-            setError(e.toString());
-            return false;
-          }
-        }) ??
+          },
+          logName: _logName,
+          logContext: 'searchUsers()',
+        ) ??
         false;
   }
 
   /// Appends supplementary search matching results down the collection index.
   Future<void> loadMoreSearchUser() async {
     if (_isLoadingMore || !_hasMore) return;
+
     _isLoadingMore = true;
     notifyListeners();
 
@@ -100,10 +98,12 @@ class SearchUserViewModel extends BaseViewModel {
           (paginatedResult?.page ?? 0) < (paginatedResult?.totalPages ?? 0);
 
       notifyListeners();
-    } catch (e) {
+    } catch (e, stackTrace) {
       developer.log(
-        'SearchUserViewModel - loadMoreSearchUser() error: $e',
-        name: 'SearchUserViewModel',
+        'loadMoreSearchUser() error: $e',
+        name: _logName,
+        error: e,
+        stackTrace: stackTrace,
       );
       setError(e.toString());
 

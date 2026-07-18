@@ -183,6 +183,9 @@ const Map<String, String> jaJP = {
   'add_member_success': 'メンバーを追加しました',
   'add_member_failed': 'メンバーの追加に失敗しました',
   'participants_added_success': '参加者を追加しました',
+  'you_blocked_this_user': 'このユーザーをブロックしています',
+  'you_are_blocked_by_this_user': 'このユーザーにブロックされています',
+  'block_status_retrieved_success': 'ブロック状態を正常に取得しました',
 
   // General Enums
   'view_profile_image': 'プロフィール画像を見る',
@@ -199,6 +202,7 @@ const Map<String, String> jaJP = {
   "failed_to_pick_image": "画像を選択できませんでした",
   'no_file_uploaded': 'ファイルがアップロードされていません',
   'permission_denied': '権限が拒否されました',
+  'invalid_response': '無効なレスポンスです',
 
   // Misc
   'cancel': 'キャンセル',

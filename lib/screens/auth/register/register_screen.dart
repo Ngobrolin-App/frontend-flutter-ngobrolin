@@ -117,7 +117,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     errorBuilder: (context, error, stackTrace) => const Icon(
                       Icons.image_not_supported,
                       size: 100,
-                      color: Colors.grey,
+                      color: AppColors.grey,
                     ),
                   ),
                   const SizedBox(height: 16),

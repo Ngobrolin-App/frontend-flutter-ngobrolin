@@ -11,6 +11,8 @@ import 'dart:developer' as developer;
 class ChatListViewModel extends BaseViewModel {
   final ChatRepository _chatRepository;
 
+  static const String _logName = 'ChatListViewModel';
+
   List<ChatListItemModel> _chatList = [];
   List<ChatListItemModel> get chatList => _chatList;
 
@@ -33,41 +35,32 @@ class ChatListViewModel extends BaseViewModel {
     _hasMore = true;
     _chatList = [];
 
-    return await runBusyFuture(() async {
-          try {
+    return await runBusyFuture(
+          () async {
             final result = await _chatRepository.getConversationList(
               page: _page,
               limit: _limit,
             );
 
             final paginatedResult = result.data;
-            final conversationList = paginatedResult?.items ?? [];
-
-            _chatList = conversationList;
+            _chatList = paginatedResult?.items ?? [];
             _hasMore =
                 (paginatedResult?.page ?? 0) <
                 (paginatedResult?.totalPages ?? 0);
 
             notifyListeners();
             return true;
-          } catch (e) {
-            developer.log(
-              'ChatListViewModel - fetchChatList() error: $e',
-              name: 'ChatListViewModel',
-            );
-            setError(e.toString());
-            return false;
-          }
-        }) ??
+          },
+          logName: _logName,
+          logContext: 'fetchChatList()',
+        ) ??
         false;
   }
 
   /// Appends older conversations to the active list when scrolling down (Infinite Scroll).
   Future<bool> loadMoreChatList() async {
-    // Prevent duplicated API requests if there is no more data or the channel is busy
-    if (!_hasMore || isLoading || _isLoadingMore) return false;
+    if (!_hasMore || _isLoadingMore) return false;
 
-    // Set loading more secara manual agar tidak mengganggu state isLoading utama
     _isLoadingMore = true;
     notifyListeners();
 
@@ -85,47 +78,46 @@ class ChatListViewModel extends BaseViewModel {
       _hasMore =
           (paginatedResult?.page ?? 0) < (paginatedResult?.totalPages ?? 0);
 
-      _isLoadingMore = false;
-      notifyListeners();
       return true;
-    } catch (e) {
+    } catch (e, stackTrace) {
       developer.log(
-        'ChatListViewModel - loadMoreChatList() error: $e',
-        name: 'ChatListViewModel',
+        'loadMoreChatList() error: $e',
+        name: _logName,
+        error: e,
+        stackTrace: stackTrace,
       );
       setError(e.toString());
-      _page -= 1; // Rollback page index on network failure
+      _page = (_page > 1) ? _page - 1 : 1;
+      return false;
+    } finally {
       _isLoadingMore = false;
       notifyListeners();
-      return false;
     }
   }
 
   /// Implements optimistic updates to clear unread counts instantly and synchronization over the API network.
-  void markChatAsRead(String conversationId) async {
+  Future<void> markChatAsRead(String conversationId) async {
     try {
       final index = _chatList.indexWhere((chat) => chat.id == conversationId);
       if (index == -1) return;
 
-      final chat = _chatList[index];
-
-      // Optimistic UI update for swift interface feedback loops
-      _chatList[index] = chat.copyWith(unreadCount: 0);
+      final oldChat = _chatList[index];
+      _chatList[index] = oldChat.copyWith(unreadCount: 0);
       notifyListeners();
 
-      final lastMessage = chat.lastMessage;
-      if (lastMessage != null) {
-        if (lastMessage.id.isNotEmpty) {
-          await _chatRepository.markAsRead(
-            conversationId: conversationId,
-            messageId: lastMessage.id,
-          );
-        }
+      final lastMessage = oldChat.lastMessage;
+      if (lastMessage != null && lastMessage.id.isNotEmpty) {
+        await _chatRepository.markAsRead(
+          conversationId: conversationId,
+          messageId: lastMessage.id,
+        );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       developer.log(
-        'ChatListViewModel - markChatAsRead() error: $e',
-        name: 'ChatListViewModel',
+        'markChatAsRead() error: $e',
+        name: _logName,
+        error: e,
+        stackTrace: stackTrace,
       );
       setError(e.toString());
     }
@@ -135,29 +127,24 @@ class ChatListViewModel extends BaseViewModel {
   void handleSocketConversationUpdate(dynamic data, String? currentUserId) {
     try {
       final conversationId = data['conversationId'] as String?;
-      if (conversationId == null) return; // Fail fast jika tidak ada ID
+      if (conversationId == null) return;
 
       final rawLastMessage = data['lastMessage'] as Map<String, dynamic>?;
       final rawUpdatedConversation =
           data['updatedConversation'] as Map<String, dynamic>?;
 
-      // Parse secara independen hanya jika data benar-benar ada
-      MessageModel? lastMessage;
-      if (rawLastMessage != null && rawLastMessage.isNotEmpty) {
-        lastMessage = MessageModel.fromJson(rawLastMessage);
-      }
+      MessageModel? lastMessage =
+          (rawLastMessage != null && rawLastMessage.isNotEmpty)
+          ? MessageModel.fromJson(rawLastMessage)
+          : null;
 
-      ConversationModel? updatedConversation;
-      if (rawUpdatedConversation != null && rawUpdatedConversation.isNotEmpty) {
-        updatedConversation = ConversationModel.fromJson(
-          rawUpdatedConversation,
-        );
-      }
+      ConversationModel? updatedConversation =
+          (rawUpdatedConversation != null && rawUpdatedConversation.isNotEmpty)
+          ? ConversationModel.fromJson(rawUpdatedConversation)
+          : null;
 
-      // Jika minimal ada salah satu data yang baru, lakukan update
       if (lastMessage != null || updatedConversation != null) {
         final unreadCount = data['unreadCount'] as int?;
-
         updateWithNewMessage(
           conversationId,
           currentUserId: currentUserId,
@@ -166,10 +153,12 @@ class ChatListViewModel extends BaseViewModel {
           updatedConversation: updatedConversation,
         );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       developer.log(
-        'ChatListViewModel - handleSocketConversationUpdate() error: $e',
-        name: 'ChatListViewModel',
+        'handleSocketConversationUpdate() error: $e',
+        name: _logName,
+        error: e,
+        stackTrace: stackTrace,
       );
       setError(e.toString());
     }
@@ -189,7 +178,6 @@ class ChatListViewModel extends BaseViewModel {
         final oldChat = _chatList[index];
 
         _chatList[index] = oldChat.copyWith(
-          // Gunakan pesan baru jika ada, kalau tidak ada pertahankan pesan lama
           lastMessage: lastMessage ?? oldChat.lastMessage,
           unreadCount: unreadCount ?? oldChat.unreadCount,
           groupImage: updatedConversation?.groupImage ?? oldChat.groupImage,
@@ -201,10 +189,9 @@ class ChatListViewModel extends BaseViewModel {
           final timestampA = a.lastMessage?.createdAt;
           final timestampB = b.lastMessage?.createdAt;
 
-          // Perbaikan logika sorting
           if (timestampA == null && timestampB == null) return 0;
-          if (timestampA == null) return 1; // Jika A kosong, turunkan A
-          if (timestampB == null) return -1; // Jika B kosong, turunkan B
+          if (timestampA == null) return 1;
+          if (timestampB == null) return -1;
 
           return timestampB.compareTo(timestampA);
         });
@@ -215,28 +202,17 @@ class ChatListViewModel extends BaseViewModel {
 
       // If the chat block is non-existent in the current viewport
       await fetchChatList();
-    } catch (e) {
+    } catch (e, stackTrace) {
       developer.log(
-        'ChatListViewModel - updateWithNewMessage() error: $e',
-        name: 'ChatListViewModel',
+        'updateWithNewMessage() error: $e',
+        name: _logName,
+        error: e,
+        stackTrace: stackTrace,
       );
       setError(e.toString());
     }
   }
 
-  // void handleSocketConversationCreate(ConversationModel newConversation) {
-  //   try {
-  //     _chatList.add(newConversation);
-  //   } catch (e) {
-  //     developer.log(
-  //       'ChatListViewModel - handleSocketConversationCreate() error: $e',
-  //       name: 'ChatListViewModel',
-  //     );
-  //     setError(e.toString());
-  //   }
-  // }
-
-  /// Event listener proxy callback bound to socket event pipelines for 'conversation_read_by_me'.
   void handleSocketConversationReadByMe(String conversationId) {
     try {
       final index = _chatList.indexWhere((chat) => chat.id == conversationId);
@@ -244,10 +220,12 @@ class ChatListViewModel extends BaseViewModel {
         _chatList[index] = _chatList[index].copyWith(unreadCount: 0);
         notifyListeners();
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       developer.log(
-        'ChatListViewModel - handleSocketConversationReadByMe() error: $e',
-        name: 'ChatListViewModel',
+        'handleSocketConversationReadByMe() error: $e',
+        name: _logName,
+        error: e,
+        stackTrace: stackTrace,
       );
       setError(e.toString());
     }
@@ -263,6 +241,7 @@ class ChatListViewModel extends BaseViewModel {
       if (index != -1) {
         final lastMessage = _chatList[index].lastMessage;
         final lastMessageId = lastMessage?.id;
+
         if (messageIds.contains(lastMessageId)) {
           final newLastMessage = lastMessage?.copyWith(isRead: true);
           _chatList[index] = _chatList[index].copyWith(
@@ -271,10 +250,12 @@ class ChatListViewModel extends BaseViewModel {
         }
         notifyListeners();
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       developer.log(
-        'ChatListViewModel - handleReadStatus() error: $e',
-        name: 'ChatListViewModel',
+        'handleConversationMessagesStatusUpdated() error: $e',
+        name: _logName,
+        error: e,
+        stackTrace: stackTrace,
       );
       setError(e.toString());
     }
@@ -296,10 +277,12 @@ class ChatListViewModel extends BaseViewModel {
 
         notifyListeners();
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       developer.log(
-        'ChatListViewModel - handleConversationUserTypingToggle() error: $e',
-        name: 'ChatListViewModel',
+        'handleConversationUserTypingToggle() error: $e',
+        name: _logName,
+        error: e,
+        stackTrace: stackTrace,
       );
       setError(e.toString());
     }

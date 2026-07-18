@@ -89,7 +89,7 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
                   onTap: () => _unblockUser(user.id, blockedUsersViewModel),
                   icon: const Iconify(
                     MaterialSymbols.unblock_flipped,
-                    color: Colors.white,
+                    color: AppColors.white,
                     size: 16,
                   ),
                   text: context.tr('unblock'),

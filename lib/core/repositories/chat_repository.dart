@@ -173,14 +173,12 @@ class ChatRepository {
   Future<ApiResponse<ConversationModel>> getConversationById({
     required String conversationId,
     bool isShowParticipants = true,
-    bool isParticipantsIncludeMe = true,
   }) async {
     return await _apiService.post<ApiResponse<ConversationModel>>(
       '/conversations/get',
       data: {
         'conversationId': conversationId,
         'isShowParticipants': isShowParticipants,
-        'isParticipantsIncludeMe': isParticipantsIncludeMe,
       },
       parser: (response) => ApiResponse<ConversationModel>.fromJson(
         response,

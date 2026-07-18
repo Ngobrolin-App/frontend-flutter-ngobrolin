@@ -8,6 +8,8 @@ import 'dart:developer' as developer;
 class BlockedUsersViewModel extends BaseViewModel {
   final SettingsRepository _settingsRepository;
 
+  static const String _logName = 'BlockedUsersViewModel';
+
   List<UserModel> _blockedUsers = [];
   List<UserModel> get blockedUsers => _blockedUsers;
 
@@ -29,8 +31,8 @@ class BlockedUsersViewModel extends BaseViewModel {
     _hasMore = true;
     _blockedUsers = [];
 
-    return await runBusyFuture(() async {
-          try {
+    return await runBusyFuture(
+          () async {
             final result = await _settingsRepository.getBlockedUsers(
               page: _page,
               limit: _limit,
@@ -45,21 +47,17 @@ class BlockedUsersViewModel extends BaseViewModel {
 
             notifyListeners();
             return true;
-          } catch (e) {
-            developer.log(
-              'BlockedUsersViewModel - fetchBlockedUsers() error: $e',
-              name: 'BlockedUsersViewModel',
-            );
-            setError(e.toString());
-            return false;
-          }
-        }) ??
+          },
+          logName: _logName,
+          logContext: 'fetchBlockedUsers()',
+        ) ??
         false;
   }
 
   /// Appends older historically blacklisted user models using endless track buffers.
   Future<void> loadMoreBlockedUsers() async {
     if (_isLoadingMore || !_hasMore) return;
+
     _isLoadingMore = true;
     notifyListeners();
 
@@ -78,10 +76,12 @@ class BlockedUsersViewModel extends BaseViewModel {
           (paginatedResult?.page ?? 0) < (paginatedResult?.totalPages ?? 0);
 
       notifyListeners();
-    } catch (e) {
+    } catch (e, stackTrace) {
       developer.log(
-        'BlockedUsersViewModel - loadMoreBlockedUsers() error: $e',
-        name: 'BlockedUsersViewModel',
+        'loadMoreBlockedUsers() error: $e',
+        name: _logName,
+        error: e,
+        stackTrace: stackTrace,
       );
       setError(e.toString());
 
@@ -95,8 +95,8 @@ class BlockedUsersViewModel extends BaseViewModel {
 
   /// Dispatches an execution request to purge a user reference profile from the block list.
   Future<bool> unblockUser(String userId) async {
-    return await runBusyFuture(() async {
-          try {
+    return await runBusyFuture(
+          () async {
             final result = await _settingsRepository.unblockUser(userId);
             final success = result.isSuccess;
             setSuccess(result.message);
@@ -108,15 +108,10 @@ class BlockedUsersViewModel extends BaseViewModel {
 
             notifyListeners();
             return success;
-          } catch (e) {
-            developer.log(
-              'BlockedUsersViewModel - unblockUser() error: $e',
-              name: 'BlockedUsersViewModel',
-            );
-            setError(e.toString());
-            return false;
-          }
-        }) ??
+          },
+          logName: _logName,
+          logContext: 'unblockUser()',
+        ) ??
         false;
   }
 }

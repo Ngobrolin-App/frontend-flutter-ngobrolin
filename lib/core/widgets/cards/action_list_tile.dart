@@ -33,7 +33,7 @@ class ActionListTile extends StatelessWidget {
               radius: 24,
               backgroundColor: (iconHaveBackground)
                   ? AppColors.primary
-                  : Colors.transparent,
+                  : AppColors.transparent,
               child: Iconify(icon, color: iconColor, size: 24),
             ),
             const SizedBox(width: 16),

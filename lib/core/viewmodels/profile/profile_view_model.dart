@@ -1,12 +1,13 @@
 import '../../models/user_model.dart';
 import '../../repositories/user_repository.dart';
 import '../base_view_model.dart';
-import 'dart:developer' as developer;
 
 /// ViewModel responsible for retrieving and updating user profile data,
 /// including textual records and avatar media uploads.
 class ProfileViewModel extends BaseViewModel {
   final UserRepository _userRepository;
+
+  static const String _logName = 'ProfileViewModel';
 
   UserModel? _user;
   UserModel? get user => _user;
@@ -22,17 +23,16 @@ class ProfileViewModel extends BaseViewModel {
 
   /// Fetches the latest authenticated user profile metrics from the network API.
   Future<bool> fetchCurrentProfile() async {
-    return await runBusyFuture(() async {
-          try {
+    return await runBusyFuture(
+          () async {
             final response = await _userRepository.getCurrentProfile();
             _user = response.data;
             notifyListeners();
             return true;
-          } catch (e) {
-            setError(e.toString());
-            return false;
-          }
-        }) ??
+          },
+          logName: _logName,
+          logContext: 'fetchCurrentProfile()',
+        ) ??
         false;
   }
 
@@ -47,8 +47,8 @@ class ProfileViewModel extends BaseViewModel {
   }) async {
     if (_user == null) return false;
 
-    return await runBusyFuture(() async {
-          try {
+    return await runBusyFuture(
+          () async {
             var success = true;
 
             // Section A: Evaluates and updates textual parameters or password credentials
@@ -93,15 +93,10 @@ class ProfileViewModel extends BaseViewModel {
 
             notifyListeners();
             return success;
-          } catch (e) {
-            developer.log(
-              "ProfileViewModel - updateProfile() error $e",
-              name: 'ProfileViewModel',
-            );
-            setError(e.toString());
-            return false;
-          }
-        }) ??
+          },
+          logName: _logName,
+          logContext: 'updateProfile()',
+        ) ??
         false;
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ngobrolin_app/theme/app_colors.dart';
 import 'custom_text_field.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/material_symbols.dart';
@@ -53,7 +54,7 @@ class _PasswordFieldState extends State<PasswordField> {
           _obscureText
               ? MaterialSymbols.visibility_off_rounded
               : MaterialSymbols.visibility_rounded,
-          color: Colors.grey,
+          color: AppColors.grey,
         ),
         onPressed: () {
           setState(() {

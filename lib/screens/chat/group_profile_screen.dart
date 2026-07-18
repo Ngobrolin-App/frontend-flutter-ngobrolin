@@ -360,7 +360,7 @@ class _GroupProfileScreenState extends State<GroupProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.white,
       appBar: AppBar(title: const Text('Profil Grup'), elevation: 0),
       body: SingleChildScrollView(
         controller: _scrollController,
@@ -430,7 +430,7 @@ class _GroupProfileScreenState extends State<GroupProfileScreen> {
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              color: AppColors.white,
                             ),
                           ),
                           Container(
@@ -450,7 +450,7 @@ class _GroupProfileScreenState extends State<GroupProfileScreen> {
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              color: AppColors.white,
                             ),
                           ),
                         ],

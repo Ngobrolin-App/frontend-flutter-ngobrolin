@@ -35,7 +35,7 @@ class MiniIconTextButton extends StatelessWidget {
               Text(
                 text!,
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: AppColors.white,
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),

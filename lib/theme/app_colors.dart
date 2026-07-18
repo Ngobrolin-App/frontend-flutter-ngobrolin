@@ -13,6 +13,7 @@ class AppColors {
   static const Color deactiveButton = Color(0xFFA8A8A8);
   static const Color warning = Color(0xFFA80000);
   static const Color backgroundGeneral = Color(0xFFFFFFFF);
+  static const Color messageRead = Color(0xFF2196F3);
   // static const Color backgroundGeneral = Color(0xFFF2F2F2);
 
   // Additional Colors

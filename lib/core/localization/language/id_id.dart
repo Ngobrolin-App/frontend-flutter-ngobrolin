@@ -95,18 +95,18 @@ const Map<String, String> idID = {
   'app_language': 'Bahasa Aplikasi',
   'private_account': 'Akun Privat',
   'private_account_description':
-      'Saat akun diatur sebagai privat, pengguna lain tidak dapat memulai obrolan dengan Kamu.',
+      'Saat akun diatur sebagai privat, pengguna lain tidak dapat memulai obrolan dengan Anda.',
   'block_account': 'Blokir Akun',
   'yes': 'Ya',
   'no': 'Tidak',
-  'are_you_sure_logout': 'Apakah Kamu yakin ingin keluar?',
-  'are_you_sure_block': 'Apakah Kamu yakin ingin memblokir pengguna ini?',
+  'are_you_sure_logout': 'Apakah Anda yakin ingin keluar?',
+  'are_you_sure_block': 'Apakah Anda yakin ingin memblokir pengguna ini?',
   'no_blocked_users': 'Belum ada pengguna yang diblokir',
   'no_blocked_users_description': 'Tidak ada pengguna yang diblokir saat ini.',
   'unblock': 'Batal Blokir',
   'unblock_user': 'Batal Blokir',
   'unblock_user_confirmation':
-      'Apakah Kamu yakin ingin membatalkan blokir pengguna ini?',
+      'Apakah Anda yakin ingin membatalkan blokir pengguna ini?',
   'user_unblocked': 'Pengguna dibatalkan blokir',
   'about_ngobrolin': 'Tentang Ngobrolin',
   'about_ngobrolin_description':
@@ -119,7 +119,7 @@ const Map<String, String> idID = {
   'no_chats': 'Belum ada obrolan',
   'start_new_chat': 'Mulai obrolan baru',
   'user_is_blocked_cannot_start_chat':
-      'Pengguna ini diblokir. Kamu tidak bisa memulai obrolan.',
+      'Pengguna ini diblokir. Anda tidak bisa memulai obrolan.',
   'choose_image': 'Pilih Gambar',
   'choose_file': 'Pilih File',
   'file': 'File',
@@ -191,6 +191,9 @@ const Map<String, String> idID = {
   'add_member_success': 'Anggota berhasil ditambahkan',
   'add_member_failed': 'Gagal menambahkan anggota',
   'participants_added_success': 'Peserta berhasil ditambahkan',
+  'you_blocked_this_user': 'Anda telah memblokir pengguna ini',
+  'you_are_blocked_by_this_user': 'Anda telah diblokir oleh pengguna ini',
+  'block_status_retrieved_success': 'Status blokir berhasil diperoleh',
 
   // General Enums
   'view_profile_image': 'Lihat Foto Profil',
@@ -207,6 +210,7 @@ const Map<String, String> idID = {
   "failed_to_pick_image": "Gagal memilih gambar",
   'no_file_uploaded': 'Tidak ada file yang diunggah',
   'permission_denied': 'Izin ditolak',
+  'invalid_response': 'Respons tidak valid',
 
   // Misc
   'cancel': 'Batal',

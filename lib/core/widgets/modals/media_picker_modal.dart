@@ -18,7 +18,7 @@ class MediaPickerModal {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        color: Colors.transparent,
+        color: AppColors.transparent,
         padding: const EdgeInsets.symmetric(vertical: 8.0),
         child: Row(
           children: [

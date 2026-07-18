@@ -113,7 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     errorBuilder: (context, error, stackTrace) => const Icon(
                       Icons.image_not_supported,
                       size: 120,
-                      color: Colors.grey,
+                      color: AppColors.grey,
                     ),
                   ),
 

@@ -11,6 +11,7 @@ import 'package:ngobrolin_app/core/utils/media_utils.dart';
 import 'package:ngobrolin_app/core/viewmodels/chat/chat_view_model.dart';
 import 'package:ngobrolin_app/core/widgets/cards/reply_message.dart';
 import 'package:ngobrolin_app/core/widgets/inputs/chat_input_bar.dart';
+import 'package:ngobrolin_app/theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:path/path.dart' as path;
 
@@ -185,7 +186,7 @@ class _AttachmentPreviewScreenState extends State<AttachmentPreviewScreen> {
             child: Text(
               path.basename(_currentFilePath),
               style: const TextStyle(
-                color: Colors.white,
+                color: AppColors.white,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
@@ -205,14 +206,14 @@ class _AttachmentPreviewScreenState extends State<AttachmentPreviewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.black,
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: AppColors.black,
         title: Text(
           context.tr(
             'preview_attachment',
           ), // Pastikan di app_localizations ada translasi ini
-          style: const TextStyle(color: Colors.white, fontSize: 18),
+          style: const TextStyle(color: AppColors.white, fontSize: 18),
         ),
         actions: [
           // Tampilkan icon crop dan rotate HANYA jika fileType adalah gambar
@@ -221,7 +222,7 @@ class _AttachmentPreviewScreenState extends State<AttachmentPreviewScreen> {
               icon: const Icon(
                 Icons.crop_rounded,
                 size: 24,
-                color: Colors.white,
+                color: AppColors.white,
               ),
               onPressed: _cropImage,
               tooltip: 'Potong Gambar',
@@ -230,7 +231,7 @@ class _AttachmentPreviewScreenState extends State<AttachmentPreviewScreen> {
               icon: const Icon(
                 Icons.rotate_right_rounded,
                 size: 26,
-                color: Colors.white,
+                color: AppColors.white,
               ),
               onPressed: _rotateImage,
               tooltip: 'Rotasi 90°',
@@ -244,7 +245,7 @@ class _AttachmentPreviewScreenState extends State<AttachmentPreviewScreen> {
           Expanded(
             child: Center(
               child: _isProcessing
-                  ? const CircularProgressIndicator(color: Colors.white)
+                  ? const CircularProgressIndicator(color: AppColors.white)
                   : _buildPreviewArea(),
             ),
           ),

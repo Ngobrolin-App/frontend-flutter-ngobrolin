@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:ngobrolin_app/theme/app_colors.dart';
 
 class AppBottomSheet {
-  /// Menampilkan kerangka Bottom Sheet standar aplikasi Ngobrolin
   static Future<T?> show<T>({
     required BuildContext context,
     required Widget child,
@@ -11,8 +10,7 @@ class AppBottomSheet {
     return showModalBottomSheet<T>(
       context: context,
       isScrollControlled: isScrollControlled,
-      backgroundColor:
-          Colors.transparent, // Penting agar border radius terlihat
+      backgroundColor: AppColors.transparent,
       builder: (context) => SafeArea(
         child: Container(
           constraints: BoxConstraints(

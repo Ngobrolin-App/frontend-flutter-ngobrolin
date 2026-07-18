@@ -2,12 +2,15 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:ngobrolin_app/core/enums/general_enums.dart';
+import 'package:ngobrolin_app/core/models/block_user_status.dart';
 import 'package:ngobrolin_app/core/models/message_model.dart';
 import 'package:ngobrolin_app/core/utils/permission_utils.dart';
 import 'package:ngobrolin_app/core/viewmodels/auth/auth_view_model.dart';
 import 'package:ngobrolin_app/core/widgets/cards/app_avatar.dart';
+import 'package:ngobrolin_app/core/widgets/cards/blocked_badge.dart';
 import 'package:ngobrolin_app/core/widgets/cards/chat_date_badge.dart';
 import 'package:ngobrolin_app/core/widgets/cards/chat_system_message_badge.dart';
+import 'package:ngobrolin_app/core/widgets/cards/note_badge.dart';
 import 'package:ngobrolin_app/core/widgets/cards/reply_message.dart';
 import 'package:ngobrolin_app/core/widgets/inputs/chat_input_bar.dart';
 import 'package:ngobrolin_app/core/widgets/modals/media_picker_modal.dart';
@@ -63,6 +66,7 @@ class _ChatScreenState extends State<ChatScreen> {
   late Function(dynamic) _statusHandler;
   late Function(dynamic) _leftParticipantHandler;
   late Function(dynamic) _participantsAddedHandler;
+  late Function(dynamic) _blockStatusUpdatedHandler;
 
   late ChatViewModel _chatViewModel;
   late AuthViewModel _authViewModel;
@@ -123,20 +127,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _checkBlockStatusAndInitChat() async {
     try {
-      if (widget.userId.isNotEmpty) {
-        final isBlocked = await _settingsViewModel.isUserBlocked(widget.userId);
-
-        if (isBlocked && mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(context.tr('user_is_blocked_cannot_start_chat')),
-              backgroundColor: AppColors.warning,
-            ),
-          );
-          Navigator.of(context).pop();
-          return;
-        }
-      }
       _chatViewModel.initChat(
         conversationId: widget.chatId,
         userId: widget.userId,
@@ -265,6 +255,12 @@ class _ChatScreenState extends State<ChatScreen> {
       } catch (_) {}
     };
 
+    _blockStatusUpdatedHandler = (data) {
+      try {
+        _chatViewModel.getBlockUserStatus();
+      } catch (_) {}
+    };
+
     _socketProvider.on('new_message', _newMessageHandler);
     _socketProvider.on('messages_read_status_updated', _readStatusHandler);
     _socketProvider.on('conversation_created', _conversationCreatedHandler);
@@ -274,6 +270,7 @@ class _ChatScreenState extends State<ChatScreen> {
     _socketProvider.on('conversation_updated', _conversationUpdatedHandler);
     _socketProvider.on('left_participant', _leftParticipantHandler);
     _socketProvider.on('participants_added', _participantsAddedHandler);
+    _socketProvider.on('block_status_updated', _blockStatusUpdatedHandler);
   }
 
   @override
@@ -307,12 +304,15 @@ class _ChatScreenState extends State<ChatScreen> {
         );
         _socketProvider.off('left_participant', _leftParticipantHandler);
         _socketProvider.off('participants_added', _participantsAddedHandler);
+        _socketProvider.off('block_status_updated', _blockStatusUpdatedHandler);
       } catch (e) {
         developer.log(
           'ChatScreen - dispose() - Error unregistering socket: $e',
           name: 'ChatScreen',
         );
       }
+
+      _chatViewModel.resetBlockStatus();
 
       _chatViewModel.removeListener(_onChatViewModelChanged);
     }
@@ -485,7 +485,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             context.tr('online'),
                             style: const TextStyle(
                               fontSize: 12,
-                              color: Colors.greenAccent,
+                              color: AppColors.accent,
                             ),
                           );
                         }
@@ -498,189 +498,191 @@ class _ChatScreenState extends State<ChatScreen> {
             ],
           ),
         ),
-        actions: [
-          Selector<ChatViewModel, (String?, bool)>(
-            selector: (_, vm) => (vm.conversationType, vm.isLoading),
-            builder: (context, data, _) {
-              final conversationType = data.$1;
-              final isLoading = data.$2;
-              if ((conversationType != ConversationType.private.name) ||
-                  isLoading) {
-                return const SizedBox();
-              } else {
-                return PopupMenuButton<String>(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(16),
-                      bottomLeft: Radius.circular(16),
-                      bottomRight: Radius.circular(16),
-                    ),
-                  ),
-                  color: AppColors.white,
-                  onSelected: (value) {
-                    if (value == 'block') _showBlockDialog(context);
-                  },
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: 'block',
-                      child: Row(
-                        children: [
-                          Iconify(Ic.round_block, color: AppColors.warning),
-                          const SizedBox(width: 8),
-                          Text(context.tr('block_account')),
-                        ],
-                      ),
-                    ),
-                  ],
-                );
-              }
-            },
-          ),
-        ],
       ),
       body: Column(
         children: [
           Expanded(
-            child: Selector<ChatViewModel, bool>(
-              selector: (_, vm) => vm.isLoading,
-              builder: (context, isLoading, _) {
-                return Consumer<ChatViewModel>(
-                  builder: (context, chatVM, _) {
-                    final messages = chatVM.messages;
-                    final myId = _authViewModel.user?.id;
+            child: Stack(
+              children: [
+                Expanded(
+                  child: Selector<ChatViewModel, bool>(
+                    selector: (_, vm) => vm.isLoading,
+                    builder: (context, isLoading, _) {
+                      return Consumer<ChatViewModel>(
+                        builder: (context, chatVM, _) {
+                          final messages = chatVM.messages;
+                          final myId = _authViewModel.user?.id;
 
-                    if (isLoading && messages.isEmpty) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (messages.isEmpty) {
-                      return EmptyState(
-                        title: context.tr('no_messages'),
-                        subtitle: context.tr('start_new_chat'),
-                      );
-                    }
-
-                    return ListView.separated(
-                      separatorBuilder: (context, index) {
-                        return SizedBox(height: 10);
-                      },
-                      controller: _scrollController,
-                      reverse: true,
-                      padding: const EdgeInsets.all(16),
-                      // FIX: Tambah +1 pada itemCount agar bisa render spinner pagination di paling atas
-                      itemCount: messages.length + 1,
-                      itemBuilder: (context, index) {
-                        // FIX LOGIKA PAGINATION SPINNER
-                        if (index == messages.length) {
-                          return chatVM.isLoadingMore
-                              ? const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 16),
-                                  child: Center(
-                                    child: CircularProgressIndicator(),
-                                  ),
-                                )
-                              : const SizedBox.shrink();
-                        }
-
-                        final message = messages[index];
-                        final isMe = myId != null && message.senderId == myId;
-                        final conversationType = chatVM.conversationType ?? '';
-
-                        final key = _messageKeys.putIfAbsent(
-                          message.id,
-                          () => GlobalKey(),
-                        );
-
-                        // --- LOGIKA DATE HEADER ---
-                        bool showDateHeader = false;
-
-                        // Jika ini adalah pesan paling ujung atas (paling tua yang sedang diload)
-                        if (index == messages.length - 1) {
-                          // Selalu tampilkan header jika kita sudah di ujung list,
-                          // KECUALI jika masih ada data lama di server (karena nanti akan ketimpa saat pagination)
-                          showDateHeader = !chatVM.hasMore;
-                        } else {
-                          // Bandingkan dengan pesan sebelumnya (yang ada di atasnya / index + 1)
-                          final currentMsgDate = message.createdAt;
-                          final previousMsgDate = messages[index + 1].createdAt;
-
-                          if (currentMsgDate.year != previousMsgDate.year ||
-                              currentMsgDate.month != previousMsgDate.month ||
-                              currentMsgDate.day != previousMsgDate.day) {
-                            showDateHeader = true;
+                          if (isLoading && messages.isEmpty) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
                           }
-                        }
-                        // ---------------------------
+                          if (messages.isEmpty) {
+                            return EmptyState(
+                              title: context.tr('no_messages'),
+                              subtitle: context.tr('start_new_chat'),
+                            );
+                          }
 
-                        //LOGIKA SHOW SENDER NAME
-                        bool showSenderName = true;
-                        if (index == messages.length - 1) {
-                          showSenderName = true;
-                        } else {
-                          final currentMessageSenderId = message.senderId;
-                          final isCurrentMessageRepliedAnotherMessage =
-                              message.repliedMessage != null;
-                          final previousMessageSenderId =
-                              messages[index + 1].senderId;
-                          final previousMessageType = messages[index + 1].type;
-
-                          showSenderName =
-                              (currentMessageSenderId !=
-                                  previousMessageSenderId) ||
-                              isCurrentMessageRepliedAnotherMessage ||
-                              (previousMessageType ==
-                                  MessageType.system.name) ||
-                              showDateHeader;
-                        }
-
-                        final bubbleWidget =
-                            (message.type == MessageType.system.name)
-                            ? ChatSystemMessageBadge(message: message)
-                            : ChatBubble(
-                                key: key,
-                                message: message,
-                                isMe: isMe,
-                                conversationType: (conversationType.isNotEmpty)
-                                    ? ConversationType.values.byName(
-                                        conversationType,
+                          return ListView.separated(
+                            separatorBuilder: (context, index) {
+                              return SizedBox(height: 10);
+                            },
+                            controller: _scrollController,
+                            reverse: true,
+                            padding: const EdgeInsets.all(16),
+                            // FIX: Tambah +1 pada itemCount agar bisa render spinner pagination di paling atas
+                            itemCount: messages.length + 1,
+                            itemBuilder: (context, index) {
+                              if (index == messages.length) {
+                                return chatVM.isLoadingMore
+                                    ? const Padding(
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: 16,
+                                        ),
+                                        child: Center(
+                                          child: CircularProgressIndicator(),
+                                        ),
                                       )
-                                    : null,
-                                onReplyTap: (repliedMessageId) =>
-                                    _scrollToRepliedMessage(repliedMessageId),
-                                showSenderName: showSenderName,
+                                    : const SizedBox.shrink();
+                              }
+
+                              final message = messages[index];
+                              final isMe =
+                                  myId != null && message.senderId == myId;
+                              final conversationType =
+                                  chatVM.conversationType ?? '';
+
+                              final key = _messageKeys.putIfAbsent(
+                                message.id,
+                                () => GlobalKey(),
                               );
 
-                        // Jika butuh header, bungkus dengan Column
-                        if (showDateHeader) {
-                          return Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              ChatDateBadge(date: message.createdAt),
-                              SizedBox(height: 10),
-                              bubbleWidget,
-                            ],
-                          );
-                        }
+                              bool showDateHeader = false;
 
-                        // Jika tidak, render bubble biasa
-                        return bubbleWidget;
-                      },
-                    );
-                  },
-                );
-              },
+                              if (index == messages.length - 1) {
+                                showDateHeader = !chatVM.hasMore;
+                              } else {
+                                final currentMsgDate = message.createdAt;
+                                final previousMsgDate =
+                                    messages[index + 1].createdAt;
+
+                                if (currentMsgDate.year !=
+                                        previousMsgDate.year ||
+                                    currentMsgDate.month !=
+                                        previousMsgDate.month ||
+                                    currentMsgDate.day != previousMsgDate.day) {
+                                  showDateHeader = true;
+                                }
+                              }
+
+                              bool showSenderName = true;
+                              if (index == messages.length - 1) {
+                                showSenderName = true;
+                              } else {
+                                final currentMessageSenderId = message.senderId;
+                                final isCurrentMessageRepliedAnotherMessage =
+                                    message.repliedMessage != null;
+                                final previousMessageSenderId =
+                                    messages[index + 1].senderId;
+                                final previousMessageType =
+                                    messages[index + 1].type;
+
+                                showSenderName =
+                                    (currentMessageSenderId !=
+                                        previousMessageSenderId) ||
+                                    isCurrentMessageRepliedAnotherMessage ||
+                                    (previousMessageType ==
+                                        MessageType.system.name) ||
+                                    showDateHeader;
+                              }
+
+                              final bubbleWidget =
+                                  (message.type == MessageType.system.name)
+                                  ? ChatSystemMessageBadge(message: message)
+                                  : ChatBubble(
+                                      key: key,
+                                      message: message,
+                                      isLongPressOptionEnabled:
+                                          !(chatVM.blockUserStatus?.isBlocked ??
+                                              false),
+                                      isMe: isMe,
+                                      conversationType:
+                                          (conversationType.isNotEmpty)
+                                          ? ConversationType.values.byName(
+                                              conversationType,
+                                            )
+                                          : null,
+                                      onReplyTap: (repliedMessageId) =>
+                                          _scrollToRepliedMessage(
+                                            repliedMessageId,
+                                          ),
+                                      showSenderName: showSenderName,
+                                    );
+
+                              // Jika butuh header, bungkus dengan Column
+                              if (showDateHeader) {
+                                return Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    ChatDateBadge(date: message.createdAt),
+                                    SizedBox(height: 10),
+                                    bubbleWidget,
+                                  ],
+                                );
+                              }
+
+                              // Jika tidak, render bubble biasa
+                              return bubbleWidget;
+                            },
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+                Positioned(
+                  bottom: 16,
+                  right: 16,
+                  left: 16,
+                  child: Selector<ChatViewModel, BlockUserStatus?>(
+                    selector: (_, vm) => vm.blockUserStatus,
+                    builder: (context, blockUserStatus, _) {
+                      if (blockUserStatus?.isBlocked ?? false) {
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: BlockedBadge(
+                            message: context.tr(
+                              blockUserStatus?.blockedMessage ?? '',
+                            ),
+                          ),
+                        );
+                      } else {
+                        return SizedBox();
+                      }
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
-          Selector<ChatViewModel, (MessageModel?, bool)>(
-            selector: (_, vm) => (vm.replyingToMessage, vm.isLoading),
+
+          Selector<ChatViewModel, (MessageModel?, bool, BlockUserStatus?)>(
+            selector: (_, vm) =>
+                (vm.replyingToMessage, vm.isLoading, vm.blockUserStatus),
             builder: (context, state, _) {
               final replyingTo = state.$1;
               final isLoading = state.$2;
+              final blockedUserStatus = state.$3;
+              final enabled = !(blockedUserStatus?.isBlocked ?? false);
 
               return ChatInputBar(
                 controller: _messageController,
                 hintText: context.tr("type_message"),
                 isSending: isLoading,
                 onSend: _sendMessage,
+                enabled: enabled,
                 onAttachment: () => _handleAttachment(context),
                 onSubmitted: (_) => _sendMessage(),
                 top: replyingTo == null
@@ -790,62 +792,5 @@ class _ChatScreenState extends State<ChatScreen> {
         }
       }
     }
-  }
-
-  void _showBlockDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(context.tr('block_account')),
-        content: Text(context.tr('are_you_sure_block')),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(context.tr('no')),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              _blockUser(context);
-            },
-            child: Text(
-              context.tr('yes'),
-              style: const TextStyle(color: AppColors.warning),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _blockUser(BuildContext context) {
-    _settingsViewModel.blockAccount(widget.userId).then((success) {
-      if (!mounted) return;
-      if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              context.tr(
-                _settingsViewModel.successMessage ??
-                    'user_blocked_successfully',
-              ),
-            ),
-            backgroundColor: AppColors.accent,
-          ),
-        );
-        Navigator.of(context).pop();
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              context.tr(
-                _settingsViewModel.errorMessage ?? 'failed_to_block_user',
-              ),
-            ),
-            backgroundColor: AppColors.warning,
-          ),
-        );
-      }
-    });
   }
 }

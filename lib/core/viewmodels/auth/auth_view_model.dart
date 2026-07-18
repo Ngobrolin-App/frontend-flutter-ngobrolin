@@ -11,6 +11,8 @@ class AuthViewModel extends BaseViewModel {
   final AuthRepository _authRepository;
   final UserRepository _userRepository;
 
+  static const String _logName = 'AuthViewModel';
+
   String? _token;
   String? get token => _token;
 
@@ -32,49 +34,44 @@ class AuthViewModel extends BaseViewModel {
 
   /// Checks the local authentication persistency status during startup.
   Future<bool> checkAuthStatus() async {
-    setLoading(true);
-    try {
-      final hasToken = await _authRepository.isAuthenticated();
+    final result = await runBusyFuture(
+      () async {
+        final hasToken = await _authRepository.isAuthenticated();
 
-      if (!hasToken) {
-        _authenticated = false;
-        _token = null;
-        _user = null;
-        notifyListeners();
+        if (!hasToken) return false;
+
+        _token = await _authRepository.getToken();
+        final result = await _userRepository.getCurrentProfile();
+
+        if (result.isSuccess && result.data != null) {
+          _authenticated = true;
+          _user = result.data;
+          notifyListeners();
+          return true;
+        }
+
         return false;
-      }
+      },
+      logName: _logName,
+      logContext: 'checkAuthStatus()',
+    );
 
-      _token = await _authRepository.getToken();
-
-      final result = await _userRepository.getCurrentProfile();
-      if (result.isSuccess && result.data != null) {
-        _authenticated = true;
-        _user = result.data;
-        notifyListeners();
-        return true;
-      }
-
-      return false;
-    } catch (e) {
-      developer.log(
-        'AuthViewModel - checkAuthStatus() error: $e',
-        name: 'AuthViewModel',
-      );
+    // Ensures cleanup state runs cleanly if token is invalid or getProfile fails
+    if (result == null || result == false) {
       _authenticated = false;
       _token = null;
       _user = null;
-      setError(e.toString());
       notifyListeners();
       return false;
-    } finally {
-      setLoading(false);
     }
+
+    return true;
   }
 
   /// Handles user sign-in requests using email/username and password.
   Future<bool> signIn(String usernameOrEmail, String password) async {
-    return await runBusyFuture(() async {
-          try {
+    return await runBusyFuture(
+          () async {
             final response = await _authRepository.login(
               usernameOrEmail,
               password,
@@ -82,8 +79,8 @@ class AuthViewModel extends BaseViewModel {
             final authResponse = response.data;
 
             if (authResponse == null) {
-              setError('invalid_response');
-              return false;
+              // Throw to be caught by BaseViewModel logger
+              throw Exception('invalid_response');
             }
 
             setSuccess(response.message);
@@ -97,15 +94,10 @@ class AuthViewModel extends BaseViewModel {
 
             notifyListeners();
             return response.isSuccess;
-          } catch (e) {
-            developer.log(
-              'AuthViewModel - signIn() error: $e',
-              name: 'AuthViewModel',
-            );
-            setError(e.toString());
-            return false;
-          }
-        }) ??
+          },
+          logName: _logName,
+          logContext: 'signIn()',
+        ) ??
         false;
   }
 
@@ -116,8 +108,8 @@ class AuthViewModel extends BaseViewModel {
     required String name,
     required String password,
   }) async {
-    return await runBusyFuture(() async {
-          try {
+    return await runBusyFuture(
+          () async {
             final response = await _authRepository.register(
               username: username,
               email: email,
@@ -127,8 +119,7 @@ class AuthViewModel extends BaseViewModel {
 
             final authResponse = response.data;
             if (authResponse == null) {
-              setError('invalid_response');
-              return false;
+              throw Exception('invalid_response');
             }
 
             setSuccess(response.message);
@@ -141,71 +132,60 @@ class AuthViewModel extends BaseViewModel {
 
             notifyListeners();
             return response.isSuccess;
-          } catch (e) {
-            developer.log(
-              'AuthViewModel - signUp() error: $e',
-              name: 'AuthViewModel',
-            );
-            setError(e.toString());
-            return false;
-          }
-        }) ??
+          },
+          logName: _logName,
+          logContext: 'signUp()',
+        ) ??
         false;
   }
 
   /// Triggers a password recovery link to the specified email address.
   Future<bool> forgotPassword(String email) async {
-    return await runBusyFuture(() async {
-          try {
+    return await runBusyFuture(
+          () async {
             final result = await _authRepository.forgotPassword(email);
             setSuccess(result.message);
             return result.isSuccess;
-          } catch (e) {
-            developer.log(
-              'AuthViewModel - forgotPassword() error: $e',
-              name: 'AuthViewModel',
-            );
-            setError(e.toString());
-            return false;
-          }
-        }) ??
+          },
+          logName: _logName,
+          logContext: 'forgotPassword()',
+        ) ??
         false;
   }
 
   /// Resets the user's password using a verification token.
   Future<bool> resetPassword(String token, String newPassword) async {
-    return await runBusyFuture(() async {
-          try {
+    return await runBusyFuture(
+          () async {
             final result = await _authRepository.resetPassword(
               token,
               newPassword,
             );
             setSuccess(result.message);
             return result.isSuccess;
-          } catch (e) {
-            developer.log(
-              'AuthViewModel - resetPassword() error: $e',
-              name: 'AuthViewModel',
-            );
-            setError(e.toString());
-            return false;
-          }
-        }) ??
+          },
+          logName: _logName,
+          logContext: 'resetPassword()',
+        ) ??
         false;
   }
 
   /// Performs a clean sign-out by unlinking the FCM token and clearing local session states.
   Future<bool> signOut() async {
-    return await runBusyFuture(() async {
-          try {
+    return await runBusyFuture(
+          () async {
             try {
               final fcmToken = await FirebaseMessaging.instance.getToken();
               if (fcmToken != null && fcmToken.isNotEmpty) {
                 await serviceLocator<UserRepository>().deleteFcmToken(fcmToken);
               }
-            } catch (fcmError) {
+            } catch (e, stackTrace) {
+              // Inner catch is intentionally left out to not stop the Sign Out flow
               developer.log(
-                'AuthViewModel - Failed to delete FCM token on server: $fcmError',
+                'Failed to delete FCM token on server: $e',
+                name: _logName,
+                error: e,
+                stackTrace: stackTrace,
               );
             }
 
@@ -217,27 +197,26 @@ class AuthViewModel extends BaseViewModel {
             notifyListeners();
 
             return true;
-          } catch (e) {
-            developer.log(
-              'AuthViewModel - signOut() error: $e',
-              name: 'AuthViewModel',
-            );
-            setError(e.toString());
-            return false;
-          }
-        }) ??
+          },
+          logName: _logName,
+          logContext: 'signOut()',
+        ) ??
         false;
   }
 
   /// Manually triggers FCM registration with UI loading state indications.
   Future<bool> registerFcmToken() async {
-    return await runBusyFuture(() async {
-          final isSuccess = await _executeFcmRegistration();
-          if (!isSuccess) {
-            setError('fcm_registration_failed');
-          }
-          return isSuccess;
-        }) ??
+    return await runBusyFuture(
+          () async {
+            final isSuccess = await _executeFcmRegistration();
+            if (!isSuccess) {
+              throw Exception('fcm_registration_failed');
+            }
+            return isSuccess;
+          },
+          logName: _logName,
+          logContext: 'registerFcmToken()',
+        ) ??
         false;
   }
 
@@ -250,10 +229,12 @@ class AuthViewModel extends BaseViewModel {
         await serviceLocator<UserRepository>().registerFcmToken(fcmToken);
       }
       return true;
-    } catch (e) {
+    } catch (e, stackTrace) {
       developer.log(
-        'AuthViewModel - _executeFcmRegistration() error: $e',
-        name: 'AuthViewModel',
+        '_executeFcmRegistration() error: $e',
+        name: _logName,
+        error: e,
+        stackTrace: stackTrace,
       );
       // Returns false cleanly without triggering setError to keep primary Auth UI stream uninterrupted
       return false;

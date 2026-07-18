@@ -59,10 +59,10 @@ class ChatInputBar extends StatelessWidget {
         bottom: MediaQuery.of(context).padding.bottom + 8,
       ),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(.05),
+            color: AppColors.black.withOpacity(.05),
             blurRadius: 4,
             offset: const Offset(0, -2),
           ),

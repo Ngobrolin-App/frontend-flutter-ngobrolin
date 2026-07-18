@@ -1,9 +1,9 @@
 import 'package:ngobrolin_app/core/enums/general_enums.dart';
+import 'package:ngobrolin_app/core/models/block_user_status.dart';
 import 'package:ngobrolin_app/core/models/conversation_model.dart';
 import 'package:ngobrolin_app/core/models/conversation_participant_model.dart';
 import 'package:ngobrolin_app/core/models/user_model.dart';
 import 'package:ngobrolin_app/core/repositories/settings_repository.dart';
-
 import '../../models/message_model.dart';
 import '../../repositories/chat_repository.dart';
 import '../base_view_model.dart';
@@ -12,6 +12,8 @@ import 'dart:developer' as developer;
 class ChatViewModel extends BaseViewModel {
   final ChatRepository _chatRepository;
   final SettingsRepository _settingsRepository;
+
+  static const String _logName = 'ChatViewModel';
 
   List<MessageModel> _messages = [];
   List<MessageModel> get messages => _messages;
@@ -48,9 +50,11 @@ class ChatViewModel extends BaseViewModel {
 
   List<String> get participantNames =>
       _participants.map((user) => user.name).toList();
-
   String get participantNamesText =>
       _participants.map((user) => user.name).join(', ');
+
+  BlockUserStatus? _blockUserStatus;
+  BlockUserStatus? get blockUserStatus => _blockUserStatus;
 
   // Pagination states
   int _page = 1;
@@ -87,6 +91,11 @@ class ChatViewModel extends BaseViewModel {
     _setupChatRoomContext();
   }
 
+  void resetBlockStatus() {
+    _blockUserStatus = null;
+    notifyListeners();
+  }
+
   /// Internal asynchronous runner orchestration to load chat histories sequentially.
   Future<void> _setupChatRoomContext() async {
     if (_conversationId == null || _conversationId!.isEmpty) {
@@ -100,43 +109,58 @@ class ChatViewModel extends BaseViewModel {
 
     if (_conversationType == ConversationType.private.name &&
         _privatePartnerId.isNotEmpty) {
-      await _checkBlockStatus();
+      await getBlockUserStatus();
     }
   }
 
-  Future<bool> _checkBlockStatus() async {
-    try {
-      return await _settingsRepository.isUserBlocked(_privatePartnerId);
-    } catch (e) {
-      developer.log(
-        'ChatViewModel - _checkBlockStatus() error: $e',
-        name: 'ChatViewModel',
-      );
-      setError(e.toString());
-      return false;
-    }
+  Future<bool> getBlockUserStatus() async {
+    return await runBusyFuture(
+          () async {
+            try {
+              final result = await _settingsRepository.getBlockUserStatus(
+                _privatePartnerId,
+              );
+
+              _blockUserStatus = result.data;
+
+              notifyListeners();
+              return true;
+            } catch (e, stackTrace) {
+              developer.log(
+                'getBlockUserStatus - error: $e',
+                name: _logName,
+                error: e,
+                stackTrace: stackTrace,
+              );
+              _blockUserStatus = null;
+              notifyListeners();
+
+              setError(e.toString());
+              return false;
+            }
+          },
+          logName: _logName,
+          logContext: '_getBlockUserStatus()',
+        ) ??
+        false;
   }
 
   /// Fetches private single room session mappings linked to a user profile ID.
   Future<bool> _getPrivateConversationIdByParticipantId() async {
-    return await runBusyFuture(() async {
-          try {
+    return await runBusyFuture(
+          () async {
             final result = await _chatRepository
                 .getPrivateConversationByPartnerId(_privatePartnerId);
             final conversation = result.data;
+
             _conversationId = conversation?.id;
 
             notifyListeners();
             return true;
-          } catch (e) {
-            developer.log(
-              "ChatViewModel - _getPrivateConversationIdByParticipantId error $e",
-              name: 'ChatViewModel',
-            );
-            setError(e.toString());
-            return false;
-          }
-        }) ??
+          },
+          logName: _logName,
+          logContext: '_getPrivateConversationIdByParticipantId()',
+        ) ??
         false;
   }
 
@@ -160,15 +184,11 @@ class ChatViewModel extends BaseViewModel {
   Future<bool> _getConversationDataOnly() async {
     if (_conversationId == null) return false;
 
-    return await runBusyFuture(() async {
-          try {
+    return await runBusyFuture(
+          () async {
             final result = await _chatRepository.getConversationById(
               conversationId: _conversationId!,
               isShowParticipants: true,
-              isParticipantsIncludeMe:
-                  (_conversationType == ConversationType.group.name)
-                  ? true
-                  : false,
             );
             final conversation = result.data;
 
@@ -177,6 +197,7 @@ class ChatViewModel extends BaseViewModel {
               _conversationName = conversation?.name;
               _conversationImageUrl = conversation?.groupImage;
             }
+
             _participants = conversation?.participants ?? [];
             if (conversation?.type == ConversationType.private.name) {
               if (_participants.isNotEmpty) {
@@ -189,15 +210,10 @@ class ChatViewModel extends BaseViewModel {
 
             notifyListeners();
             return true;
-          } catch (e) {
-            developer.log(
-              "ChatViewModel - _getConversationDataOnly() error $e",
-              name: 'ChatViewModel',
-            );
-            setError(e.toString());
-            return false;
-          }
-        }) ??
+          },
+          logName: _logName,
+          logContext: '_getConversationDataOnly()',
+        ) ??
         false;
   }
 
@@ -205,8 +221,8 @@ class ChatViewModel extends BaseViewModel {
   Future<bool> _loadMessages() async {
     if (_conversationId == null) return false;
 
-    return await runBusyFuture(() async {
-          try {
+    return await runBusyFuture(
+          () async {
             final result = await _chatRepository.getMessagesByConversationId(
               conversationId: _conversationId!,
               page: _page,
@@ -219,6 +235,7 @@ class ChatViewModel extends BaseViewModel {
             _hasMore =
                 (paginatedResult?.page ?? 0) <
                 (paginatedResult?.totalPages ?? 0);
+
             notifyListeners();
 
             // Auto-acknowledge unread elements sent by the partner peer upon entering viewport
@@ -234,33 +251,27 @@ class ChatViewModel extends BaseViewModel {
             }
 
             return true;
-          } catch (e) {
-            developer.log(
-              "ChatViewModel - _loadMessages() error $e",
-              name: 'ChatViewModel',
-            );
-            setError(e.toString());
-            return false;
-          }
-        }) ??
+          },
+          logName: _logName,
+          logContext: '_loadMessages()',
+        ) ??
         false;
   }
 
   /// Appends older historical conversations via endless tracking triggers.
   Future<void> loadMoreMessages() async {
     if (_isLoadingMore || !_hasMore || _conversationId == null) return;
+
     _isLoadingMore = true;
     notifyListeners();
 
     try {
       _page += 1;
-
       final result = await _chatRepository.getMessagesByConversationId(
         conversationId: _conversationId!,
         page: _page,
         limit: _limit,
       );
-
       final paginatedResult = result.data;
       final olderMessages = paginatedResult?.items ?? [];
 
@@ -268,12 +279,13 @@ class ChatViewModel extends BaseViewModel {
       _messages.addAll(olderMessages);
       _hasMore =
           (paginatedResult?.page ?? 0) < (paginatedResult?.totalPages ?? 0);
-    } catch (e) {
+    } catch (e, stackTrace) {
       developer.log(
-        "ChatViewModel - _loadMoreMessages() error $e",
-        name: 'ChatViewModel',
+        "loadMoreMessages() error $e",
+        name: _logName,
+        error: e,
+        stackTrace: stackTrace,
       );
-
       setError(e.toString());
       _page = (_page > 1) ? _page - 1 : 1;
     } finally {
@@ -293,8 +305,8 @@ class ChatViewModel extends BaseViewModel {
     required String createdByUserId,
     String? groupImagePath,
   }) async {
-    return await runBusyFuture(() async {
-          try {
+    return await runBusyFuture(
+          () async {
             String? groupImageUrl;
             if (groupImagePath != null && groupImagePath.isNotEmpty) {
               final result = await _chatRepository.uploadConversationGroupImage(
@@ -302,6 +314,7 @@ class ChatViewModel extends BaseViewModel {
               );
               groupImageUrl = result.data;
             }
+
             final result = await _chatRepository.createGroupConversation(
               groupName: groupName,
               participantIds: participantIds,
@@ -317,15 +330,10 @@ class ChatViewModel extends BaseViewModel {
 
             notifyListeners();
             return true;
-          } catch (e) {
-            developer.log(
-              "ChatViewModel - createGroupConversation() error $e",
-              name: 'ChatViewModel',
-            );
-            setError(e.toString());
-            return false;
-          }
-        }) ??
+          },
+          logName: _logName,
+          logContext: 'createGroupConversation()',
+        ) ??
         false;
   }
 
@@ -350,8 +358,8 @@ class ChatViewModel extends BaseViewModel {
       setConversationId(conversation?.id);
     }
 
-    return await runBusyFuture(() async {
-          try {
+    return await runBusyFuture(
+          () async {
             final result = await _chatRepository.sendMessage(
               conversationId: _conversationId!,
               content: content,
@@ -379,17 +387,14 @@ class ChatViewModel extends BaseViewModel {
                 notifyListeners();
               }
             }
+
             if (newMessageId.isNotEmpty) markMessageAsRead(newMessageId);
+
             return true;
-          } catch (e) {
-            developer.log(
-              "ChatViewModel - sendMessage() error $e",
-              name: 'ChatViewModel',
-            );
-            setError(e.toString());
-            return false;
-          }
-        }) ??
+          },
+          logName: _logName,
+          logContext: 'sendMessage()',
+        ) ??
         false;
   }
 
@@ -410,14 +415,14 @@ class ChatViewModel extends BaseViewModel {
       setConversationId(conversation?.id);
     }
 
-    return await runBusyFuture(() async {
-          try {
+    return await runBusyFuture(
+          () async {
             final result = await _chatRepository.uploadAttachment(
               filePath: mediaFilePath,
               type: type,
             );
-
             final url = result.data ?? '';
+
             return await sendMessage(
               content: content,
               type: type,
@@ -426,15 +431,10 @@ class ChatViewModel extends BaseViewModel {
               mediaFileName: mediaFileName,
               mediaSize: mediaSize,
             );
-          } catch (e) {
-            developer.log(
-              "ChatViewModel - sendAttachment() error $e",
-              name: 'ChatViewModel',
-            );
-            setError(e.toString());
-            return false;
-          }
-        }) ??
+          },
+          logName: _logName,
+          logContext: 'sendAttachment()',
+        ) ??
         false;
   }
 
@@ -457,10 +457,12 @@ class ChatViewModel extends BaseViewModel {
         _messages.insert(0, message);
         notifyListeners();
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       developer.log(
-        "ChatViewModel - handleIncomingMessage() error $e",
-        name: 'ChatViewModel',
+        "handleIncomingMessage() error $e",
+        name: _logName,
+        error: e,
+        stackTrace: stackTrace,
       );
       setError(e.toString());
     }
@@ -491,10 +493,12 @@ class ChatViewModel extends BaseViewModel {
         conversationId: _conversationId!,
         messageId: messageId,
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
       developer.log(
-        "ChatViewModel - markMessageAsRead() error $e",
-        name: 'ChatViewModel',
+        "markMessageAsRead() error $e",
+        name: _logName,
+        error: e,
+        stackTrace: stackTrace,
       );
       setError(e.toString());
     }
@@ -510,8 +514,8 @@ class ChatViewModel extends BaseViewModel {
     try {
       final rawUpdatedConversation =
           data['updatedConversation'] as Map<String, dynamic>?;
-
       ConversationModel? updatedConversation;
+
       if (rawUpdatedConversation != null) {
         updatedConversation = ConversationModel.fromJson(
           rawUpdatedConversation,
@@ -519,11 +523,14 @@ class ChatViewModel extends BaseViewModel {
         _conversationImageUrl = updatedConversation.groupImage;
         _conversationName = updatedConversation.name;
       }
+
       notifyListeners();
-    } catch (e) {
+    } catch (e, stackTrace) {
       developer.log(
-        'ChatViewModel - handleConversationUpdated() error: $e',
-        name: 'ChatListViewModel',
+        'handleConversationUpdated() error: $e',
+        name: _logName,
+        error: e,
+        stackTrace: stackTrace,
       );
       setError(e.toString());
     }
@@ -532,16 +539,16 @@ class ChatViewModel extends BaseViewModel {
   void handleLeftParticipant(dynamic data) {
     try {
       final userId = data as String?;
-
       if (userId != null) {
         _participants.removeWhere((participant) => participant.id == userId);
       }
-
       notifyListeners();
-    } catch (e) {
+    } catch (e, stackTrace) {
       developer.log(
-        'ChatViewModel - handleLeftParticipant() error: $e',
-        name: 'ChatViewModel',
+        'handleLeftParticipant() error: $e',
+        name: _logName,
+        error: e,
+        stackTrace: stackTrace,
       );
       setError(e.toString());
     }
@@ -550,7 +557,6 @@ class ChatViewModel extends BaseViewModel {
   void handleParticipantsAdded(dynamic data) {
     try {
       final rawParticipantsAdded = data as Map<String, dynamic>?;
-
       final rawAddedParticipants = List<Map<String, dynamic>>.from(
         rawParticipantsAdded?['addedParticipants'] ?? [],
       );
@@ -571,15 +577,18 @@ class ChatViewModel extends BaseViewModel {
       if (addedUserParticipants.isNotEmpty) {
         _participants.addAll(addedUserParticipants);
       }
-      developer.log(
-        'ChatViewModel - handleParticipantsAdded - participantNamesText : $participantNamesText',
-      );
 
-      notifyListeners();
-    } catch (e) {
       developer.log(
-        'ChatViewModel - handleParticipantsAdded() error: $e',
-        name: 'ChatViewModel',
+        'handleParticipantsAdded - participantNamesText : $participantNamesText',
+        name: _logName,
+      );
+      notifyListeners();
+    } catch (e, stackTrace) {
+      developer.log(
+        'handleParticipantsAdded() error: $e',
+        name: _logName,
+        error: e,
+        stackTrace: stackTrace,
       );
       setError(e.toString());
     }

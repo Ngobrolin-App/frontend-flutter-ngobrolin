@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ngobrolin_app/core/localization/app_localizations.dart';
 import 'package:ngobrolin_app/core/models/api_response.dart';
+import 'package:ngobrolin_app/core/models/block_user_status.dart';
 import 'package:ngobrolin_app/core/models/paginated_result.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
@@ -129,29 +130,17 @@ class SettingsRepository {
     );
   }
 
-  Future<bool> isUserBlocked(String userId) async {
-    try {
-      await _apiService.post<ApiResponse<UserModel>>(
-        '/users/get-user',
-        data: {'userId': userId},
-        parser: (response) {
-          return ApiResponse<UserModel>.fromJson(response, (data) {
-            final mappedData =
-                data as Map<String, dynamic>? ?? <String, dynamic>{};
-            return UserModel.fromJson(mappedData);
-          });
-        },
-      );
-      return false;
-    } catch (e) {
-      if (e is ApiException) {
-        if (e.statusCode == 403) {
-          return true;
-        }
-
-        rethrow;
-      }
-      throw ApiException(message: e.toString());
-    }
+  Future<ApiResponse<BlockUserStatus>> getBlockUserStatus(String userId) async {
+    return await _apiService.post<ApiResponse<BlockUserStatus>>(
+      '/users/block-user-status',
+      data: {'userId': userId},
+      parser: (response) {
+        return ApiResponse<BlockUserStatus>.fromJson(response, (data) {
+          final mappedData =
+              data as Map<String, dynamic>? ?? <String, dynamic>{};
+          return BlockUserStatus.fromJson(mappedData);
+        });
+      },
+    );
   }
 }

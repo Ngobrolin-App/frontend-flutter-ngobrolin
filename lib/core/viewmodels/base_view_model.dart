@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
+import 'dart:developer' as developer;
 
 /// Base class for all ViewModels in the application.
-/// Provides common functionality for state management.
 class BaseViewModel extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -14,38 +14,48 @@ class BaseViewModel extends ChangeNotifier {
 
   bool _disposed = false;
 
-  /// Sets the loading state and notifies listeners
   void setLoading(bool loading) {
     _isLoading = loading;
     notifyListeners();
   }
 
-  /// Sets a success message and notifies listeners
   void setSuccess(String? message) {
     _successMessage = message;
     notifyListeners();
   }
 
-  /// Sets an error message and notifies listeners
   void setError(String? message) {
     _errorMessage = message;
     notifyListeners();
   }
 
-  /// Clears any error message and notifies listeners
   void clearError() {
     _errorMessage = null;
     notifyListeners();
   }
 
-  /// Safely runs an async operation with loading state management
-  Future<T?> runBusyFuture<T>(Future<T> Function() future) async {
+  /// Safely runs an async operation with loading state management and flexible logging
+  Future<T?> runBusyFuture<T>(
+    Future<T> Function() future, {
+    String? logName, // Example: 'SettingsViewModel'
+    String? logContext, // Example: 'initSettings()'
+  }) async {
     try {
       setLoading(true);
       clearError();
       final result = await future();
       return result;
-    } catch (e) {
+    } catch (e, stackTrace) {
+      // If logName or logContext is filled, print the log
+      if (logContext != null || logName != null) {
+        developer.log(
+          '${logContext ?? "Unknown Method"} error: $e',
+          name: logName ?? 'BaseViewModel',
+          error: e,
+          stackTrace: stackTrace, // So it's easy to track in the console
+        );
+      }
+
       setError(e.toString());
       return null;
     } finally {

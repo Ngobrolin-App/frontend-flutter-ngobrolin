@@ -190,6 +190,9 @@ const Map<String, String> enUS = {
   'add_member_success': 'Member added successfully',
   'add_member_failed': 'Failed to add member',
   'participants_added_success': 'Participants added successfully',
+  'you_blocked_this_user': 'You have blocked this user',
+  'you_are_blocked_by_this_user': 'You have been blocked by this user',
+  'block_status_retrieved_success': 'Block status retrieved successfully',
 
   // General Enums
   'view_profile_image': 'View Profile Image',
@@ -206,6 +209,7 @@ const Map<String, String> enUS = {
   "failed_to_pick_image": "Failed to pick image",
   'no_file_uploaded': 'No file uploaded',
   'permission_denied': 'Permission denied',
+  'invalid_response': 'Invalid response',
 
   // Misc
   'cancel': 'Cancel',

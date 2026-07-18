@@ -8,6 +8,8 @@ import 'dart:developer' as developer;
 class GroupProfileViewModel extends BaseViewModel {
   final ChatRepository _chatRepository;
 
+  static const String _logName = 'GroupProfileViewModel';
+
   ConversationModel? _conversation;
   ConversationModel? get conversation => _conversation;
 
@@ -45,6 +47,7 @@ class GroupProfileViewModel extends BaseViewModel {
   int _pageParticipants = 1;
   bool _hasMoreParticipants = true;
   bool get hasMoreParticipants => _hasMoreParticipants;
+
   bool _isLoadingMoreParticipants = false;
   bool get isLoadingMoreParticipants => _isLoadingMoreParticipants;
 
@@ -65,16 +68,15 @@ class GroupProfileViewModel extends BaseViewModel {
   Future<bool> _getConversationDataOnly() async {
     if (_conversationId == null) return false;
 
-    return await runBusyFuture(() async {
-          try {
+    return await runBusyFuture(
+          () async {
             final result = await _chatRepository.getConversationById(
               conversationId: _conversationId!,
               isShowParticipants: true,
             );
+
             final conversation = result.data;
-
             _conversation = conversation;
-
             _conversationType = conversation?.type;
             _conversationName = conversation?.name;
             _conversationDescription = conversation?.groupDescription;
@@ -85,15 +87,10 @@ class GroupProfileViewModel extends BaseViewModel {
 
             notifyListeners();
             return true;
-          } catch (e) {
-            developer.log(
-              "GroupProfileViewModel - _getConversationDataOnly() error $e",
-              name: 'GroupProfileViewModel',
-            );
-            setError(e.toString());
-            return false;
-          }
-        }) ??
+          },
+          logName: _logName,
+          logContext: '_getConversationDataOnly()',
+        ) ??
         false;
   }
 
@@ -101,8 +98,8 @@ class GroupProfileViewModel extends BaseViewModel {
   Future<bool> fetchParticipants() async {
     if (_conversationId == null) return false;
 
-    return await runBusyFuture(() async {
-          try {
+    return await runBusyFuture(
+          () async {
             final result = await _chatRepository.getConversationParticipants(
               page: _pageParticipants,
               limit: _limit,
@@ -112,9 +109,7 @@ class GroupProfileViewModel extends BaseViewModel {
 
             final paginatedResult = result.data;
             _totalParticipants = paginatedResult?.total ?? 0;
-
             final participantList = paginatedResult?.items ?? [];
-
             _conversationParticipants = participantList;
             _hasMoreParticipants =
                 (paginatedResult?.page ?? 0) <
@@ -122,15 +117,10 @@ class GroupProfileViewModel extends BaseViewModel {
 
             notifyListeners();
             return true;
-          } catch (e) {
-            developer.log(
-              "GroupProfileViewModel - fetchParticipants() error $e",
-              name: 'ChatViewModel',
-            );
-            setError(e.toString());
-            return false;
-          }
-        }) ??
+          },
+          logName: _logName,
+          logContext: 'fetchParticipants()',
+        ) ??
         false;
   }
 
@@ -146,67 +136,55 @@ class GroupProfileViewModel extends BaseViewModel {
     _isLoadingMoreParticipants = true;
     notifyListeners();
 
-    return await runBusyFuture(() async {
-          try {
-            _pageParticipants += 1;
-            final result = await _chatRepository.getConversationParticipants(
-              page: _pageParticipants,
-              limit: _limit,
-              conversationId: _conversationId!,
-              isIncludeMe: _conversationType != ConversationType.private.name,
-            );
+    try {
+      _pageParticipants += 1;
+      final result = await _chatRepository.getConversationParticipants(
+        page: _pageParticipants,
+        limit: _limit,
+        conversationId: _conversationId!,
+        isIncludeMe: _conversationType != ConversationType.private.name,
+      );
 
-            final paginatedResult = result.data;
-            _totalParticipants = paginatedResult?.total ?? 0;
+      final paginatedResult = result.data;
+      _totalParticipants = paginatedResult?.total ?? 0;
+      final participantList = paginatedResult?.items ?? [];
+      _conversationParticipants.addAll(participantList);
+      _hasMoreParticipants =
+          (paginatedResult?.page ?? 0) < (paginatedResult?.totalPages ?? 0);
 
-            final participantList = paginatedResult?.items ?? [];
-
-            _conversationParticipants.addAll(participantList);
-            _hasMoreParticipants =
-                (paginatedResult?.page ?? 0) <
-                (paginatedResult?.totalPages ?? 0);
-
-            _isLoadingMoreParticipants = false;
-            notifyListeners();
-            return true;
-          } catch (e) {
-            developer.log(
-              "GroupProfileViewModel - fetchParticipants() error $e",
-              name: 'ChatViewModel',
-            );
-            _pageParticipants -= 1;
-            _isLoadingMoreParticipants = false;
-            setError(e.toString());
-            return false;
-          }
-        }) ??
-        false;
+      return true;
+    } catch (e, stackTrace) {
+      developer.log(
+        "loadMoreParticipants() error $e",
+        name: _logName,
+        error: e,
+        stackTrace: stackTrace,
+      );
+      _pageParticipants = (_pageParticipants > 1) ? _pageParticipants - 1 : 1;
+      setError(e.toString());
+      return false;
+    } finally {
+      _isLoadingMoreParticipants = false;
+      notifyListeners();
+    }
   }
 
   Future<bool> leaveConversation({required String? conversationId}) async {
     if (conversationId == null || conversationId.isEmpty) return false;
 
-    return await runBusyFuture(() async {
-          try {
-            var success = true;
-
+    return await runBusyFuture(
+          () async {
             final result = await _chatRepository.leaveConversation(
               conversationId: conversationId,
             );
-            success = result.isSuccess;
-            setSuccess(result.message);
 
+            setSuccess(result.message);
             notifyListeners();
-            return success;
-          } catch (e) {
-            developer.log(
-              "GroupProfileViewModel - leaveConversation() error $e",
-              name: 'GroupProfileViewModel',
-            );
-            setError(e.toString());
-            return false;
-          }
-        }) ??
+            return result.isSuccess;
+          },
+          logName: _logName,
+          logContext: 'leaveConversation()',
+        ) ??
         false;
   }
 
@@ -219,28 +197,20 @@ class GroupProfileViewModel extends BaseViewModel {
       return false;
     }
 
-    return await runBusyFuture(() async {
-          try {
-            var success = true;
-
+    return await runBusyFuture(
+          () async {
             final result = await _chatRepository.addConversationParticipants(
               conversationId: _conversationId!,
               newParticipantsIds: newParticipanstIds,
             );
-            success = result.isSuccess;
-            setSuccess(result.message);
 
+            setSuccess(result.message);
             notifyListeners();
-            return success;
-          } catch (e) {
-            developer.log(
-              "GroupProfileViewModel - addConversationParticipants() error $e",
-              name: 'GroupProfileViewModel',
-            );
-            setError(e.toString());
-            return false;
-          }
-        }) ??
+            return result.isSuccess;
+          },
+          logName: _logName,
+          logContext: 'addConversationParticipants()',
+        ) ??
         false;
   }
 
@@ -251,8 +221,8 @@ class GroupProfileViewModel extends BaseViewModel {
   }) async {
     if (_conversationId == null) return false;
 
-    return await runBusyFuture(() async {
-          try {
+    return await runBusyFuture(
+          () async {
             String? groupImageUrl;
 
             // Section A: Evaluates and updates textual parameters or password credentials
@@ -260,9 +230,9 @@ class GroupProfileViewModel extends BaseViewModel {
               final result = await _chatRepository.uploadConversationGroupImage(
                 filePath: groupImagePath,
               );
-
               groupImageUrl = result.data;
             }
+
             if (name != null ||
                 groupDescription != null ||
                 groupImageUrl != null) {
@@ -274,7 +244,6 @@ class GroupProfileViewModel extends BaseViewModel {
               );
 
               _conversation = result.data;
-
               _conversationName = _conversation?.name;
               _conversationDescription = _conversation?.groupDescription;
               _conversationGroupImage = _conversation?.groupImage;
@@ -284,15 +253,10 @@ class GroupProfileViewModel extends BaseViewModel {
 
             notifyListeners();
             return true;
-          } catch (e) {
-            developer.log(
-              "GroupProfileViewModel - updateConversation() error $e",
-              name: 'GroupProfileViewModel',
-            );
-            setError(e.toString());
-            return false;
-          }
-        }) ??
+          },
+          logName: _logName,
+          logContext: 'updateConversation()',
+        ) ??
         false;
   }
 
@@ -300,8 +264,8 @@ class GroupProfileViewModel extends BaseViewModel {
     try {
       final rawUpdatedConversation =
           data['updatedConversation'] as Map<String, dynamic>?;
-
       ConversationModel? updatedConversation;
+
       if (rawUpdatedConversation != null) {
         updatedConversation = ConversationModel.fromJson(
           rawUpdatedConversation,
@@ -311,10 +275,12 @@ class GroupProfileViewModel extends BaseViewModel {
         _conversationName = updatedConversation.name;
       }
       notifyListeners();
-    } catch (e) {
+    } catch (e, stackTrace) {
       developer.log(
-        'GroupProfileViewModel - handleConversationUpdated() error: $e',
-        name: 'GroupProfileViewModel',
+        'handleConversationUpdated() error: $e',
+        name: _logName,
+        error: e,
+        stackTrace: stackTrace,
       );
       setError(e.toString());
     }
@@ -323,24 +289,22 @@ class GroupProfileViewModel extends BaseViewModel {
   void handleLeftParticipant(dynamic data) {
     try {
       final userId = data as String?;
-
       if (userId != null) {
         final initialLength = _conversationParticipants.length;
-
         _conversationParticipants.removeWhere(
           (participant) => participant.userId == userId,
         );
-
         if (_conversationParticipants.length < initialLength) {
           _totalParticipants--;
         }
       }
-
       notifyListeners();
-    } catch (e) {
+    } catch (e, stackTrace) {
       developer.log(
-        'GroupProfileViewModel - handleLeftParticipant() error: $e',
-        name: 'GroupProfileViewModel',
+        'handleLeftParticipant() error: $e',
+        name: _logName,
+        error: e,
+        stackTrace: stackTrace,
       );
       setError(e.toString());
     }
@@ -349,7 +313,6 @@ class GroupProfileViewModel extends BaseViewModel {
   void handleParticipantsAdded(dynamic data) {
     try {
       final rawParticipantsAdded = data as Map<String, dynamic>?;
-
       final rawAddedParticipants = List<Map<String, dynamic>>.from(
         rawParticipantsAdded?['addedParticipants'] ?? [],
       );
@@ -363,12 +326,13 @@ class GroupProfileViewModel extends BaseViewModel {
               .toList();
 
       _conversationParticipants.addAll(addedCovParticipants);
-
       notifyListeners();
-    } catch (e) {
+    } catch (e, stackTrace) {
       developer.log(
-        'GroupProfileViewModel - handleParticipantsAdded() error: $e',
-        name: 'GroupProfileViewModel',
+        'handleParticipantsAdded() error: $e',
+        name: _logName,
+        error: e,
+        stackTrace: stackTrace,
       );
       setError(e.toString());
     }

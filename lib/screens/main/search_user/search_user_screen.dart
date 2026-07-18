@@ -272,7 +272,7 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
                                   : '',
                             ),
                             style: const TextStyle(
-                              color: Colors.grey,
+                              color: AppColors.grey,
                               fontSize: 12,
                             ),
                           )
@@ -294,7 +294,7 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
                             ),
                             icon: const Iconify(
                               Mdi.message_plus_outline,
-                              color: Colors.white,
+                              color: AppColors.white,
                               size: 16,
                             ),
                             text: context.tr('message'),

@@ -179,6 +179,9 @@ const Map<String, String> zhCN = {
   'add_member_success': '成员添加成功',
   'add_member_failed': '添加成员失败',
   'participants_added_success': '参与者添加成功',
+  'you_blocked_this_user': '您已屏蔽此用户',
+  'you_are_blocked_by_this_user': '您已被此用户屏蔽',
+  'block_status_retrieved_success': '已成功获取屏蔽状态',
 
   // General Enums
   'view_profile_image': '查看头像',
@@ -195,6 +198,7 @@ const Map<String, String> zhCN = {
   "failed_to_pick_image": "无法选择图片",
   'no_file_uploaded': '未上传文件',
   'permission_denied': '权限被拒绝',
+  'invalid_response': '无效的响应',
 
   // Misc
   'cancel': '取消',

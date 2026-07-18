@@ -21,6 +21,7 @@ import '../../models/message_model.dart';
 class ChatBubble extends StatelessWidget {
   final MessageModel message;
   final ConversationType? conversationType;
+  final bool isLongPressOptionEnabled;
   final bool isMe;
   final bool showSenderName;
   final Function(String)? onReplyTap;
@@ -32,6 +33,7 @@ class ChatBubble extends StatelessWidget {
     this.showSenderName = false,
     this.conversationType,
     this.onReplyTap,
+    this.isLongPressOptionEnabled = true,
   });
 
   String _extractFileName(String? url, String fallback) {
@@ -164,10 +166,12 @@ class ChatBubble extends StatelessWidget {
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: GestureDetector(
-        onLongPressStart: (details) => _showContextMenu(
-          context: context,
-          position: details.globalPosition,
-        ),
+        onLongPressStart: isLongPressOptionEnabled
+            ? (details) => _showContextMenu(
+                context: context,
+                position: details.globalPosition,
+              )
+            : null,
         child: Container(
           constraints: BoxConstraints(
             maxWidth: MediaQuery.of(context).size.width * 0.75,
@@ -182,7 +186,7 @@ class ChatBubble extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: AppColors.black.withOpacity(0.05),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
@@ -324,11 +328,13 @@ class ChatBubble extends StatelessWidget {
                 );
               },
 
-              onLongPressStart: (details) => _showContextMenu(
-                context: context,
-                position: details.globalPosition,
-                showDownloadAndOpen: true,
-              ),
+              onLongPressStart: isLongPressOptionEnabled
+                  ? (details) => _showContextMenu(
+                      context: context,
+                      position: details.globalPosition,
+                      showDownloadAndOpen: true,
+                    )
+                  : null,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: CachedNetworkImage(
@@ -418,7 +424,7 @@ class ChatBubble extends StatelessWidget {
                 ? MaterialSymbols.done_all_rounded
                 : MaterialSymbols.done_rounded,
             size: 14,
-            color: message.isRead ? Colors.blue : AppColors.timestamp,
+            color: message.isRead ? AppColors.messageRead : AppColors.timestamp,
           ),
         ],
       ],

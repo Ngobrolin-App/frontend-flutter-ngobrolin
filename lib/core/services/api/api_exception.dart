@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'dart:developer' as developer;
 
 /// Custom exception class for API errors
 class ApiException implements Exception {
