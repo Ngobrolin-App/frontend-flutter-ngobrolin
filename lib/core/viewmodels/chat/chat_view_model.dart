@@ -91,8 +91,22 @@ class ChatViewModel extends BaseViewModel {
     _setupChatRoomContext();
   }
 
-  void resetBlockStatus() {
+  void resetAllConversationData() {
+    _messages.clear();
+    _privatePartnerId = '';
+    _privatePartnerStatus = UserStatus.offline.name;
+    _isParticipantTyping = false;
+    _typingParticipantName = null;
+    _conversationId = null;
+    _conversationType = null;
+    _conversationName = null;
+    _conversationImageUrl = null;
+    _replyingToMessage = null;
+    _participants.clear();
     _blockUserStatus = null;
+    _page = 1;
+    _isLoadingMore = false;
+    _hasMore = false;
     notifyListeners();
   }
 

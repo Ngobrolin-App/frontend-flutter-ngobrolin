@@ -275,6 +275,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
+    _chatViewModel.resetAllConversationData();
+
     _typingTimer?.cancel();
 
     _messageController.removeListener(_onTextChanged);
@@ -311,8 +313,6 @@ class _ChatScreenState extends State<ChatScreen> {
           name: 'ChatScreen',
         );
       }
-
-      _chatViewModel.resetBlockStatus();
 
       _chatViewModel.removeListener(_onChatViewModelChanged);
     }
@@ -504,7 +504,7 @@ class _ChatScreenState extends State<ChatScreen> {
           Expanded(
             child: Stack(
               children: [
-                Expanded(
+                Positioned.fill(
                   child: Selector<ChatViewModel, bool>(
                     selector: (_, vm) => vm.isLoading,
                     builder: (context, isLoading, _) {
