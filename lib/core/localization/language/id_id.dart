@@ -361,4 +361,5 @@ const Map<String, String> idID = {
   'system_msg_description_changed':
       '{actorName} mengubah deskripsi grup menjadi "{groupDescription}"',
   'number_groups_in_common': '{number} grup yang sama',
+  'number_of_people': '{number} orang',
 };

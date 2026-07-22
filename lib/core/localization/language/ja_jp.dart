@@ -332,4 +332,5 @@ const Map<String, String> jaJP = {
   'system_msg_description_changed':
       '{actorName}がグループの説明を「{groupDescription}」に変更しました',
   'number_groups_in_common': '{number}件の共通グループ',
+  'number_of_people': '{number}人',
 };

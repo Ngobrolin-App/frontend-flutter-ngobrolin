@@ -514,7 +514,10 @@ class _GroupProfileScreenState extends State<GroupProfileScreen> {
                     selector: (_, vm) => vm.totalParticipants,
                     builder: (context, total, _) {
                       return Text(
-                        '$total Orang',
+                        context.tr(
+                          'number_of_people',
+                          args: {'number': total.toString()},
+                        ),
                         style: const TextStyle(
                           fontSize: 14,
                           color: AppColors.primary,

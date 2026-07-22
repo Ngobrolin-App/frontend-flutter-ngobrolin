@@ -355,4 +355,5 @@ const Map<String, String> enUS = {
   'system_msg_description_changed':
       '{actorName} changed the group description to "{groupDescription}"',
   'number_groups_in_common': '{number} groups in common',
+  'number_of_people': '{number} people',
 };

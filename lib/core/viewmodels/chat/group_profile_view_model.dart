@@ -45,7 +45,7 @@ class GroupProfileViewModel extends BaseViewModel {
 
   final int _limit = 5;
   int _pageParticipants = 1;
-  bool _hasMoreParticipants = true;
+  bool _hasMoreParticipants = false;
   bool get hasMoreParticipants => _hasMoreParticipants;
 
   bool _isLoadingMoreParticipants = false;
@@ -57,7 +57,7 @@ class GroupProfileViewModel extends BaseViewModel {
   void initGroupProfile({required String conversationId}) async {
     _conversationId = conversationId;
     _pageParticipants = 1;
-    _hasMoreParticipants = true;
+    _hasMoreParticipants = false;
 
     if (_conversationId != null && _conversationId!.isNotEmpty) {
       await _getConversationDataOnly();

@@ -325,4 +325,5 @@ const Map<String, String> zhCN = {
   'number_of_members': '{number} 位成员',
   'system_msg_description_changed': '{actorName} 将群组描述更改为“{groupDescription}”',
   'number_groups_in_common': '{number} 个共同群组',
+  'number_of_people': '{number} 人',
 };
