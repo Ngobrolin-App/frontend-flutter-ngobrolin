@@ -85,7 +85,7 @@ class _SearchGroupScreenState extends State<SearchGroupScreen> {
                 child: PaginatedStateBuilder(
                   isLoading: viewModel.isLoading,
                   isEmpty: viewModel.groups.isEmpty,
-                  emptyMessage: 'no_groups_found',
+                  emptyMessage: context.tr('no_groups_found'),
                   onRefresh: () async =>
                       viewModel.setSearchQuery(query: _searchController.text),
                   child: _buildGroupList(viewModel),

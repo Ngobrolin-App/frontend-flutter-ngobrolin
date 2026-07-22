@@ -145,7 +145,7 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
                 child: PaginatedStateBuilder(
                   isLoading: viewModel.isLoading,
                   isEmpty: viewModel.users.isEmpty,
-                  emptyMessage: 'no_users_found',
+                  emptyMessage: context.tr('no_users_found'),
                   onRefresh: () async =>
                       viewModel.setSearchQuery(query: _searchController.text),
                   child: _buildUserList(viewModel),

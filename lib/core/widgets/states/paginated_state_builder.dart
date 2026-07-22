@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:ngobrolin_app/core/localization/app_localizations.dart';
 import 'empty_state.dart';
 
 class PaginatedStateBuilder extends StatelessWidget {
@@ -54,7 +53,7 @@ class PaginatedStateBuilder extends StatelessWidget {
                   title: emptyMessage,
                   subtitle: emptySubtitle, // Terapkan di sini
                   showButton: showEmptyButton,
-                  buttonText: context.tr(emptyButtonText ?? ''),
+                  buttonText: emptyButtonText,
                   onButtonPressed: onEmptyButtonPressed,
                 ),
               ),
