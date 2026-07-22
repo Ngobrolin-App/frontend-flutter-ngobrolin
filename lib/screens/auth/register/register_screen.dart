@@ -138,6 +138,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     controller: _nameController,
                     hintText: context.tr('enter_name'),
                     labelText: context.tr('name'),
+                    maxLength: 100,
+                    showCounter: false,
                     prefixIcon: const Icon(Icons.person_outline),
                     textCapitalization: TextCapitalization.words,
                     enabled: !isLoading,
@@ -179,6 +181,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     controller: _usernameController,
                     hintText: context.tr('enter_username'),
                     labelText: context.tr('username'),
+                    maxLength: 30,
+                    showCounter: false,
                     prefixIcon: const Icon(Icons.alternate_email),
                     enabled: !isLoading,
                     validator: (value) {

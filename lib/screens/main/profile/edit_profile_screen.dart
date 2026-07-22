@@ -262,6 +262,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 CustomTextField(
                   controller: _nameController,
                   labelText: context.tr('name'),
+                  maxLength: 100,
+                  showCounter: false,
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return context.tr('please_enter_name');
@@ -295,6 +297,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 CustomTextField(
                   controller: _bioController,
                   labelText: context.tr('bio'),
+                  maxLength: 500,
+                  showCounter: false,
                   textInputAction: TextInputAction.newline,
                   keyboardType: TextInputType.multiline,
                   minLines: 1,

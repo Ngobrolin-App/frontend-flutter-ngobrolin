@@ -70,10 +70,10 @@ class ChatUtils {
           args: {'actorName': actorName, 'groupName': groupName},
         );
 
-      case 'USER_ADDED':
+      case 'USER_JOINED':
         return context.tr(
-          'system_msg_user_added',
-          args: {'actorName': actorName, 'targetName': targetName},
+          'system_msg_user_joined',
+          args: {'actorName': actorName},
         );
 
       case 'USERS_ADDED':

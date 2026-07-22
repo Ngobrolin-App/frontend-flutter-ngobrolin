@@ -341,6 +341,17 @@ class ChatBubble extends StatelessWidget {
                   imageUrl: message.mediaUrl ?? '',
                   width: MediaQuery.of(context).size.width * 0.6,
                   fit: BoxFit.cover,
+                  progressIndicatorBuilder: (context, url, downloadProgress) =>
+                      Container(
+                        width: MediaQuery.of(context).size.width * 0.6,
+                        height: 160,
+                        alignment: Alignment.center,
+                        color: AppColors.lightGrey,
+                        child: CircularProgressIndicator(
+                          value: downloadProgress.progress,
+                          strokeWidth: 3.0,
+                        ),
+                      ),
                   errorWidget: (context, url, error) => ImageErrorPlaceholder(
                     width: MediaQuery.of(context).size.width * 0.6,
                     height: 160,

@@ -182,6 +182,13 @@ const Map<String, String> zhCN = {
   'you_blocked_this_user': '您已屏蔽此用户',
   'you_are_blocked_by_this_user': '您已被此用户屏蔽',
   'block_status_retrieved_success': '已成功获取屏蔽状态',
+  'no_groups_found': '未找到群组',
+  'search_groups': '搜索群组',
+  'group_details': '群组详情',
+  'open_conversation': '打开会话',
+  'joined': '已加入',
+  'join_group_success': '成功加入群组',
+  'join_group_failed': '加入群组失败',
 
   // General Enums
   'view_profile_image': '查看头像',
@@ -267,6 +274,7 @@ const Map<String, String> zhCN = {
   'message_delete_success': '消息删除成功',
   'message_delete_failed': '消息删除失败',
   'messages_marked_as_read': '消息已标记为已读',
+  'userid_required': '用户 ID 为必填项',
 
   // RESPONSESTATUS STATUSCODE
   'success': '成功',
@@ -309,10 +317,12 @@ const Map<String, String> zhCN = {
   // WITH ARGS
   'system_msg_group_created': '{actorName} 创建了群组 "{groupName}"',
   'system_msg_user_added': '{actorName} 将 {targetName} 加入了群组',
+  'system_msg_user_joined': '{actorName} 加入了群组',
   'system_msg_image_changed': '{actorName} 修改了群头像',
   'system_msg_name_changed': '{actorName} 将群组名称修改为 "{groupName}"',
   'system_msg_user_removed': '{actorName} 将 {targetName} 移出了群组',
   'system_msg_user_left': '{actorName} 离开了群组',
   'number_of_members': '{number} 位成员',
   'system_msg_description_changed': '{actorName} 将群组描述更改为“{groupDescription}”',
+  'number_groups_in_common': '{number} 个共同群组',
 };

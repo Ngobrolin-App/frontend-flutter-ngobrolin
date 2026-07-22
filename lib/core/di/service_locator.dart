@@ -1,6 +1,7 @@
 import 'package:get_it/get_it.dart';
 import 'package:ngobrolin_app/core/services/deeplink/deeplink_service.dart';
 import 'package:ngobrolin_app/core/viewmodels/chat/group_profile_view_model.dart';
+import 'package:ngobrolin_app/core/viewmodels/search/search_group_view_model.dart';
 
 import '../repositories/auth_repository.dart';
 import '../repositories/chat_repository.dart';
@@ -43,7 +44,10 @@ void setupServiceLocator() {
 
   // Register view models
   serviceLocator.registerFactory(
-    () => AuthViewModel(authRepository: serviceLocator<AuthRepository>()),
+    () => AuthViewModel(
+      authRepository: serviceLocator<AuthRepository>(),
+      userRepository: serviceLocator<UserRepository>(),
+    ),
   );
   serviceLocator.registerFactory(
     () => ProfileViewModel(userRepository: serviceLocator<UserRepository>()),
@@ -55,7 +59,10 @@ void setupServiceLocator() {
     ),
   );
   serviceLocator.registerFactory(
-    () => ChatViewModel(chatRepository: serviceLocator<ChatRepository>()),
+    () => ChatViewModel(
+      chatRepository: serviceLocator<ChatRepository>(),
+      settingsRepository: serviceLocator<SettingsRepository>(),
+    ),
   );
   serviceLocator.registerFactory(
     () => ChatListViewModel(chatRepository: serviceLocator<ChatRepository>()),
@@ -66,6 +73,10 @@ void setupServiceLocator() {
   );
   serviceLocator.registerFactory(
     () => SearchUserViewModel(userRepository: serviceLocator<UserRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () =>
+        SearchGroupViewModel(chatRepository: serviceLocator<ChatRepository>()),
   );
   serviceLocator.registerFactory(
     () => SettingsViewModel(

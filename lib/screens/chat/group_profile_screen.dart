@@ -45,6 +45,7 @@ class _GroupProfileScreenState extends State<GroupProfileScreen> {
   late Function(dynamic) _conversationUpdatedHandler;
   late Function(dynamic) _leftParticipantHandler;
   late Function(dynamic) _participantsAddedHandler;
+  late Function(dynamic) _participantJoinedHandler;
 
   @override
   void initState() {
@@ -75,9 +76,15 @@ class _GroupProfileScreenState extends State<GroupProfileScreen> {
     _participantsAddedHandler = (data) {
       groupProfileViewModel.handleParticipantsAdded(data);
     };
+
+    _participantJoinedHandler = (data) {
+      groupProfileViewModel.handleParticipantJoined(data);
+    };
+
     _socketProvider.on('conversation_updated', _conversationUpdatedHandler);
     _socketProvider.on('left_participant', _leftParticipantHandler);
     _socketProvider.on('participants_added', _participantsAddedHandler);
+    _socketProvider.on('participant_joined', _participantJoinedHandler);
   }
 
   @override
@@ -88,6 +95,7 @@ class _GroupProfileScreenState extends State<GroupProfileScreen> {
       _socketProvider.off('conversation_updated', _conversationUpdatedHandler);
       _socketProvider.off('left_participant', _leftParticipantHandler);
       _socketProvider.off('participants_added', _participantsAddedHandler);
+      _socketProvider.off('participant_joined', _participantJoinedHandler);
     } catch (e) {
       developer.log(
         'GroupProfileScreen - dispose() - Error unregistering socket: $e',

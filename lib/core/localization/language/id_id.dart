@@ -194,6 +194,13 @@ const Map<String, String> idID = {
   'you_blocked_this_user': 'Anda telah memblokir pengguna ini',
   'you_are_blocked_by_this_user': 'Anda telah diblokir oleh pengguna ini',
   'block_status_retrieved_success': 'Status blokir berhasil diperoleh',
+  'no_groups_found': 'Tidak ada grup yang ditemukan',
+  'search_groups': 'Cari Grup',
+  'group_details': 'Rincian Grup',
+  'open_conversation': 'Buka Percakapan',
+  'joined': 'Bergabung',
+  'join_group_success': 'Berhasil bergabung ke grup',
+  'join_group_failed': 'Gagal bergabung ke grup',
 
   // General Enums
   'view_profile_image': 'Lihat Foto Profil',
@@ -287,6 +294,7 @@ const Map<String, String> idID = {
   'message_delete_success': 'Pesan berhasil dihapus',
   'message_delete_failed': 'Pesan gagal dihapus',
   'messages_marked_as_read': 'Pesan ditandai sebagai sudah dibaca',
+  'userid_required': 'User ID is required',
 
   // RESPONSESTATUS STATUSCODE
   // --- 2xx Success ---
@@ -342,6 +350,7 @@ const Map<String, String> idID = {
   // WITH ARGS
   'system_msg_group_created': '{actorName} membuat grup "{groupName}"',
   'system_msg_user_added': '{actorName} menambahkan {targetName}',
+  'system_msg_user_joined': '{actorName} bergabung ke grup',
   'system_msg_image_changed': '{actorName} mengubah foto grup',
   'system_msg_name_changed':
       '{actorName} mengubah nama grup menjadi "{groupName}"',
@@ -351,4 +360,5 @@ const Map<String, String> idID = {
   'number_of_members': '{number} anggota',
   'system_msg_description_changed':
       '{actorName} mengubah deskripsi grup menjadi "{groupDescription}"',
+  'number_groups_in_common': '{number} grup yang sama',
 };

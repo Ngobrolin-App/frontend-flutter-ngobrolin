@@ -1,10 +1,12 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/material_symbols.dart';
 import 'package:iconify_flutter/icons/mdi.dart';
 import 'package:ngobrolin_app/core/enums/general_enums.dart';
+import 'package:ngobrolin_app/core/utils/debouncer.dart';
 import 'package:ngobrolin_app/core/widgets/buttons/primary_button.dart';
+import 'package:ngobrolin_app/core/widgets/inputs/custom_search_bar.dart';
+import 'package:ngobrolin_app/core/widgets/states/paginated_state_builder.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/localization/app_localizations.dart';
@@ -13,7 +15,6 @@ import '../../../core/widgets/buttons/mini_icon_text_button.dart';
 import '../../../core/widgets/cards/action_list_tile.dart';
 import '../../../core/widgets/cards/user_list_item.dart';
 import '../../../core/widgets/cards/circle_user_item_selected.dart';
-import '../../../core/widgets/states/empty_state.dart';
 import '../../../routes/app_routes.dart';
 import '../../../theme/app_colors.dart';
 
@@ -34,7 +35,7 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
   late SearchUserViewModel _searchUserViewModel;
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  Timer? _debounce;
+  final _debouncer = Debouncer(milliseconds: 400);
 
   @override
   void initState() {
@@ -53,7 +54,7 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
 
   @override
   void dispose() {
-    _debounce?.cancel();
+    _debouncer.dispose();
     _searchController.dispose();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
@@ -70,9 +71,8 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
     }
   }
 
-  void _updateSearchQuery(String query) {
-    _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 400), () {
+  void _onSearchChanged(String query) {
+    _debouncer.run(() {
       if (mounted) _searchUserViewModel.setSearchQuery(query: query);
     });
   }
@@ -101,46 +101,54 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
               if (viewModel.userSelectionAction != null)
                 _buildSelectionHeader(viewModel)
               else
-                ActionListTile(
-                  title: context.tr('new_group'),
-                  icon: Mdi.account_multiple_plus,
-                  onTap: () => viewModel.setUserSelectionAction(
-                    UserSelectionAction.createNewGroup,
-                  ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ActionListTile(
+                        padding: EdgeInsets.only(
+                          top: 8,
+                          bottom: 8,
+                          left: 16,
+                          right: 4,
+                        ),
+                        title: context.tr('new_group'),
+                        icon: Mdi.account_multiple_plus,
+                        onTap: () => viewModel.setUserSelectionAction(
+                          UserSelectionAction.createNewGroup,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: ActionListTile(
+                        padding: EdgeInsets.only(
+                          top: 8,
+                          bottom: 8,
+                          left: 4,
+                          right: 16,
+                        ),
+                        title: context.tr('join_group'),
+                        icon: Mdi.account_multiple,
+                        onTap: () {
+                          Navigator.pushNamed(context, AppRoutes.searchGroup);
+                        },
+                      ),
+                    ),
+                  ],
                 ),
-              _buildSearchBar(),
-
+              CustomSearchBar(
+                controller: _searchController,
+                hintText: context.tr('search_users'),
+                onChanged: _onSearchChanged,
+                onClear: () => _onSearchChanged(''),
+              ),
               Expanded(
-                child: RefreshIndicator(
+                child: PaginatedStateBuilder(
+                  isLoading: viewModel.isLoading,
+                  isEmpty: viewModel.users.isEmpty,
+                  emptyMessage: 'no_users_found',
                   onRefresh: () async =>
                       viewModel.setSearchQuery(query: _searchController.text),
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      if (viewModel.isLoading) {
-                        return SingleChildScrollView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          child: SizedBox(
-                            height: constraints.maxHeight,
-                            child: const Center(
-                              child: CircularProgressIndicator(),
-                            ),
-                          ),
-                        );
-                      }
-                      if (viewModel.users.isEmpty) {
-                        return SingleChildScrollView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          child: SizedBox(
-                            height: constraints.maxHeight,
-                            child: EmptyState(
-                              title: context.tr('no_users_found'),
-                            ),
-                          ),
-                        );
-                      }
-                      return _buildUserList(viewModel);
-                    },
-                  ),
+                  child: _buildUserList(viewModel),
                 ),
               ),
             ],
@@ -174,55 +182,6 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
     );
   }
 
-  Widget _buildSearchBar() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-      child: TextField(
-        controller: _searchController,
-        onChanged: (value) {
-          _updateSearchQuery(value);
-          setState(() {});
-        },
-        decoration: InputDecoration(
-          hintText: context.tr('search_users'),
-          prefixIcon: const Icon(Icons.search),
-          suffixIcon: _searchController.text.isNotEmpty
-              ? IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    _searchController.clear();
-                    _updateSearchQuery('');
-                    setState(() {});
-                  },
-                )
-              : null,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(24),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(24),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(24),
-            borderSide: BorderSide.none,
-          ),
-          errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(24),
-            borderSide: BorderSide.none,
-          ),
-          filled: true,
-          fillColor: AppColors.textFieldLightGrey,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 8,
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildUserList(SearchUserViewModel viewModel) {
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -230,6 +189,9 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
       children: [
         ListView.builder(
           shrinkWrap: true,
+          padding: (viewModel.userSelectionAction != null)
+              ? EdgeInsets.only(bottom: 64)
+              : EdgeInsets.only(bottom: 16),
           physics: const NeverScrollableScrollPhysics(),
           itemCount: viewModel.users.length + (viewModel.isLoadingMore ? 1 : 0),
           itemBuilder: (context, index) {

@@ -26,6 +26,8 @@ ConversationModel _$ConversationModelFromJson(Map<String, dynamic> json) =>
       createdByUser: json['createdByUser'] == null
           ? null
           : UserModel.fromJson(json['createdByUser'] as Map<String, dynamic>),
+      totalParticipants: (json['totalParticipants'] as num?)?.toInt(),
+      isMember: json['isMember'] as bool?,
     );
 
 Map<String, dynamic> _$ConversationModelToJson(ConversationModel instance) =>
@@ -40,4 +42,6 @@ Map<String, dynamic> _$ConversationModelToJson(ConversationModel instance) =>
       'createdAt': instance.createdAt?.toIso8601String(),
       'updatedAt': instance.updatedAt?.toIso8601String(),
       'createdByUser': instance.createdByUser,
+      'totalParticipants': instance.totalParticipants,
+      'isMember': instance.isMember,
     };

@@ -10,20 +10,16 @@ import 'package:ngobrolin_app/core/widgets/cards/app_avatar.dart';
 import 'package:ngobrolin_app/core/widgets/cards/blocked_badge.dart';
 import 'package:ngobrolin_app/core/widgets/cards/chat_date_badge.dart';
 import 'package:ngobrolin_app/core/widgets/cards/chat_system_message_badge.dart';
-import 'package:ngobrolin_app/core/widgets/cards/note_badge.dart';
 import 'package:ngobrolin_app/core/widgets/cards/reply_message.dart';
 import 'package:ngobrolin_app/core/widgets/inputs/chat_input_bar.dart';
 import 'package:ngobrolin_app/core/widgets/modals/media_picker_modal.dart';
 import 'package:provider/provider.dart';
-import 'package:iconify_flutter/iconify_flutter.dart';
-import 'package:iconify_flutter/icons/ic.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:ngobrolin_app/core/widgets/states/empty_state.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/providers/socket_provider.dart';
 import '../../core/viewmodels/chat/chat_view_model.dart';
-import '../../core/viewmodels/settings/settings_view_model.dart';
 import '../../core/widgets/cards/chat_bubble.dart';
 import '../../routes/app_routes.dart';
 import '../../theme/app_colors.dart';
@@ -53,7 +49,10 @@ class _ChatScreenState extends State<ChatScreen> {
   final ScrollController _scrollController = ScrollController();
   bool _joinedRoom = false;
   bool _isInit = false;
+
+  bool _isTyping = false;
   Timer? _typingTimer;
+
   final Map<String, GlobalKey> _messageKeys = {};
 
   // Socket Handlers
@@ -66,11 +65,11 @@ class _ChatScreenState extends State<ChatScreen> {
   late Function(dynamic) _statusHandler;
   late Function(dynamic) _leftParticipantHandler;
   late Function(dynamic) _participantsAddedHandler;
+  late Function(dynamic) _participantJoinedHandler;
   late Function(dynamic) _blockStatusUpdatedHandler;
 
   late ChatViewModel _chatViewModel;
   late AuthViewModel _authViewModel;
-  late SettingsViewModel _settingsViewModel;
   late SocketProvider _socketProvider;
 
   @override
@@ -103,10 +102,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
     if (!_isInit) {
       _chatViewModel = Provider.of<ChatViewModel>(context, listen: false);
-      _settingsViewModel = Provider.of<SettingsViewModel>(
-        context,
-        listen: false,
-      );
       _socketProvider = Provider.of<SocketProvider>(context, listen: false);
       _authViewModel = Provider.of<AuthViewModel>(context, listen: false);
 
@@ -255,6 +250,12 @@ class _ChatScreenState extends State<ChatScreen> {
       } catch (_) {}
     };
 
+    _participantJoinedHandler = (data) {
+      try {
+        _chatViewModel.handleParticipantJoined(data);
+      } catch (_) {}
+    };
+
     _blockStatusUpdatedHandler = (data) {
       try {
         _chatViewModel.getBlockUserStatus();
@@ -270,6 +271,7 @@ class _ChatScreenState extends State<ChatScreen> {
     _socketProvider.on('conversation_updated', _conversationUpdatedHandler);
     _socketProvider.on('left_participant', _leftParticipantHandler);
     _socketProvider.on('participants_added', _participantsAddedHandler);
+    _socketProvider.on('participant_joined', _participantJoinedHandler);
     _socketProvider.on('block_status_updated', _blockStatusUpdatedHandler);
   }
 
@@ -306,6 +308,7 @@ class _ChatScreenState extends State<ChatScreen> {
         );
         _socketProvider.off('left_participant', _leftParticipantHandler);
         _socketProvider.off('participants_added', _participantsAddedHandler);
+        _socketProvider.off('participant_joined', _participantJoinedHandler);
         _socketProvider.off('block_status_updated', _blockStatusUpdatedHandler);
       } catch (e) {
         developer.log(
@@ -325,10 +328,16 @@ class _ChatScreenState extends State<ChatScreen> {
 
     if (_typingTimer?.isActive ?? false) _typingTimer!.cancel();
 
-    _socketProvider.sendTypingStart(_chatViewModel.conversationId!);
+    if (!_isTyping) {
+      _isTyping = true;
+      _socketProvider.sendTypingStart(_chatViewModel.conversationId!);
+    }
+
+    if (_typingTimer?.isActive ?? false) _typingTimer!.cancel();
 
     _typingTimer = Timer(const Duration(seconds: 2), () {
       if (mounted && _chatViewModel.conversationId != null) {
+        _isTyping = false;
         _socketProvider.sendTypingStop(_chatViewModel.conversationId!);
       }
     });

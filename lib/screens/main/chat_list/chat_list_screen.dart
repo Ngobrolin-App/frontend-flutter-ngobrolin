@@ -7,8 +7,8 @@ import 'package:ngobrolin_app/core/models/conversation_model.dart';
 import 'package:ngobrolin_app/core/providers/socket_provider.dart';
 import 'package:ngobrolin_app/core/viewmodels/auth/auth_view_model.dart';
 import 'package:ngobrolin_app/core/viewmodels/settings/settings_view_model.dart';
+import 'package:ngobrolin_app/core/widgets/states/paginated_state_builder.dart';
 import 'package:provider/provider.dart';
-import 'package:ngobrolin_app/core/widgets/states/empty_state.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/viewmodels/chat/chat_list_view_model.dart';
 import '../../../core/widgets/cards/chat_list_item.dart';
@@ -251,41 +251,33 @@ class _ChatListScreenState extends State<ChatListScreen> {
           ),
         ],
       ),
-      // OPTIMASI: Gunakan Consumer secara spesifik hanya pada area list data yang reaktif
       body: Consumer<ChatListViewModel>(
         builder: (context, chatListViewModel, _) {
           final chatList = chatListViewModel.chatList;
 
-          if (chatListViewModel.isLoading && chatList.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
+          return PaginatedStateBuilder(
+            isLoading: chatListViewModel.isLoading,
+            isEmpty: chatList.isEmpty,
+            emptyMessage: context.tr('no_chats'),
+            showEmptyButton: true,
+            emptyButtonText: context.tr('start_new_chat'),
+            onEmptyButtonPressed: () {
+              Navigator.of(
+                context,
+              ).pushNamed(AppRoutes.main, arguments: {'tabIndex': 1});
+            },
 
-          if (chatList.isEmpty) {
-            return EmptyState(
-              title: context.tr('no_chats'),
-              showButton: true,
-              buttonText: context.tr('start_new_chat'),
-              onButtonPressed: () {
-                Navigator.of(
-                  context,
-                ).pushNamed(AppRoutes.main, arguments: {'tabIndex': 1});
-              },
-            );
-          }
-
-          return RefreshIndicator(
             onRefresh: () async {
               await chatListViewModel.fetchChatList();
             },
+
             child: ListView.builder(
               physics: const AlwaysScrollableScrollPhysics(),
               controller: _scrollController,
-              // Tambahkan 1 item tambahan di akhir jika masih ada data (hasMore) untuk menampung loading indicator
               itemCount: chatListViewModel.hasMore
                   ? chatList.length + 1
                   : chatList.length,
               itemBuilder: (context, index) {
-                // Cek jika index berada di posisi item tambahan paling bawah
                 if (index == chatList.length) {
                   return chatListViewModel.isLoadingMore
                       ? const Padding(
@@ -305,6 +297,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
                 final chat = chatList[index];
                 final type = ConversationType.values.byName(chat.type);
+
                 return ChatListItem(
                   chat: chat,
                   type: type,

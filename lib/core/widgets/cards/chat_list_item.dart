@@ -130,6 +130,7 @@ class ChatListItem extends StatelessWidget {
               dateTime,
               context,
               showTodayTime: true,
+              useNumericFormat: true,
               localeCode: languageCode ?? 'en',
             ), // Sekarang dateTime pasti objek DateTime
             style: const TextStyle(fontSize: 12, color: AppColors.timestamp),

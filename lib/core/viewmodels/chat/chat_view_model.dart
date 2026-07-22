@@ -592,14 +592,37 @@ class ChatViewModel extends BaseViewModel {
         _participants.addAll(addedUserParticipants);
       }
 
-      developer.log(
-        'handleParticipantsAdded - participantNamesText : $participantNamesText',
-        name: _logName,
-      );
       notifyListeners();
     } catch (e, stackTrace) {
       developer.log(
         'handleParticipantsAdded() error: $e',
+        name: _logName,
+        error: e,
+        stackTrace: stackTrace,
+      );
+      setError(e.toString());
+    }
+  }
+
+  void handleParticipantJoined(dynamic data) {
+    try {
+      final rawParticipantJoined = data as Map<String, dynamic>?;
+      final rawJoinedParticipant =
+          rawParticipantJoined?['joinedParticipant'] ?? {};
+
+      ConversationParticipantModel joinedConvParticipant =
+          ConversationParticipantModel.fromJson(
+            rawJoinedParticipant as Map<String, dynamic>,
+          );
+      UserModel? joinedParticipant = joinedConvParticipant.user;
+
+      if (joinedParticipant != null) {
+        participants.add(joinedParticipant);
+      }
+      notifyListeners();
+    } catch (e, stackTrace) {
+      developer.log(
+        'handleParticipantJoined() error: $e',
         name: _logName,
         error: e,
         stackTrace: stackTrace,

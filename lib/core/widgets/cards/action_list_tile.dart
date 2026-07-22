@@ -8,6 +8,7 @@ class ActionListTile extends StatelessWidget {
   final String icon;
   final Color iconColor;
   final bool iconHaveBackground;
+  final EdgeInsets? padding;
 
   final VoidCallback onTap;
 
@@ -18,6 +19,7 @@ class ActionListTile extends StatelessWidget {
     required this.icon,
     this.iconColor = AppColors.white,
     this.iconHaveBackground = true,
+    this.padding,
     required this.onTap,
   });
 
@@ -25,8 +27,10 @@ class ActionListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding:
+            padding ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Row(
           children: [
             CircleAvatar(

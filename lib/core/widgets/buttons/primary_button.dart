@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ngobrolin_app/core/localization/app_localizations.dart';
 import '../../../theme/app_colors.dart';
 
 class PrimaryButton extends StatelessWidget {
@@ -60,7 +61,7 @@ class PrimaryButton extends StatelessWidget {
                 children: [
                   if (icon != null) ...[icon!, const SizedBox(width: 8)],
                   Text(
-                    text,
+                    context.tr(text),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,

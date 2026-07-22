@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:ngobrolin_app/core/services/deeplink/deeplink_service.dart';
 import 'package:ngobrolin_app/core/viewmodels/chat/group_profile_view_model.dart';
+import 'package:ngobrolin_app/core/viewmodels/search/search_group_view_model.dart';
 import 'package:provider/provider.dart';
 
 import 'package:firebase_core/firebase_core.dart';
@@ -173,6 +174,9 @@ Future<void> bootstrap() async {
         ),
         ChangeNotifierProvider(
           create: (_) => serviceLocator<SearchUserViewModel>(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => serviceLocator<SearchGroupViewModel>(),
         ),
         ChangeNotifierProvider(
           create: (_) => serviceLocator<SettingsViewModel>(),

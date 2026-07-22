@@ -337,4 +337,28 @@ class GroupProfileViewModel extends BaseViewModel {
       setError(e.toString());
     }
   }
+
+  void handleParticipantJoined(dynamic data) {
+    try {
+      final rawParticipantJoined = data as Map<String, dynamic>?;
+      final rawJoinedParticipant =
+          rawParticipantJoined?['joinedParticipant'] ?? {};
+
+      ConversationParticipantModel joinedConvParticipant =
+          ConversationParticipantModel.fromJson(
+            rawJoinedParticipant as Map<String, dynamic>,
+          );
+
+      _conversationParticipants.add(joinedConvParticipant);
+      notifyListeners();
+    } catch (e, stackTrace) {
+      developer.log(
+        'handleParticipantJoined() error: $e',
+        name: _logName,
+        error: e,
+        stackTrace: stackTrace,
+      );
+      setError(e.toString());
+    }
+  }
 }

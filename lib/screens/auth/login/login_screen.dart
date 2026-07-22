@@ -152,7 +152,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: _passwordController,
                     hintText: context.tr('enter_password'),
                     labelText: context.tr('password'),
-                    enabled: !isLoading, // Kunci input saat loading berjalan
+                    enabled: !isLoading,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return context.tr('please_enter_password');

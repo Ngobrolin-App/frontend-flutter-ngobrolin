@@ -21,6 +21,7 @@ class CustomTextField extends StatelessWidget {
   final TextCapitalization textCapitalization;
   final int? maxLength;
   final bool autofocus;
+  final bool showCounter;
 
   const CustomTextField({
     super.key,
@@ -43,6 +44,7 @@ class CustomTextField extends StatelessWidget {
     this.textCapitalization = TextCapitalization.none,
     this.maxLength,
     this.autofocus = false,
+    this.showCounter = true,
   });
 
   @override
@@ -69,6 +71,7 @@ class CustomTextField extends StatelessWidget {
         prefixIcon: prefixIcon,
         suffixIcon: suffixIcon,
         contentPadding: contentPadding,
+        counterText: showCounter ? null : "",
       ),
     );
   }

@@ -193,6 +193,13 @@ const Map<String, String> enUS = {
   'you_blocked_this_user': 'You have blocked this user',
   'you_are_blocked_by_this_user': 'You have been blocked by this user',
   'block_status_retrieved_success': 'Block status retrieved successfully',
+  'no_groups_found': 'No groups found',
+  'search_groups': 'Search Groups',
+  'group_details': 'Group Details',
+  'open_conversation': 'Open Conversation',
+  'joined': 'Joined',
+  'join_group_success': 'Successfully joined the group',
+  'join_group_failed': 'Failed to join the group',
 
   // General Enums
   'view_profile_image': 'View Profile Image',
@@ -282,6 +289,7 @@ const Map<String, String> enUS = {
   'message_delete_success': 'Message deleted successfully',
   'message_delete_failed': 'Failed to delete message',
   'messages_marked_as_read': 'Messages marked as read',
+  'userid_required': 'User ID is required',
 
   // RESPONSESTATUS STATUSCODE
   // --- 2xx Success ---
@@ -336,6 +344,7 @@ const Map<String, String> enUS = {
   // WITH ARGS
   'system_msg_group_created': '{actorName} created the group "{groupName}"',
   'system_msg_user_added': '{actorName} added {targetName}',
+  'system_msg_user_joined': '{actorName} joined the group',
   'system_msg_image_changed': '{actorName} changed the group photo',
   'system_msg_name_changed':
       '{actorName} changed the group name to "{groupName}"',
@@ -345,4 +354,5 @@ const Map<String, String> enUS = {
   'number_of_members': '{number} members',
   'system_msg_description_changed':
       '{actorName} changed the group description to "{groupDescription}"',
+  'number_groups_in_common': '{number} groups in common',
 };

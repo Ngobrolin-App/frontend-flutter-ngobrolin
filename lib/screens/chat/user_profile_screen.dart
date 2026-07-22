@@ -6,7 +6,6 @@ import 'package:ngobrolin_app/core/viewmodels/auth/auth_view_model.dart';
 import 'package:ngobrolin_app/core/widgets/buttons/secondary_button.dart';
 import 'package:ngobrolin_app/core/widgets/cards/app_avatar.dart';
 import 'package:ngobrolin_app/core/widgets/cards/blocked_badge.dart';
-import 'package:ngobrolin_app/core/widgets/cards/note_badge.dart';
 import 'package:ngobrolin_app/core/widgets/states/image_error_placeholder.dart';
 import 'package:ngobrolin_app/core/widgets/texts/expandable_text_section.dart';
 import 'package:photo_view/photo_view.dart';

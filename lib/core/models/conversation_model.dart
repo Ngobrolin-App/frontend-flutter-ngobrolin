@@ -18,6 +18,9 @@ class ConversationModel extends Equatable {
   final DateTime? updatedAt;
 
   final UserModel? createdByUser;
+  final int? totalParticipants;
+
+  final bool? isMember;
 
   const ConversationModel({
     required this.id,
@@ -30,6 +33,8 @@ class ConversationModel extends Equatable {
     this.createdAt,
     this.updatedAt,
     this.createdByUser,
+    this.totalParticipants,
+    this.isMember,
   });
 
   /// Creates a ConversationModel from JSON data
@@ -51,6 +56,8 @@ class ConversationModel extends Equatable {
     DateTime? createdAt,
     DateTime? updatedAt,
     UserModel? createdByUser,
+    int? totalParticipants,
+    bool? isMember,
   }) {
     return ConversationModel(
       id: id ?? this.id,
@@ -63,6 +70,8 @@ class ConversationModel extends Equatable {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       createdByUser: createdByUser ?? this.createdByUser,
+      totalParticipants: totalParticipants ?? this.totalParticipants,
+      isMember: isMember ?? this.isMember,
     );
   }
 
@@ -78,5 +87,7 @@ class ConversationModel extends Equatable {
     createdAt,
     updatedAt,
     createdByUser,
+    totalParticipants,
+    isMember,
   ];
 }

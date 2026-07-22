@@ -186,6 +186,13 @@ const Map<String, String> jaJP = {
   'you_blocked_this_user': 'このユーザーをブロックしています',
   'you_are_blocked_by_this_user': 'このユーザーにブロックされています',
   'block_status_retrieved_success': 'ブロック状態を正常に取得しました',
+  'no_groups_found': 'グループが見つかりません',
+  'search_groups': 'グループを検索',
+  'group_details': 'グループの詳細',
+  'open_conversation': '会話を開く',
+  'joined': '参加済み',
+  'join_group_success': 'グループに参加しました',
+  'join_group_failed': 'グループへの参加に失敗しました',
 
   // General Enums
   'view_profile_image': 'プロフィール画像を見る',
@@ -270,6 +277,7 @@ const Map<String, String> jaJP = {
   'message_delete_success': 'メッセージを削除しました',
   'message_delete_failed': 'メッセージの削除に失敗しました',
   'messages_marked_as_read': 'メッセージを既読にしました',
+  'userid_required': 'User ID is required',
 
   // RESPONSESTATUS STATUSCODE
   'success': '成功',
@@ -314,6 +322,7 @@ const Map<String, String> jaJP = {
   // WITH ARGS
   'system_msg_group_created': '{actorName}がグループ「{groupName}」を作成しました',
   'system_msg_user_added': '{actorName}が{targetName}を追加しました',
+  'system_msg_user_joined': '{actorName}がグループに参加しました',
   'system_msg_image_changed': '{actorName}がグループの写真を変更しました',
   'system_msg_name_changed': '{actorName}がグループ名を「{groupName}」に変更しました',
   'system_msg_user_removed': '{actorName}が{targetName}をグループから削除しました',
@@ -322,4 +331,5 @@ const Map<String, String> jaJP = {
   'number_of_members': '{number}人のメンバー',
   'system_msg_description_changed':
       '{actorName}がグループの説明を「{groupDescription}」に変更しました',
+  'number_groups_in_common': '{number}件の共通グループ',
 };

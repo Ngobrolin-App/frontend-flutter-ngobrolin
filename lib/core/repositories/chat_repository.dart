@@ -51,11 +51,6 @@ class ChatRepository {
           },
         );
       },
-      //   return ApiResponse<PaginatedResult<ChatListItemModel>>.fromJson(
-      //     response,
-      //     (data) => _parseConversationList(data),
-      //   );
-      // },
     );
   }
 
@@ -209,6 +204,16 @@ class ChatRepository {
         'conversationId': conversationId,
         'participantIds': newParticipantsIds,
       },
+      parser: (response) => ApiResponse.fromJson(response, null),
+    );
+  }
+
+  Future<ApiResponse> joinGroupConversation({
+    required String conversationId,
+  }) async {
+    return await _apiService.post<ApiResponse>(
+      '/conversations/join-group',
+      data: {'conversationId': conversationId},
       parser: (response) => ApiResponse.fromJson(response, null),
     );
   }
@@ -391,6 +396,48 @@ class ChatRepository {
         final dataMap = data as Map<String, dynamic>? ?? <String, dynamic>{};
         return (dataMap['url'] as String? ?? '').toString();
       }),
+    );
+  }
+
+  Future<ApiResponse<PaginatedResult<ConversationModel>>>
+  searchGroupConversations(String query, {int page = 1, int limit = 20}) async {
+    // final body = {'q': query, 'page': page, 'limit': limit};
+    return _apiService.post<ApiResponse<PaginatedResult<ConversationModel>>>(
+      '/conversations/search-group',
+      data: {'q': query, 'page': page, 'limit': limit},
+      parser: (response) {
+        // developer.log(
+        //   'ChatRepository - searchGroupConversations - body: $body - response $response',
+        //   name: 'ChatRepository',
+        // );
+        return ApiResponse<PaginatedResult<ConversationModel>>.fromJson(
+          response,
+          (data) {
+            final mappedData =
+                data as Map<String, dynamic>? ?? <String, dynamic>{};
+            final pagination =
+                mappedData['pagination'] as Map<String, dynamic>? ?? {};
+            final groupConversations =
+                mappedData['groupConversations'] as List<dynamic>? ?? [];
+
+            final result = groupConversations
+                .map(
+                  (item) => ConversationModel.fromJson(
+                    item is Map<String, dynamic> ? item : <String, dynamic>{},
+                  ),
+                )
+                .toList();
+
+            return PaginatedResult<ConversationModel>(
+              items: result,
+              total: (pagination['total'] as int?) ?? 0,
+              page: (pagination['page'] as int?) ?? 1,
+              limit: (pagination['limit'] as int?) ?? 20,
+              totalPages: (pagination['totalPages'] as int?) ?? 1,
+            );
+          },
+        );
+      },
     );
   }
 }

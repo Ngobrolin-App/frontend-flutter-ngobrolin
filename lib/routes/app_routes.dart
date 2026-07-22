@@ -6,6 +6,7 @@ import 'package:ngobrolin_app/core/widgets/screens/text_editor_screen.dart';
 import 'package:ngobrolin_app/screens/chat/create_chat_group_screen.dart';
 import 'package:ngobrolin_app/screens/chat/group_profile_screen.dart';
 import 'package:ngobrolin_app/screens/main/search_user/search_user_screen.dart';
+import 'package:ngobrolin_app/screens/main/search_user/search_group_screen.dart';
 import 'package:ngobrolin_app/theme/app_colors.dart';
 
 // Screens
@@ -20,7 +21,7 @@ import '../screens/chat/chat_screen.dart';
 import '../screens/chat/user_profile_screen.dart';
 import '../screens/settings/settings_screen.dart';
 import '../screens/settings/blocked_users_screen.dart';
-import 'dart:developer' as developer;
+// import 'dart:developer' as developer;
 
 class AppRoutes {
   static const String splash = '/';
@@ -38,6 +39,7 @@ class AppRoutes {
   static const String groupProfile = '/group-profile';
   static const String textEditor = '/text-editor';
   static const String searchUser = '/search-user';
+  static const String searchGroup = '/search-group';
 
   static Route<dynamic>? generateRoute(RouteSettings settings) {
     // developer.log(
@@ -114,14 +116,11 @@ class AppRoutes {
             excludeUsers: args?['excludeUsers'] as List<String>? ?? [],
           ),
         );
+      case searchGroup:
+        return MaterialPageRoute(builder: (_) => SearchGroupScreen());
       default:
         _showRouteError(settings.name);
         return null;
-      // return MaterialPageRoute(
-      //   builder: (_) => Scaffold(
-      //     body: Center(child: Text('No route defined for ${settings.name}')),
-      //   ),
-      // );
     }
   }
 

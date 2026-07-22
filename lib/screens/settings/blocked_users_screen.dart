@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:ngobrolin_app/core/widgets/states/paginated_state_builder.dart';
 import 'package:ngobrolin_app/routes/app_routes.dart';
 import 'package:provider/provider.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
-import 'package:iconify_flutter/icons/ic.dart';
-import 'package:ngobrolin_app/core/widgets/states/empty_state.dart';
 import 'package:ngobrolin_app/core/widgets/buttons/mini_icon_text_button.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/viewmodels/settings/blocked_users_view_model.dart';
@@ -55,47 +54,69 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // OPTIMASI: Pindahkan Scaffold ke luar Consumer agar tidak ikut rebuild menyeluruh
     return Scaffold(
       appBar: AppBar(title: Text(context.tr('blocked_users'))),
       body: Consumer<BlockedUsersViewModel>(
-        builder: (context, blockedUsersViewModel, _) {
-          if (blockedUsersViewModel.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+        builder: (context, vm, _) {
+          final blockedUsers = vm.blockedUsers;
 
-          final blockedUsers = blockedUsersViewModel.blockedUsers;
+          return PaginatedStateBuilder(
+            isLoading: vm.isLoading,
+            isEmpty: blockedUsers.isEmpty,
+            emptyMessage: context.tr('no_blocked_users'),
+            emptySubtitle: context.tr(
+              'no_blocked_users_description',
+            ), // Gunakan parameter baru
+            // Tambahkan fitur pull-to-refresh secara instan
+            onRefresh: () async => vm.fetchBlockedUsers(),
 
-          if (blockedUsers.isEmpty) {
-            return EmptyState(
-              title: context.tr('no_blocked_users'),
-              subtitle: context.tr('no_blocked_users_description'),
-            );
-          }
+            child: ListView.builder(
+              physics:
+                  const AlwaysScrollableScrollPhysics(), // Wajib agar RefreshIndicator berfungsi walau item sedikit
+              controller: _scrollController,
+              // Tambahkan 1 item ekstra untuk indikator loading pagination
+              itemCount: vm.hasMore
+                  ? blockedUsers.length + 1
+                  : blockedUsers.length,
+              itemBuilder: (context, index) {
+                // Tampilkan loading di ujung bawah list
+                if (index == blockedUsers.length) {
+                  return vm.isLoadingMore
+                      ? const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 20),
+                          child: Center(
+                            child: SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                              ),
+                            ),
+                          ),
+                        )
+                      : const SizedBox.shrink();
+                }
 
-          return ListView.builder(
-            controller: _scrollController,
-            itemCount: blockedUsers.length,
-            itemBuilder: (context, index) {
-              final user = blockedUsers[index];
+                final user = blockedUsers[index];
 
-              return UserListItem(
-                user: user,
-                onTap: () => Navigator.of(context).pushNamed(
-                  AppRoutes.userProfile,
-                  arguments: {'userId': user.id},
-                ),
-                actionWidget: MiniIconTextButton(
-                  onTap: () => _unblockUser(user.id, blockedUsersViewModel),
-                  icon: const Iconify(
-                    MaterialSymbols.unblock_flipped,
-                    color: AppColors.white,
-                    size: 16,
+                return UserListItem(
+                  user: user,
+                  onTap: () => Navigator.of(context).pushNamed(
+                    AppRoutes.userProfile,
+                    arguments: {'userId': user.id},
                   ),
-                  text: context.tr('unblock'),
-                ),
-              );
-            },
+                  actionWidget: MiniIconTextButton(
+                    onTap: () => _unblockUser(user.id, vm),
+                    icon: const Iconify(
+                      MaterialSymbols.unblock_flipped,
+                      color: AppColors.white,
+                      size: 16,
+                    ),
+                    text: context.tr('unblock'),
+                  ),
+                );
+              },
+            ),
           );
         },
       ),

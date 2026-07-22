@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:ngobrolin_app/core/models/conversation_model.dart';
 import '../../../theme/app_colors.dart';
-import '../../models/user_model.dart';
 
-class UserListItem extends StatelessWidget {
-  final UserModel user;
+class GroupListItem extends StatelessWidget {
+  final ConversationModel group;
   final VoidCallback? onTap;
   final Widget? actionWidget;
 
-  const UserListItem({
+  const GroupListItem({
     super.key,
-    required this.user,
+    required this.group,
     this.onTap,
     this.actionWidget,
   });
@@ -31,30 +31,24 @@ class UserListItem extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    user.name,
+                    group.name ?? '',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: AppColors.text,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '@${user.username}',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.text.withOpacity(0.7),
-                    ),
-                  ),
-                  if (user.bio != null && user.bio!.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      user.bio!,
-                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppColors.timestamp,
+                    ),
+                  ),
+                  if (group.groupDescription != null &&
+                      (group.groupDescription?.isNotEmpty ?? false)) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      group.groupDescription ?? '',
+                      maxLines: 2,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppColors.text.withOpacity(0.7),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
@@ -72,12 +66,14 @@ class UserListItem extends StatelessWidget {
     return CircleAvatar(
       radius: 24,
       backgroundColor: AppColors.lightGrey,
-      backgroundImage: user.avatarUrl != null
-          ? CachedNetworkImageProvider(user.avatarUrl!)
+      backgroundImage: group.groupImage != null
+          ? CachedNetworkImageProvider(group.groupImage!)
           : null,
-      child: user.avatarUrl == null
+      child: group.groupImage == null
           ? Text(
-              user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
+              (group.name?.isNotEmpty ?? false)
+                  ? group.name![0].toUpperCase()
+                  : '?',
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
