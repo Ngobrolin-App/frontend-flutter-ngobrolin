@@ -7,12 +7,14 @@ class GroupListItem extends StatelessWidget {
   final ConversationModel group;
   final VoidCallback? onTap;
   final Widget? actionWidget;
+  final EdgeInsets padding;
 
   const GroupListItem({
     super.key,
     required this.group,
     this.onTap,
     this.actionWidget,
+    this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
   });
 
   @override
@@ -20,7 +22,7 @@ class GroupListItem extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: padding,
         child: Row(
           children: [
             _buildAvatar(),

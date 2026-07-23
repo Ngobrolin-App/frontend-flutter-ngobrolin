@@ -38,6 +38,12 @@ class SearchUserViewModel extends BaseViewModel {
   SearchUserViewModel({UserRepository? userRepository})
     : _userRepository = userRepository ?? UserRepository();
 
+  void resetAllUserSearchData() {
+    _userSelectionAction = null;
+    _selectedUsers.clear();
+    notifyListeners();
+  }
+
   /// Sets the real-time search criteria string and resets query indices.
   void setSearchQuery({String query = ''}) {
     _searchQuery = query;
@@ -132,6 +138,20 @@ class SearchUserViewModel extends BaseViewModel {
       _selectedUsers.removeWhere((u) => u.id == user.id);
     } else {
       _selectedUsers.add(user);
+    }
+    notifyListeners();
+  }
+
+  void addUserSelection(UserModel user) {
+    if (!(_selectedUsers.any((u) => u.id == user.id))) {
+      _selectedUsers.add(user);
+    }
+    notifyListeners();
+  }
+
+  void removeUserSelection(UserModel user) {
+    if (_selectedUsers.any((u) => u.id == user.id)) {
+      _selectedUsers.removeWhere((u) => u.id == user.id);
     }
     notifyListeners();
   }

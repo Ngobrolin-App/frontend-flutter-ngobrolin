@@ -1,4 +1,5 @@
 import 'package:ngobrolin_app/core/models/block_user_status.dart';
+import 'package:ngobrolin_app/core/models/conversation_model.dart';
 
 import '../../models/user_model.dart';
 import '../../repositories/user_repository.dart';
@@ -14,6 +15,9 @@ class UserProfileViewModel extends BaseViewModel {
 
   static const String _logName = 'UserProfileViewModel';
 
+  String? _userId;
+  String? get userId => _userId;
+
   UserModel? _user;
   UserModel? get user => _user;
 
@@ -23,17 +27,46 @@ class UserProfileViewModel extends BaseViewModel {
   BlockUserStatus? _blockUserStatus;
   BlockUserStatus? get blockUserStatus => _blockUserStatus;
 
+  List<ConversationModel> _groupsInCommon = [];
+  List<ConversationModel> get groupsInCommon => _groupsInCommon;
+
+  int get countLoadedGroupsInCommon => _groupsInCommon.length;
+
+  int _totalGroupsInCommon = 0;
+  int get totalGroupsInCommon => _totalGroupsInCommon;
+
+  final int _limit = 5;
+  int _pageGroupsInCommon = 1;
+  bool _hasMoreGroupsInCommon = false;
+  bool get hasMoreGroupsInCommon => _hasMoreGroupsInCommon;
+
+  bool _isLoadingGroupsInCommon = false;
+  bool get isLoadingGroupsInCommon => _isLoadingGroupsInCommon;
+
   UserProfileViewModel({
     UserRepository? userRepository,
     SettingsRepository? settingsRepository,
   }) : _userRepository = userRepository ?? UserRepository(),
        _settingsRepository = settingsRepository ?? SettingsRepository();
 
+  void initUserProfile({required String userId}) async {
+    _userId = userId;
+    _pageGroupsInCommon = 1;
+    _hasMoreGroupsInCommon = false;
+
+    if (_userId != null && _userId!.isNotEmpty) {
+      await fetchUserProfile();
+      await getBlockUserStatus();
+      await fetchGroupsInCommon();
+    }
+  }
+
   /// Fetches standard user profile metrics and evaluates target relationship blocks.
-  Future<bool> fetchUserProfile(String userId) async {
+  Future<bool> fetchUserProfile() async {
+    if (_userId == null || (userId?.isEmpty ?? true)) return false;
     return await runBusyFuture(
           () async {
-            final result = await _userRepository.getUserById(userId);
+            final result = await _userRepository.getUserById(_userId!);
             _user = result.data;
 
             notifyListeners();
@@ -135,6 +168,78 @@ class UserProfileViewModel extends BaseViewModel {
       return await unblockUser();
     } else {
       return await blockUser();
+    }
+  }
+
+  Future<bool> fetchGroupsInCommon() async {
+    if (_userId == null) return false;
+
+    return await runBusyFuture(
+          () async {
+            final result = await _userRepository.getGroupsInCommon(
+              page: _pageGroupsInCommon,
+              limit: _limit,
+              userId: _userId!,
+            );
+
+            final paginatedResult = result.data;
+            _totalGroupsInCommon = paginatedResult?.total ?? 0;
+            _groupsInCommon = paginatedResult?.items ?? [];
+            _hasMoreGroupsInCommon =
+                (paginatedResult?.page ?? 0) <
+                (paginatedResult?.totalPages ?? 0);
+
+            notifyListeners();
+            return true;
+          },
+          logName: _logName,
+          logContext: 'fetchGroupsInCommon()',
+        ) ??
+        false;
+  }
+
+  // Fetches participants metadata linked inside the room roster array.
+  Future<bool> loadMoreGroupsInCommon() async {
+    if (!_hasMoreGroupsInCommon ||
+        isLoading ||
+        _isLoadingGroupsInCommon ||
+        _userId == null) {
+      return false;
+    }
+
+    _isLoadingGroupsInCommon = true;
+    notifyListeners();
+
+    try {
+      _pageGroupsInCommon += 1;
+      final result = await _userRepository.getGroupsInCommon(
+        page: _pageGroupsInCommon,
+        limit: _limit,
+        userId: _userId!,
+      );
+
+      final paginatedResult = result.data;
+      _totalGroupsInCommon = paginatedResult?.total ?? 0;
+      _groupsInCommon.addAll(paginatedResult?.items ?? []);
+      _hasMoreGroupsInCommon =
+          (paginatedResult?.page ?? 0) < (paginatedResult?.totalPages ?? 0);
+
+      return true;
+    } catch (e, stackTrace) {
+      developer.log(
+        "loadMoreParticipants() error $e",
+        name: _logName,
+        error: e,
+        stackTrace: stackTrace,
+      );
+      _pageGroupsInCommon = (_pageGroupsInCommon > 1)
+          ? _pageGroupsInCommon - 1
+          : 1;
+      setError(e.toString());
+      return false;
+    } finally {
+      _isLoadingGroupsInCommon = false;
+      notifyListeners();
     }
   }
 }

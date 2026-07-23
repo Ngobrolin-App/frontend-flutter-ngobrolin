@@ -95,6 +95,7 @@ class ChatViewModel extends BaseViewModel {
     _messages.clear();
     _privatePartnerId = '';
     _privatePartnerStatus = UserStatus.offline.name;
+    _participants.clear();
     _isParticipantTyping = false;
     _typingParticipantName = null;
     _conversationId = null;

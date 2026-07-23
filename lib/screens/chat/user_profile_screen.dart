@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:iconify_flutter/icons/material_symbols.dart';
+import 'package:ngobrolin_app/core/enums/general_enums.dart';
 import 'package:ngobrolin_app/core/models/block_user_status.dart';
+import 'package:ngobrolin_app/core/models/conversation_model.dart';
 import 'package:ngobrolin_app/core/providers/socket_provider.dart';
 import 'package:ngobrolin_app/core/viewmodels/auth/auth_view_model.dart';
+import 'package:ngobrolin_app/core/widgets/buttons/load_more_list_button.dart';
 import 'package:ngobrolin_app/core/widgets/buttons/secondary_button.dart';
+import 'package:ngobrolin_app/core/widgets/cards/action_list_tile.dart';
 import 'package:ngobrolin_app/core/widgets/cards/app_avatar.dart';
 import 'package:ngobrolin_app/core/widgets/cards/blocked_badge.dart';
+import 'package:ngobrolin_app/core/widgets/cards/group_list_item.dart';
 import 'package:ngobrolin_app/core/widgets/states/image_error_placeholder.dart';
 import 'package:ngobrolin_app/core/widgets/texts/expandable_text_section.dart';
 import 'package:photo_view/photo_view.dart';
@@ -36,7 +41,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadUserProfile();
+      context.read<UserProfileViewModel>().initUserProfile(
+        userId: widget.userId,
+      );
 
       _socketProvider = Provider.of<SocketProvider>(context, listen: false);
       _setupSocketHandlers();
@@ -56,36 +63,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
   @override
   void dispose() {
-    final userProfileViewModel = context.read<UserProfileViewModel>();
-    userProfileViewModel.resetBlockStatus();
+    Future.microtask(() {
+      final userProfileViewModel = context.read<UserProfileViewModel>();
+      userProfileViewModel.resetBlockStatus();
+    });
 
     _socketProvider.off('block_status_updated', _blockStatusUpdatedHandler);
     super.dispose();
-  }
-
-  Future<void> _loadUserProfile() async {
-    final userProfileViewModel = Provider.of<UserProfileViewModel>(
-      context,
-      listen: false,
-    );
-    final success = await userProfileViewModel.fetchUserProfile(widget.userId);
-    await userProfileViewModel.getBlockUserStatus();
-
-    if (!mounted) return;
-
-    if (!success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            context.tr(
-              userProfileViewModel.errorMessage ?? 'failed_to_load_profile',
-            ),
-          ),
-          backgroundColor: AppColors.warning,
-        ),
-      );
-      Navigator.pop(context);
-    }
   }
 
   void _startChat() {
@@ -325,35 +309,162 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 ),
                 Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Selector<UserProfileViewModel, (bool, BlockUserStatus?)>(
-                    selector: (_, vm) => (vm.isBlocked, vm.blockUserStatus),
-                    builder: (context, data, _) {
-                      // Ambil logic auth pakai read supaya nggak re-render screen
-                      final isBlocked = data.$1;
-                      final blockUserStatus = data.$2;
-                      final authViewModel = context.read<AuthViewModel>();
-                      final currentUserId = authViewModel.user?.id;
-                      final isSelf = currentUserId == user.id;
-                      final isPrivate = user.isPrivate;
-                      final canStartChat =
-                          !isBlocked &&
-                          (!isPrivate || isSelf) &&
-                          (blockUserStatus == null);
+                  child: Column(
+                    children: [
+                      Selector<UserProfileViewModel, (bool, BlockUserStatus?)>(
+                        selector: (_, vm) => (vm.isBlocked, vm.blockUserStatus),
+                        builder: (context, data, _) {
+                          final isBlocked = data.$1;
+                          final blockUserStatus = data.$2;
+                          final authViewModel = context.read<AuthViewModel>();
+                          final currentUserId = authViewModel.user?.id;
+                          final isSelf = currentUserId == user.id;
+                          final isPrivate = user.isPrivate;
+                          final canStartChat =
+                              !isBlocked &&
+                              (!isPrivate || isSelf) &&
+                              (blockUserStatus == null);
 
-                      return Column(
-                        children: [
-                          if (canStartChat) ...[
-                            PrimaryButton(
-                              text: context.tr('start_chat'),
-                              onPressed: _startChat,
-                              icon: const Iconify(
-                                Mdi.message_plus,
-                                color: AppColors.white,
+                          if (canStartChat) {
+                            return Column(
+                              children: [
+                                PrimaryButton(
+                                  text: context.tr('start_chat'),
+                                  onPressed: _startChat,
+                                  icon: const Iconify(
+                                    Mdi.message_plus,
+                                    color: AppColors.white,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                              ],
+                            );
+                          } else {
+                            return SizedBox();
+                          }
+                        },
+                      ),
+                      Divider(indent: 0, endIndent: 0),
+
+                      SizedBox(height: 16),
+                      Selector<UserProfileViewModel, int>(
+                        selector: (_, vm) => vm.totalGroupsInCommon,
+                        builder: (context, totalGroupsInCommon, _) {
+                          return Align(
+                            alignment: Alignment.topLeft,
+                            child: Text(
+                              (totalGroupsInCommon > 0)
+                                  ? context.tr(
+                                      'number_groups_in_common',
+                                      args: {
+                                        'number': totalGroupsInCommon
+                                            .toString(),
+                                      },
+                                    )
+                                  : context.tr('no_groups_in_common'),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.text,
                               ),
                             ),
-                            const SizedBox(height: 16),
-                          ],
-                          SecondaryButton(
+                          );
+                        },
+                      ),
+                      SizedBox(height: 16),
+                      ActionListTile(
+                        padding: EdgeInsets.zero,
+                        title: context.tr(
+                          'create_group_with_target_name',
+                          args: {'targetName': user.name},
+                        ),
+                        icon: Mdi.account_multiple_plus,
+                        onTap: () {
+                          Navigator.pushNamed(
+                            context,
+                            AppRoutes.searchUser,
+                            arguments: {
+                              'userSelectionAction':
+                                  UserSelectionAction.createNewGroup,
+                              'includeUsers': [user.id],
+                            },
+                          );
+                        },
+                      ),
+                      SizedBox(height: 16),
+
+                      Selector<UserProfileViewModel, int>(
+                        selector: (_, vm) => vm.countLoadedGroupsInCommon,
+                        builder: (context, totalLoaded, _) {
+                          if (totalLoaded == 0) {
+                            return SizedBox();
+                          }
+
+                          return ListView.separated(
+                            separatorBuilder: (context, index) {
+                              return SizedBox(height: 10);
+                            },
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: totalLoaded,
+                            itemBuilder: (context, index) {
+                              // 5. Micro-Rebuild: Item didelegasikan ke Widget Khusus Berbasis Indeks
+                              return Selector<
+                                UserProfileViewModel,
+                                ConversationModel
+                              >(
+                                selector: (_, vm) => vm.groupsInCommon[index],
+                                builder: (context, groupInCommon, _) {
+                                  return GroupListItem(
+                                    group: groupInCommon,
+                                    padding: EdgeInsets.zero,
+                                    onTap: () {
+                                      Navigator.pushNamed(
+                                        context,
+                                        AppRoutes.chat,
+                                        arguments: {'chatId': groupInCommon.id},
+                                      );
+                                    },
+                                  );
+                                },
+                              );
+                            },
+                          );
+                        },
+                      ),
+
+                      Selector<UserProfileViewModel, (bool, bool)>(
+                        selector: (_, vm) => (
+                          vm.hasMoreGroupsInCommon,
+                          vm.isLoadingGroupsInCommon,
+                        ),
+                        builder: (context, data, _) {
+                          final hasMore = data.$1;
+                          final isLoadingMore = data.$2;
+
+                          // Tombol akan hilang sepenuhnya jika hasMore bernilai false
+                          if (!hasMore) return const SizedBox();
+
+                          return Center(
+                            child: LoadMoreListButton(
+                              isLoading: isLoadingMore,
+                              onPressed: () {
+                                // Memanggil API tanpa perlu stateful rebuild
+                                context
+                                    .read<UserProfileViewModel>()
+                                    .loadMoreGroupsInCommon();
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                      SizedBox(height: 16),
+                      Divider(indent: 0, endIndent: 0),
+                      SizedBox(height: 16),
+                      Selector<UserProfileViewModel, bool>(
+                        selector: (_, vm) => vm.isBlocked,
+                        builder: (context, isBlocked, _) {
+                          return SecondaryButton(
                             text: isBlocked
                                 ? context.tr('unblock_user')
                                 : context.tr('block_account'),
@@ -364,10 +475,11 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                             borderColor: isBlocked
                                 ? AppColors.primary
                                 : AppColors.warning,
-                          ),
-                        ],
-                      );
-                    },
+                          );
+                        },
+                      ),
+                      SizedBox(height: 64),
+                    ],
                   ),
                 ),
               ],

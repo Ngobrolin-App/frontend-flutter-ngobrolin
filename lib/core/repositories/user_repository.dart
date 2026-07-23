@@ -1,8 +1,10 @@
 import 'package:ngobrolin_app/core/models/api_response.dart';
+import 'package:ngobrolin_app/core/models/conversation_model.dart';
 import 'package:ngobrolin_app/core/models/paginated_result.dart';
 import '../models/user_model.dart';
 import '../services/api/api_service.dart';
 import 'package:dio/dio.dart';
+import 'dart:developer' as developer;
 
 class UserRepository {
   final ApiService _apiService;
@@ -141,5 +143,46 @@ class UserRepository {
       '/notifications/token/delete',
       data: {'token': token},
     );
+  }
+
+  Future<ApiResponse<PaginatedResult<ConversationModel>>> getGroupsInCommon({
+    int page = 1,
+    int limit = 20,
+    required String userId,
+    bool isIncludeMe = true,
+  }) async {
+    return await _apiService
+        .post<ApiResponse<PaginatedResult<ConversationModel>>>(
+          '/conversations/user-groups-in-common',
+          data: {'page': page, 'limit': limit, 'userId': userId},
+          parser: (response) {
+            return ApiResponse<PaginatedResult<ConversationModel>>.fromJson(
+              response,
+              (data) {
+                final mappedData =
+                    data as Map<String, dynamic>? ?? <String, dynamic>{};
+                final pagination =
+                    mappedData['pagination'] as Map<String, dynamic>? ?? {};
+                final participants =
+                    mappedData['userGroupsInCommon'] as List<dynamic>? ?? [];
+
+                final items = participants
+                    .map(
+                      (e) => ConversationModel.fromJson(
+                        e as Map<String, dynamic>? ?? <String, dynamic>{},
+                      ),
+                    )
+                    .toList();
+                return PaginatedResult(
+                  items: items,
+                  total: (pagination['total'] as int?) ?? 0,
+                  page: (pagination['page'] as int?) ?? 1,
+                  limit: (pagination['limit'] as int?) ?? 20,
+                  totalPages: (pagination['totalPages'] as int?) ?? 1,
+                );
+              },
+            );
+          },
+        );
   }
 }

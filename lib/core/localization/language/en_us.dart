@@ -200,6 +200,7 @@ const Map<String, String> enUS = {
   'joined': 'Joined',
   'join_group_success': 'Successfully joined the group',
   'join_group_failed': 'Failed to join the group',
+  'no_groups_in_common': 'No groups in common',
 
   // General Enums
   'view_profile_image': 'View Profile Image',
@@ -356,4 +357,5 @@ const Map<String, String> enUS = {
       '{actorName} changed the group description to "{groupDescription}"',
   'number_groups_in_common': '{number} groups in common',
   'number_of_people': '{number} people',
+  'create_group_with_target_name': 'Create a group with {targetName}',
 };

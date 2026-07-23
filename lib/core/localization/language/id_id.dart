@@ -201,6 +201,7 @@ const Map<String, String> idID = {
   'joined': 'Bergabung',
   'join_group_success': 'Berhasil bergabung ke grup',
   'join_group_failed': 'Gagal bergabung ke grup',
+  'no_groups_in_common': 'Tidak ada grup yang sama',
 
   // General Enums
   'view_profile_image': 'Lihat Foto Profil',
@@ -362,4 +363,5 @@ const Map<String, String> idID = {
       '{actorName} mengubah deskripsi grup menjadi "{groupDescription}"',
   'number_groups_in_common': '{number} grup yang sama',
   'number_of_people': '{number} orang',
+  'create_group_with_target_name': 'Buat grup bersama {targetName}',
 };

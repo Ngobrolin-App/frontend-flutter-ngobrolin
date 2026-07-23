@@ -189,6 +189,7 @@ const Map<String, String> zhCN = {
   'joined': '已加入',
   'join_group_success': '成功加入群组',
   'join_group_failed': '加入群组失败',
+  'no_groups_in_common': '没有共同群组',
 
   // General Enums
   'view_profile_image': '查看头像',
@@ -326,4 +327,5 @@ const Map<String, String> zhCN = {
   'system_msg_description_changed': '{actorName} 将群组描述更改为“{groupDescription}”',
   'number_groups_in_common': '{number} 个共同群组',
   'number_of_people': '{number} 人',
+  'create_group_with_target_name': '与 {targetName} 创建群组',
 };

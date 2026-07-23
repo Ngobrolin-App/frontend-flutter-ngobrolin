@@ -114,6 +114,7 @@ class AppRoutes {
             userSelectionAction:
                 args?['userSelectionAction'] as UserSelectionAction?,
             excludeUsers: args?['excludeUsers'] as List<String>? ?? [],
+            includeUsers: args?['includeUsers'] as List<String>? ?? [],
           ),
         );
       case searchGroup:

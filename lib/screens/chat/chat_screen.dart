@@ -277,7 +277,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
-    _chatViewModel.resetAllConversationData();
+    Future.microtask(() {
+      _chatViewModel.resetAllConversationData();
+    });
 
     _typingTimer?.cancel();
 

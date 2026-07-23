@@ -193,6 +193,7 @@ const Map<String, String> jaJP = {
   'joined': '参加済み',
   'join_group_success': 'グループに参加しました',
   'join_group_failed': 'グループへの参加に失敗しました',
+  'no_groups_in_common': '共通のグループはありません',
 
   // General Enums
   'view_profile_image': 'プロフィール画像を見る',
@@ -333,4 +334,5 @@ const Map<String, String> jaJP = {
       '{actorName}がグループの説明を「{groupDescription}」に変更しました',
   'number_groups_in_common': '{number}件の共通グループ',
   'number_of_people': '{number}人',
+  'create_group_with_target_name': '{targetName}とグループを作成',
 };
