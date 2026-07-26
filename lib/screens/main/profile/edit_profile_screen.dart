@@ -48,6 +48,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _passwordController = TextEditingController();
     _confirmPasswordController = TextEditingController();
     _currentPasswordController = TextEditingController();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<ProfileViewModel>().setUser(widget.user);
+    });
   }
 
   @override

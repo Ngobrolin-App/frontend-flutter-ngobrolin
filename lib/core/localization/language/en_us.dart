@@ -110,7 +110,9 @@ const Map<String, String> enUS = {
   'about_ngobrolin': 'About Ngobrolin',
   'about_ngobrolin_description':
       'Ngobrolin is a messaging app that allows users to share stories, interact, and stay close with anyone.',
-  '2025_ngobrolin': '@2025 Ngobrolin',
+  '2026_ngobrolin': '@2026 Ngobrolin',
+  'discard_changes': 'Discard Changes',
+  'are_you_sure_discard': 'Are you sure you want to discard your changes?',
 
   // Chat
   'type_message': 'Type a message...',
@@ -201,6 +203,7 @@ const Map<String, String> enUS = {
   'join_group_success': 'Successfully joined the group',
   'join_group_failed': 'Failed to join the group',
   'no_groups_in_common': 'No groups in common',
+  'failed_to_update_profile': 'Failed to update profile',
 
   // General Enums
   'view_profile_image': 'View Profile Image',

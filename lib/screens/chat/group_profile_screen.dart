@@ -563,12 +563,6 @@ class _GroupProfileScreenState extends State<GroupProfileScreen> {
 
                   if (!mounted) return;
 
-                  final searchUserViewModel = context
-                      .read<SearchUserViewModel>();
-                  searchUserViewModel.setSearchQuery();
-                  searchUserViewModel.resetUserSelection();
-
-                  // 7. Berikan notifikasi sukses/gagal via SnackBar
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(

@@ -3,6 +3,7 @@ import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/material_symbols.dart';
 import 'package:iconify_flutter/icons/mdi.dart';
 import 'package:ngobrolin_app/core/enums/general_enums.dart';
+import 'package:ngobrolin_app/core/models/user_model.dart';
 import 'package:ngobrolin_app/core/utils/debouncer.dart';
 import 'package:ngobrolin_app/core/widgets/buttons/primary_button.dart';
 import 'package:ngobrolin_app/core/widgets/inputs/custom_search_bar.dart';
@@ -182,12 +183,21 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
       ),
 
       floatingActionButton:
-          Selector<SearchUserViewModel, (UserSelectionAction?, int)>(
-            selector: (_, vm) =>
-                (vm.userSelectionAction, vm.selectedUsers.length),
+          Selector<
+            SearchUserViewModel,
+            (UserSelectionAction?, int, List<UserModel>, List<String>)
+          >(
+            selector: (_, vm) => (
+              vm.userSelectionAction,
+              vm.selectedUsers.length,
+              vm.selectedUsers,
+              vm.selectedUsersIds,
+            ),
             builder: (context, data, _) {
               final action = data.$1;
               final selectedCount = data.$2;
+              final selectedUsers = data.$3;
+              final selectedUsersIds = data.$4;
 
               if (action != null && selectedCount > 0) {
                 return Padding(
@@ -195,15 +205,19 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
                   child: PrimaryButton(
                     text: context.tr('continue'),
                     onPressed: () {
-                      final vm = context.read<SearchUserViewModel>();
                       if (action == UserSelectionAction.createNewGroup) {
                         Navigator.of(context).pushNamed(
                           AppRoutes.createChatGroup,
-                          arguments: {'members': vm.selectedUsers},
+                          arguments: {
+                            'selectedUsers': [...selectedUsers],
+                          },
                         );
                       } else if (action == UserSelectionAction.addNewMembers) {
-                        Navigator.pop(context, vm.selectedUsersIds);
+                        Navigator.pop(context, selectedUsersIds);
                       }
+                      context
+                          .read<SearchUserViewModel>()
+                          .resetAllUserSearchData();
                     },
                   ),
                 );

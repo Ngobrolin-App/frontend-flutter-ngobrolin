@@ -3,8 +3,13 @@ import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/ph.dart';
 import 'package:iconify_flutter/icons/ri.dart';
 import 'package:iconify_flutter/icons/material_symbols.dart';
+import 'package:ngobrolin_app/core/di/service_locator.dart';
 import 'package:ngobrolin_app/core/utils/permission_utils.dart';
+import 'package:ngobrolin_app/core/viewmodels/chat/chat_list_view_model.dart';
+import 'package:ngobrolin_app/core/viewmodels/profile/profile_view_model.dart';
+import 'package:ngobrolin_app/core/viewmodels/search/search_user_view_model.dart';
 import 'package:ngobrolin_app/theme/app_texts.dart';
+import 'package:provider/provider.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import 'chat_list/chat_list_screen.dart';
@@ -23,10 +28,19 @@ class _MainScreenState extends State<MainScreen> {
   bool _initializedFromArgs = false;
 
   // OPTIMASI: Pastikan widget di dalam list bersifat const atau diinstansiasi dengan benar
-  final List<Widget> _screens = const [
-    ChatListScreen(),
-    SearchUserScreen(),
-    ProfileScreen(),
+  final List<Widget> _screens = [
+    ChangeNotifierProvider(
+      create: (_) => serviceLocator<ChatListViewModel>(),
+      child: ChatListScreen(),
+    ),
+    ChangeNotifierProvider(
+      create: (_) => serviceLocator<SearchUserViewModel>(),
+      child: SearchUserScreen(),
+    ),
+    ChangeNotifierProvider(
+      create: (_) => serviceLocator<ProfileViewModel>(),
+      child: const ProfileScreen(),
+    ),
   ];
 
   @override

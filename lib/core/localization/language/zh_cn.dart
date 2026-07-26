@@ -103,7 +103,9 @@ const Map<String, String> zhCN = {
   'user_unblocked': '用户已取消屏蔽',
   'about_ngobrolin': '关于 Ngobrolin',
   'about_ngobrolin_description': 'Ngobrolin 是一款聊天应用，让用户可以分享故事、互动并与任何人保持紧密联系。',
-  '2025_ngobrolin': '@2025 Ngobrolin',
+  '2026_ngobrolin': '@2026 Ngobrolin',
+  'discard_changes': '放弃更改',
+  'are_you_sure_discard': '确定要放弃更改吗？',
 
   // Chat
   'type_message': '输入消息...',
@@ -190,6 +192,7 @@ const Map<String, String> zhCN = {
   'join_group_success': '成功加入群组',
   'join_group_failed': '加入群组失败',
   'no_groups_in_common': '没有共同群组',
+  'failed_to_update_profile': '更新个人资料失败',
 
   // General Enums
   'view_profile_image': '查看头像',

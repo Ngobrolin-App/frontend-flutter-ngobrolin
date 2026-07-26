@@ -106,7 +106,9 @@ const Map<String, String> jaJP = {
   'about_ngobrolin': 'Ngobrolinについて',
   'about_ngobrolin_description':
       'Ngobrolinは、ストーリーを共有し、交流し、誰とでも親密に過ごせるメッセージングアプリです。',
-  '2025_ngobrolin': '@2025 Ngobrolin',
+  '2026_ngobrolin': '@2026 Ngobrolin',
+  'discard_changes': '変更を破棄',
+  'are_you_sure_discard': '変更を破棄してもよろしいですか？',
 
   // Chat
   'type_message': 'メッセージを入力...',
@@ -194,6 +196,7 @@ const Map<String, String> jaJP = {
   'join_group_success': 'グループに参加しました',
   'join_group_failed': 'グループへの参加に失敗しました',
   'no_groups_in_common': '共通のグループはありません',
+  'failed_to_update_profile': 'プロフィールの更新に失敗しました',
 
   // General Enums
   'view_profile_image': 'プロフィール画像を見る',

@@ -63,10 +63,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
   @override
   void dispose() {
-    Future.microtask(() {
-      final userProfileViewModel = context.read<UserProfileViewModel>();
-      userProfileViewModel.resetBlockStatus();
-    });
+    // Future.microtask(() {
+    //   final userProfileViewModel = context.read<UserProfileViewModel>();
+    //   userProfileViewModel.resetBlockStatus();
+    // });
 
     _socketProvider.off('block_status_updated', _blockStatusUpdatedHandler);
     super.dispose();

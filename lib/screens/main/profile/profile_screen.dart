@@ -26,10 +26,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      Provider.of<ProfileViewModel>(
-        context,
-        listen: false,
-      ).fetchCurrentProfile();
+      context.read<ProfileViewModel>().fetchCurrentProfile();
     });
   }
 
@@ -162,13 +159,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: PrimaryButton(
                     text: context.tr('edit_profile'),
                     onPressed: () async {
-                      await Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => EditProfileScreen(user: user),
-                        ),
-                      );
                       if (mounted) {
-                        profileViewModel.fetchCurrentProfile();
+                        Navigator.pushNamed(
+                          context,
+                          AppRoutes.editProfile,
+                          arguments: {'user': user},
+                        ).then((onValue) {
+                          profileViewModel.fetchCurrentProfile();
+                        });
                       }
                     },
                   ),

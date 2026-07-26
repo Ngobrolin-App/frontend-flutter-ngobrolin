@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'package:ngobrolin_app/core/services/deeplink/deeplink_service.dart';
+import 'package:ngobrolin_app/core/viewmodels/chat/create_chat_group_view_model.dart';
 import 'package:ngobrolin_app/core/viewmodels/chat/group_profile_view_model.dart';
 import 'package:ngobrolin_app/core/viewmodels/search/search_group_view_model.dart';
 
@@ -70,6 +71,11 @@ void setupServiceLocator() {
   serviceLocator.registerFactory(
     () =>
         GroupProfileViewModel(chatRepository: serviceLocator<ChatRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => CreateChatGroupViewModel(
+      chatRepository: serviceLocator<ChatRepository>(),
+    ),
   );
   serviceLocator.registerFactory(
     () => SearchUserViewModel(userRepository: serviceLocator<UserRepository>()),

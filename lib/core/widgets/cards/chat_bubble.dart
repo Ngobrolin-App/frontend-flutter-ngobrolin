@@ -132,10 +132,9 @@ class ChatBubble extends StatelessWidget {
   }
 
   void _handleMenuAction(String value, BuildContext context) {
-    final chatViewModel = Provider.of<ChatViewModel>(context, listen: false);
     switch (value) {
       case 'reply':
-        chatViewModel.setReplyingTo(message);
+        context.read<ChatViewModel>().setReplyingTo(message);
         break;
       case 'copy':
         Clipboard.setData(ClipboardData(text: message.content ?? ''));

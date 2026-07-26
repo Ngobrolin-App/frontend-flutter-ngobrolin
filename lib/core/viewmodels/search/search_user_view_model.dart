@@ -39,6 +39,7 @@ class SearchUserViewModel extends BaseViewModel {
     : _userRepository = userRepository ?? UserRepository();
 
   void resetAllUserSearchData() {
+    setSearchQuery();
     _userSelectionAction = null;
     _selectedUsers.clear();
     notifyListeners();

@@ -140,112 +140,115 @@ class _SearchGroupScreenState extends State<SearchGroupScreen> {
   void _showGroupDetail(ConversationModel group) {
     AppBottomSheet.show(
       context: context,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Header Row (Close, Title, Edit)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-                Expanded(
-                  child: Text(
-                    context.tr('group_details'),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 48),
-              ],
-            ),
-          ),
-          // Full Content (Scrollable)
-          Flexible(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
+      child: ChangeNotifierProvider<SearchGroupViewModel>.value(
+        value: _searchGroupViewModel,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header Row (Close, Title, Edit)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  AppAvatar(
-                    imageUrl: group.groupImage,
-                    name: group.name,
-                    radius: 50,
-                    fontSize: 40,
-                    backgroundColor: AppColors.lightGrey,
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.of(context).pop(),
                   ),
-                  SizedBox(height: 16),
-                  Text(
-                    group.name ?? '',
-                    maxLines: 3,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.text,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  if (group.totalParticipants != null) ...[
-                    SizedBox(height: 4),
-                    Text(
-                      context.tr(
-                        'number_of_members',
-                        args: {'number': group.totalParticipants.toString()},
-                      ),
+                  Expanded(
+                    child: Text(
+                      context.tr('group_details'),
+                      textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontSize: 16,
-                        color: AppColors.grey,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ],
-                  if (group.groupDescription != null &&
-                      (group.groupDescription?.isNotEmpty ?? false)) ...[
-                    SizedBox(height: 16),
-                    ExpandableTextSection(
-                      title: context.tr('group_description'),
-                      content: group.groupDescription ?? '',
-                      maxLines: 2,
-                    ),
-                  ],
-                  SizedBox(height: 16),
-                  if (group.isMember != null)
-                    Selector<SearchGroupViewModel, bool>(
-                      selector: (_, vm) => vm.isLoading,
-                      builder: (context, isLoading, _) {
-                        return PrimaryButton(
-                          isLoading: isLoading,
-                          text: (group.isMember ?? false)
-                              ? 'open_conversation'
-                              : 'join_group',
-                          onPressed: (group.isMember ?? false)
-                              ? () {
-                                  Navigator.pop(context);
-                                  Navigator.pushNamed(
-                                    context,
-                                    AppRoutes.chat,
-                                    arguments: {'chatId': group.id},
-                                  );
-                                }
-                              : () {
-                                  _joinGroupConversation(
-                                    conversationId: group.id,
-                                  );
-                                },
-                        );
-                      },
-                    ),
+                  ),
+                  const SizedBox(width: 48),
                 ],
               ),
             ),
-          ),
-        ],
+            // Full Content (Scrollable)
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  children: [
+                    AppAvatar(
+                      imageUrl: group.groupImage,
+                      name: group.name,
+                      radius: 50,
+                      fontSize: 40,
+                      backgroundColor: AppColors.lightGrey,
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      group.name ?? '',
+                      maxLines: 3,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.text,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    if (group.totalParticipants != null) ...[
+                      SizedBox(height: 4),
+                      Text(
+                        context.tr(
+                          'number_of_members',
+                          args: {'number': group.totalParticipants.toString()},
+                        ),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: AppColors.grey,
+                        ),
+                      ),
+                    ],
+                    if (group.groupDescription != null &&
+                        (group.groupDescription?.isNotEmpty ?? false)) ...[
+                      SizedBox(height: 16),
+                      ExpandableTextSection(
+                        title: context.tr('group_description'),
+                        content: group.groupDescription ?? '',
+                        maxLines: 2,
+                      ),
+                    ],
+                    SizedBox(height: 16),
+                    if (group.isMember != null)
+                      Selector<SearchGroupViewModel, bool>(
+                        selector: (_, vm) => vm.isLoading,
+                        builder: (context, isLoading, _) {
+                          return PrimaryButton(
+                            isLoading: isLoading,
+                            text: (group.isMember ?? false)
+                                ? 'open_conversation'
+                                : 'join_group',
+                            onPressed: (group.isMember ?? false)
+                                ? () {
+                                    Navigator.pop(context);
+                                    Navigator.pushNamed(
+                                      context,
+                                      AppRoutes.chat,
+                                      arguments: {'chatId': group.id},
+                                    );
+                                  }
+                                : () {
+                                    _joinGroupConversation(
+                                      conversationId: group.id,
+                                    );
+                                  },
+                          );
+                        },
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

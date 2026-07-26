@@ -1,13 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:ngobrolin_app/bootstrap.dart';
+import 'package:ngobrolin_app/core/di/service_locator.dart';
 import 'package:ngobrolin_app/core/enums/general_enums.dart';
 import 'package:ngobrolin_app/core/localization/app_localizations.dart';
+import 'package:ngobrolin_app/core/models/user_model.dart';
+import 'package:ngobrolin_app/core/viewmodels/chat/create_chat_group_view_model.dart';
+import 'package:ngobrolin_app/core/viewmodels/chat/group_profile_view_model.dart';
+import 'package:ngobrolin_app/core/viewmodels/profile/profile_view_model.dart';
+import 'package:ngobrolin_app/core/viewmodels/profile/user_profile_view_model.dart';
+import 'package:ngobrolin_app/core/viewmodels/search/search_group_view_model.dart';
+import 'package:ngobrolin_app/core/viewmodels/search/search_user_view_model.dart';
 import 'package:ngobrolin_app/core/widgets/screens/text_editor_screen.dart';
 import 'package:ngobrolin_app/screens/chat/create_chat_group_screen.dart';
 import 'package:ngobrolin_app/screens/chat/group_profile_screen.dart';
+import 'package:ngobrolin_app/screens/main/profile/edit_profile_screen.dart';
 import 'package:ngobrolin_app/screens/main/search_user/search_user_screen.dart';
 import 'package:ngobrolin_app/screens/main/search_user/search_group_screen.dart';
 import 'package:ngobrolin_app/theme/app_colors.dart';
+import 'package:provider/provider.dart';
 
 // Screens
 import '../screens/splash/splash_screen.dart';
@@ -36,6 +46,7 @@ class AppRoutes {
   static const String settingsRoute = '/settings';
   static const String blockedUsers = '/settings/blocked-users';
   static const String userProfile = '/user-profile';
+  static const String editProfile = '/edit-profile';
   static const String groupProfile = '/group-profile';
   static const String textEditor = '/text-editor';
   static const String searchUser = '/search-user';
@@ -78,7 +89,17 @@ class AppRoutes {
           ),
         );
       case createChatGroup:
-        return MaterialPageRoute(builder: (_) => const CreateChatGroupScreen());
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => ChangeNotifierProvider(
+            create: (_) => serviceLocator<CreateChatGroupViewModel>(),
+            child: CreateChatGroupScreen(
+              selectedUsers: args?['selectedUsers'] != null
+                  ? List<UserModel>.from(args!['selectedUsers'])
+                  : [],
+            ),
+          ),
+        );
       case settingsRoute:
         return MaterialPageRoute(builder: (_) => const SettingsScreen());
       case blockedUsers:
@@ -86,14 +107,27 @@ class AppRoutes {
       case userProfile:
         final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
-          builder: (_) =>
-              UserProfileScreen(userId: args?['userId'] as String? ?? ''),
+          builder: (_) => ChangeNotifierProvider(
+            create: (_) => serviceLocator<UserProfileViewModel>(),
+            child: UserProfileScreen(userId: args?['userId'] as String? ?? ''),
+          ),
+        );
+      case editProfile:
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => ChangeNotifierProvider(
+            create: (_) => serviceLocator<ProfileViewModel>(),
+            child: EditProfileScreen(user: args?['user'] as UserModel),
+          ),
         );
       case groupProfile:
         final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
-          builder: (_) => GroupProfileScreen(
-            conversationId: args?['conversationId'] as String? ?? '',
+          builder: (_) => ChangeNotifierProvider(
+            create: (_) => serviceLocator<GroupProfileViewModel>(),
+            child: GroupProfileScreen(
+              conversationId: args?['conversationId'] as String? ?? '',
+            ),
           ),
         );
       case textEditor:
@@ -110,15 +144,23 @@ class AppRoutes {
       case searchUser:
         final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
-          builder: (_) => SearchUserScreen(
-            userSelectionAction:
-                args?['userSelectionAction'] as UserSelectionAction?,
-            excludeUsers: args?['excludeUsers'] as List<String>? ?? [],
-            includeUsers: args?['includeUsers'] as List<String>? ?? [],
+          builder: (_) => ChangeNotifierProvider(
+            create: (_) => serviceLocator<SearchUserViewModel>(),
+            child: SearchUserScreen(
+              userSelectionAction:
+                  args?['userSelectionAction'] as UserSelectionAction?,
+              excludeUsers: args?['excludeUsers'] as List<String>? ?? [],
+              includeUsers: args?['includeUsers'] as List<String>? ?? [],
+            ),
           ),
         );
       case searchGroup:
-        return MaterialPageRoute(builder: (_) => SearchGroupScreen());
+        return MaterialPageRoute(
+          builder: (_) => ChangeNotifierProvider(
+            create: (_) => serviceLocator<SearchGroupViewModel>(),
+            child: SearchGroupScreen(),
+          ),
+        );
       default:
         _showRouteError(settings.name);
         return null;

@@ -314,44 +314,6 @@ class ChatViewModel extends BaseViewModel {
     notifyListeners();
   }
 
-  Future<bool> createGroupConversation({
-    required String groupName,
-    required List<String> participantIds,
-    required String createdByUserId,
-    String? groupImagePath,
-  }) async {
-    return await runBusyFuture(
-          () async {
-            String? groupImageUrl;
-            if (groupImagePath != null && groupImagePath.isNotEmpty) {
-              final result = await _chatRepository.uploadConversationGroupImage(
-                filePath: groupImagePath,
-              );
-              groupImageUrl = result.data;
-            }
-
-            final result = await _chatRepository.createGroupConversation(
-              groupName: groupName,
-              participantIds: participantIds,
-              groupImageUrl: groupImageUrl,
-              createdByUserId: createdByUserId,
-            );
-
-            final conversation = result.data;
-            setConversationId(conversation?.id);
-            _conversationType = conversation?.type;
-            _conversationName = conversation?.name;
-            _conversationImageUrl = conversation?.groupImage;
-
-            notifyListeners();
-            return true;
-          },
-          logName: _logName,
-          logContext: 'createGroupConversation()',
-        ) ??
-        false;
-  }
-
   /// Submits text strings to remote endpoints.
   Future<bool> sendMessage({
     String? content,

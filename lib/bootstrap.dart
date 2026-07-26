@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:ngobrolin_app/core/services/deeplink/deeplink_service.dart';
-import 'package:ngobrolin_app/core/viewmodels/chat/group_profile_view_model.dart';
-import 'package:ngobrolin_app/core/viewmodels/search/search_group_view_model.dart';
 import 'package:provider/provider.dart';
 
 import 'package:firebase_core/firebase_core.dart';
@@ -27,10 +25,7 @@ import 'core/providers/socket_provider.dart';
 
 // ViewModels
 import 'core/viewmodels/auth/auth_view_model.dart';
-import 'core/viewmodels/profile/profile_view_model.dart';
-import 'core/viewmodels/profile/user_profile_view_model.dart';
 import 'core/viewmodels/chat/chat_view_model.dart';
-import 'core/viewmodels/chat/chat_list_view_model.dart';
 import 'core/viewmodels/search/search_user_view_model.dart';
 import 'core/viewmodels/settings/settings_view_model.dart';
 import 'core/viewmodels/settings/blocked_users_view_model.dart';
@@ -57,7 +52,7 @@ Future<void> bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // =======================
-  // ENV (ANTI CRASH)
+  // ENV
   // =======================
   try {
     await dotenv.load(fileName: FlavorConfig.isProd ? '.env.prod' : '.env.dev');
@@ -74,7 +69,7 @@ Future<void> bootstrap() async {
   }
 
   // =======================
-  // DI (HARUS SYNC ONLY)
+  // DI
   // =======================
   setupServiceLocator();
 
@@ -157,27 +152,8 @@ Future<void> bootstrap() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => SocketProvider()),
-
         ChangeNotifierProvider(create: (_) => serviceLocator<AuthViewModel>()),
-        ChangeNotifierProvider(
-          create: (_) => serviceLocator<ProfileViewModel>(),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => serviceLocator<UserProfileViewModel>(),
-        ),
         ChangeNotifierProvider(create: (_) => serviceLocator<ChatViewModel>()),
-        ChangeNotifierProvider(
-          create: (_) => serviceLocator<ChatListViewModel>(),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => serviceLocator<GroupProfileViewModel>(),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => serviceLocator<SearchUserViewModel>(),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => serviceLocator<SearchGroupViewModel>(),
-        ),
         ChangeNotifierProvider(
           create: (_) => serviceLocator<SettingsViewModel>(),
         ),

@@ -111,7 +111,9 @@ const Map<String, String> idID = {
   'about_ngobrolin': 'Tentang Ngobrolin',
   'about_ngobrolin_description':
       'Ngobrolin adalah aplikasi obrolan yang memungkinkan pengguna untuk berbagi cerita, berinteraksi, dan tetap dekat dengan siapa pun.',
-  '2025_ngobrolin': '@2025 Ngobrolin',
+  '2026_ngobrolin': '@2026 Ngobrolin',
+  'discard_changes': 'Buang Perubahan',
+  'are_you_sure_discard': 'Apakah Anda yakin ingin membuang perubahan?',
 
   // Chat
   'type_message': 'Ketik pesan...',
@@ -202,6 +204,7 @@ const Map<String, String> idID = {
   'join_group_success': 'Berhasil bergabung ke grup',
   'join_group_failed': 'Gagal bergabung ke grup',
   'no_groups_in_common': 'Tidak ada grup yang sama',
+  'failed_to_update_profile': 'Gagal memperbarui profil',
 
   // General Enums
   'view_profile_image': 'Lihat Foto Profil',

@@ -274,7 +274,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           errorBuilder: (_, __, ___) =>
               const Icon(Icons.apps, size: 50, color: AppColors.primary),
         ),
-        applicationLegalese: dialogContext.tr('2025_ngobrolin'),
+        applicationLegalese: dialogContext.tr('2026_ngobrolin'),
         children: [
           const SizedBox(height: 16),
           Text(dialogContext.tr('about_ngobrolin_description')),
