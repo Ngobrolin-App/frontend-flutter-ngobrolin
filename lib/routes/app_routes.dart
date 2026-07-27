@@ -139,6 +139,7 @@ class AppRoutes {
             description: args?['description'] as String?,
             maxLength: args?['maxLength'] as int?,
             maxLines: args?['maxLines'] as int?,
+            keyboardType: args?['keyboardType'] as TextInputType?,
           ),
         );
       case searchUser:

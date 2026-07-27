@@ -207,6 +207,7 @@ class _GroupProfileScreenState extends State<GroupProfileScreen> {
         'maxLength': 500,
         'maxLines': null,
         'description': context.tr('group_description_visibility'),
+        'keyboardType': TextInputType.multiline,
       },
     ).then((newValue) {
       if (newValue != null && newValue != currentDesc) {

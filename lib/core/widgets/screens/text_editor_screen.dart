@@ -9,6 +9,7 @@ class TextEditorScreen extends StatefulWidget {
   final String? description;
   final int? maxLength;
   final int? maxLines;
+  final TextInputType? keyboardType;
 
   const TextEditorScreen({
     super.key,
@@ -17,6 +18,7 @@ class TextEditorScreen extends StatefulWidget {
     this.description,
     this.maxLength,
     this.maxLines = 1,
+    this.keyboardType,
   });
 
   @override
@@ -58,6 +60,7 @@ class _TextEditorScreenState extends State<TextEditorScreen> {
                     CustomTextField(
                       controller: _controller,
                       autofocus: true,
+                      keyboardType: widget.keyboardType ?? TextInputType.text,
                       maxLength: widget.maxLength,
                       maxLines: widget.maxLines,
                       minLines: 1,

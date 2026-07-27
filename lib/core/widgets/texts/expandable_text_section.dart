@@ -60,9 +60,13 @@ class ExpandableTextSection extends StatelessWidget {
           Flexible(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24.0),
-              child: Text(
-                content,
-                style: const TextStyle(fontSize: 16, height: 1.5),
+              child: SizedBox(
+                width: double.infinity,
+                child: Text(
+                  content,
+                  textAlign: TextAlign.left,
+                  style: const TextStyle(fontSize: 16, height: 1.5),
+                ),
               ),
             ),
           ),
