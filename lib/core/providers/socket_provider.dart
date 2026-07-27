@@ -105,16 +105,26 @@ class SocketProvider extends ChangeNotifier {
     _socket.leaveConversationSocket(conversationId);
   }
 
-  void sendTypingStart(String conversationId) {
+  void sendTypingStart(String conversationId, List<String> participantIds) {
     developer.log(
-      'SocketProvider - sendTypingStart - $conversationId',
+      'SocketProvider - sendTypingStart - $conversationId - participants ids length - ${participantIds.length}',
       name: 'SocketProvider',
     );
-    _socket.emit('typing_start', {'conversationId': conversationId});
+    _socket.emit('typing_start', {
+      'conversationId': conversationId,
+      'participantIds': participantIds,
+    });
   }
 
-  void sendTypingStop(String conversationId) {
-    _socket.emit('typing_stop', {'conversationId': conversationId});
+  void sendTypingStop(String conversationId, List<String> participantIds) {
+    developer.log(
+      'SocketProvider - sendTypingStop - $conversationId - participants ids length - ${participantIds.length}',
+      name: 'SocketProvider',
+    );
+    _socket.emit('typing_stop', {
+      'conversationId': conversationId,
+      'participantIds': participantIds,
+    });
   }
 
   void updateStatus(String status) {

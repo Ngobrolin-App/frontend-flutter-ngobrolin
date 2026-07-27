@@ -330,9 +330,14 @@ class _ChatScreenState extends State<ChatScreen> {
 
     if (_typingTimer?.isActive ?? false) _typingTimer!.cancel();
 
+    final participantIds = context.read<ChatViewModel>().participantIds;
+
     if (!_isTyping) {
       _isTyping = true;
-      _socketProvider.sendTypingStart(_chatViewModel.conversationId!);
+      _socketProvider.sendTypingStart(
+        _chatViewModel.conversationId!,
+        participantIds,
+      );
     }
 
     if (_typingTimer?.isActive ?? false) _typingTimer!.cancel();
@@ -340,7 +345,10 @@ class _ChatScreenState extends State<ChatScreen> {
     _typingTimer = Timer(const Duration(seconds: 2), () {
       if (mounted && _chatViewModel.conversationId != null) {
         _isTyping = false;
-        _socketProvider.sendTypingStop(_chatViewModel.conversationId!);
+        _socketProvider.sendTypingStop(
+          _chatViewModel.conversationId!,
+          participantIds,
+        );
       }
     });
   }

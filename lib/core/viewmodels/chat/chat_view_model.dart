@@ -50,8 +50,12 @@ class ChatViewModel extends BaseViewModel {
 
   List<String> get participantNames =>
       _participants.map((user) => user.name).toList();
+
   String get participantNamesText =>
       _participants.map((user) => user.name).join(', ');
+
+  List<String> get participantIds =>
+      _participants.map((user) => user.id).toList();
 
   BlockUserStatus? _blockUserStatus;
   BlockUserStatus? get blockUserStatus => _blockUserStatus;
