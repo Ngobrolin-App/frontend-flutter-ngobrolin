@@ -10,7 +10,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-import 'firebase_options.dart';
+import 'firebase_options_dev.dart' as dev_firebase;
+import 'firebase_options_prod.dart' as prod_firebase;
 import 'routes/app_routes.dart';
 import 'theme/app_theme.dart';
 
@@ -26,7 +27,6 @@ import 'core/providers/socket_provider.dart';
 // ViewModels
 import 'core/viewmodels/auth/auth_view_model.dart';
 import 'core/viewmodels/chat/chat_view_model.dart';
-import 'core/viewmodels/search/search_user_view_model.dart';
 import 'core/viewmodels/settings/settings_view_model.dart';
 import 'core/viewmodels/settings/blocked_users_view_model.dart';
 
@@ -45,7 +45,11 @@ const String kNotificationChannelName = 'Ngobrolin Notifications';
 /// =======================
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  final firebaseOptions = FlavorConfig.isProd
+      ? prod_firebase.DefaultFirebaseOptions.currentPlatform
+      : dev_firebase.DefaultFirebaseOptions.currentPlatform;
+
+  await Firebase.initializeApp(options: firebaseOptions);
 }
 
 Future<void> bootstrap() async {
@@ -61,7 +65,12 @@ Future<void> bootstrap() async {
   // =======================
   // FIREBASE
   // =======================
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  final firebaseOptions = FlavorConfig.isProd
+      ? prod_firebase.DefaultFirebaseOptions.currentPlatform
+      : dev_firebase.DefaultFirebaseOptions.currentPlatform;
+
+  await Firebase.initializeApp(options: firebaseOptions);
 
   // iOS only
   if (Platform.isIOS) {
