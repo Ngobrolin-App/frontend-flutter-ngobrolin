@@ -794,9 +794,12 @@ class _ChatScreenState extends State<ChatScreen> {
       final result = await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => AttachmentPreviewScreen(
-            filePath: pickedPath!,
-            fileType: attachmentType,
+          builder: (context) => ChangeNotifierProvider.value(
+            value: chatVM,
+            child: AttachmentPreviewScreen(
+              filePath: pickedPath!,
+              fileType: attachmentType,
+            ),
           ),
         ),
       );
