@@ -277,9 +277,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
-    Future.microtask(() {
-      _chatViewModel.resetAllConversationData();
-    });
+    if (_isTyping) {
+      _sendStopTypingSignal();
+    }
 
     _typingTimer?.cancel();
 
@@ -325,9 +325,25 @@ class _ChatScreenState extends State<ChatScreen> {
     super.dispose();
   }
 
+  void _sendStopTypingSignal() {
+    if (_joinedRoom && _chatViewModel.conversationId != null) {
+      try {
+        final participantIds = context.read<ChatViewModel>().participantIds;
+        _socketProvider.sendTypingStop(
+          _chatViewModel.conversationId!,
+          participantIds,
+        );
+      } catch (e) {
+        developer.log(
+          'ChatScreen - _sendStopTypingSignal error: $e',
+          name: 'ChatScreen',
+        );
+      }
+    }
+  }
+
   void _onTextChanged() {
     if (_chatViewModel.conversationId == null) return;
-
     if (_typingTimer?.isActive ?? false) _typingTimer!.cancel();
 
     final participantIds = context.read<ChatViewModel>().participantIds;
@@ -340,15 +356,10 @@ class _ChatScreenState extends State<ChatScreen> {
       );
     }
 
-    if (_typingTimer?.isActive ?? false) _typingTimer!.cancel();
-
     _typingTimer = Timer(const Duration(seconds: 2), () {
       if (mounted && _chatViewModel.conversationId != null) {
         _isTyping = false;
-        _socketProvider.sendTypingStop(
-          _chatViewModel.conversationId!,
-          participantIds,
-        );
+        _sendStopTypingSignal();
       }
     });
   }
@@ -421,7 +432,6 @@ class _ChatScreenState extends State<ChatScreen> {
           },
           child: Row(
             children: [
-              // OPTIMASI: Ambil avatar menggunakan Selector agar tidak rebuild jika isi chat bertambah
               Selector<ChatViewModel, (String?, String)>(
                 selector: (_, vm) =>
                     (vm.conversationImageUrl, vm.conversationName ?? ''),
@@ -801,7 +811,7 @@ class _ChatScreenState extends State<ChatScreen> {
         if (mediaFilePath.isNotEmpty && mounted) {
           await chatVM.sendAttachment(
             mediaFilePath: mediaFilePath,
-            type: attachmentType, // Gunakan tipe attachment dari pilihan user
+            type: attachmentType,
             content: content,
             mediaFileType: mediaFileType,
             mediaFileName: mediaFileName,

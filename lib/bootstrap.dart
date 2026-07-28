@@ -162,7 +162,6 @@ Future<void> bootstrap() async {
       providers: [
         ChangeNotifierProvider(create: (_) => SocketProvider()),
         ChangeNotifierProvider(create: (_) => serviceLocator<AuthViewModel>()),
-        ChangeNotifierProvider(create: (_) => serviceLocator<ChatViewModel>()),
         ChangeNotifierProvider(
           create: (_) => serviceLocator<SettingsViewModel>(),
         ),

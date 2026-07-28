@@ -4,6 +4,7 @@ import 'package:ngobrolin_app/core/di/service_locator.dart';
 import 'package:ngobrolin_app/core/enums/general_enums.dart';
 import 'package:ngobrolin_app/core/localization/app_localizations.dart';
 import 'package:ngobrolin_app/core/models/user_model.dart';
+import 'package:ngobrolin_app/core/viewmodels/chat/chat_view_model.dart';
 import 'package:ngobrolin_app/core/viewmodels/chat/create_chat_group_view_model.dart';
 import 'package:ngobrolin_app/core/viewmodels/chat/group_profile_view_model.dart';
 import 'package:ngobrolin_app/core/viewmodels/profile/profile_view_model.dart';
@@ -81,11 +82,14 @@ class AppRoutes {
       case chat:
         final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
-          builder: (_) => ChatScreen(
-            userId: args?['userId'] as String? ?? '',
-            name: args?['name'] as String? ?? '',
-            avatarUrl: args?['avatarUrl'] as String? ?? '',
-            chatId: args?['chatId'] as String? ?? '',
+          builder: (_) => ChangeNotifierProvider(
+            create: (_) => serviceLocator<ChatViewModel>(),
+            child: ChatScreen(
+              userId: args?['userId'] as String? ?? '',
+              name: args?['name'] as String? ?? '',
+              avatarUrl: args?['avatarUrl'] as String? ?? '',
+              chatId: args?['chatId'] as String? ?? '',
+            ),
           ),
         );
       case createChatGroup:
