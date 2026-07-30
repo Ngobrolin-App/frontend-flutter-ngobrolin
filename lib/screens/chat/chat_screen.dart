@@ -328,11 +328,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void _sendStopTypingSignal() {
     if (_joinedRoom && _chatViewModel.conversationId != null) {
       try {
-        final participantIds = context.read<ChatViewModel>().participantIds;
-        _socketProvider.sendTypingStop(
-          _chatViewModel.conversationId!,
-          participantIds,
-        );
+        _socketProvider.sendTypingStop(_chatViewModel.conversationId!);
       } catch (e) {
         developer.log(
           'ChatScreen - _sendStopTypingSignal error: $e',
@@ -346,14 +342,9 @@ class _ChatScreenState extends State<ChatScreen> {
     if (_chatViewModel.conversationId == null) return;
     if (_typingTimer?.isActive ?? false) _typingTimer!.cancel();
 
-    final participantIds = context.read<ChatViewModel>().participantIds;
-
     if (!_isTyping) {
       _isTyping = true;
-      _socketProvider.sendTypingStart(
-        _chatViewModel.conversationId!,
-        participantIds,
-      );
+      _socketProvider.sendTypingStart(_chatViewModel.conversationId!);
     }
 
     _typingTimer = Timer(const Duration(seconds: 2), () {
@@ -411,121 +402,129 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: GestureDetector(
-          onTap: () {
-            final chatViewModel = context.read<ChatViewModel>();
-            if (chatViewModel.conversationType ==
-                ConversationType.private.name) {
-              Navigator.of(context).pushNamed(
-                AppRoutes.userProfile,
-                arguments: {
-                  'userId': context.read<ChatViewModel>().privatePartnerId,
-                },
-              );
-            }
-            if (chatViewModel.conversationType == ConversationType.group.name) {
-              Navigator.of(context).pushNamed(
-                AppRoutes.groupProfile,
-                arguments: {'conversationId': chatViewModel.conversationId},
-              );
-            }
-          },
-          child: Row(
-            children: [
-              Selector<ChatViewModel, (String?, String)>(
-                selector: (_, vm) =>
-                    (vm.conversationImageUrl, vm.conversationName ?? ''),
-                builder: (context, data, _) {
-                  return AppAvatar(
-                    imageUrl: data.$1,
-                    name: data.$2,
-                    radius: 16,
-                    fontSize: 14,
-                    backgroundColor: AppColors.lightGrey,
+        title: Selector<ChatViewModel, String?>(
+          selector: (_, vm) => vm.conversationId,
+          builder: (context, conversationId, _) {
+            return GestureDetector(
+              onTap: () {
+                final chatViewModel = context.read<ChatViewModel>();
+                if (chatViewModel.conversationType ==
+                    ConversationType.private.name) {
+                  Navigator.of(context).pushNamed(
+                    AppRoutes.userProfile,
+                    arguments: {
+                      'userId': context.read<ChatViewModel>().privatePartnerId,
+                    },
                   );
-                },
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Selector<ChatViewModel, String>(
-                      selector: (_, vm) => vm.conversationName ?? '',
-                      builder: (context, name, _) => Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                }
+                if (chatViewModel.conversationType ==
+                    ConversationType.group.name) {
+                  Navigator.of(context).pushNamed(
+                    AppRoutes.groupProfile,
+                    arguments: {'conversationId': conversationId},
+                  );
+                }
+              },
+              child: Row(
+                children: [
+                  Selector<ChatViewModel, (String?, String)>(
+                    selector: (_, vm) =>
+                        (vm.conversationImageUrl, vm.conversationName ?? ''),
+                    builder: (context, data, _) {
+                      return AppAvatar(
+                        imageUrl: data.$1,
+                        name: data.$2,
+                        radius: 16,
+                        fontSize: 14,
+                        backgroundColor: AppColors.lightGrey,
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Selector<ChatViewModel, String>(
+                          selector: (_, vm) => vm.conversationName ?? '',
+                          builder: (context, name, _) => Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                        // OPTIMASI: Lokalisasi rebuild sub-komponen status/typing via Selector
+                        Selector<
+                          ChatViewModel,
+                          (bool, String?, String, String?, String, int)
+                        >(
+                          selector: (_, vm) => (
+                            vm.isParticipantTyping,
+                            vm.typingParticipantName,
+                            vm.privatePartnerStatus,
+                            vm.conversationType,
+                            vm.participantNamesText,
+                            vm.participants.length,
+                          ),
+                          builder: (context, state, _) {
+                            final isParticipantTyping = state.$1;
+                            final typingParticipantName = state.$2;
+                            final privatePartnerStatus = state.$3;
+                            final conversationType = state.$4;
+                            final participantNamesText = state.$5;
+                            if (isParticipantTyping) {
+                              return Text(
+                                (conversationType ==
+                                        ConversationType.group.name)
+                                    ? context.tr(
+                                        'user_typing',
+                                        args: {
+                                          'actorName':
+                                              (typingParticipantName != null)
+                                              ? typingParticipantName
+                                              : 'Someone',
+                                        },
+                                      )
+                                    : context.tr('typing'),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              );
+                            } else if (conversationType ==
+                                ConversationType.group.name) {
+                              return Text(
+                                participantNamesText,
+                                style: const TextStyle(fontSize: 12),
+                              );
+                            } else if (conversationType ==
+                                    ConversationType.private.name &&
+                                privatePartnerStatus ==
+                                    UserStatus.online.name) {
+                              return Text(
+                                context.tr('online'),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.accent,
+                                ),
+                              );
+                            }
+                            return const SizedBox.shrink();
+                          },
+                        ),
+                      ],
                     ),
-                    // OPTIMASI: Lokalisasi rebuild sub-komponen status/typing via Selector
-                    Selector<
-                      ChatViewModel,
-                      (bool, String?, String, String?, String, int)
-                    >(
-                      selector: (_, vm) => (
-                        vm.isParticipantTyping,
-                        vm.typingParticipantName,
-                        vm.privatePartnerStatus,
-                        vm.conversationType,
-                        vm.participantNamesText,
-                        vm.participants.length,
-                      ),
-                      builder: (context, state, _) {
-                        final isParticipantTyping = state.$1;
-                        final typingParticipantName = state.$2;
-                        final privatePartnerStatus = state.$3;
-                        final conversationType = state.$4;
-                        final participantNamesText = state.$5;
-                        if (isParticipantTyping) {
-                          return Text(
-                            (conversationType == ConversationType.group.name)
-                                ? context.tr(
-                                    'user_typing',
-                                    args: {
-                                      'actorName':
-                                          (typingParticipantName != null)
-                                          ? typingParticipantName
-                                          : 'Someone',
-                                    },
-                                  )
-                                : context.tr('typing'),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          );
-                        } else if (conversationType ==
-                            ConversationType.group.name) {
-                          return Text(
-                            participantNamesText,
-                            style: const TextStyle(fontSize: 12),
-                          );
-                        } else if (conversationType ==
-                                ConversationType.private.name &&
-                            privatePartnerStatus == UserStatus.online.name) {
-                          return Text(
-                            context.tr('online'),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: AppColors.accent,
-                            ),
-                          );
-                        }
-                        return const SizedBox.shrink();
-                      },
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
       body: Column(
