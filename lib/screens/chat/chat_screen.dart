@@ -402,23 +402,22 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Selector<ChatViewModel, String?>(
-          selector: (_, vm) => vm.conversationId,
-          builder: (context, conversationId, _) {
+        title: Selector<ChatViewModel, (String?, String?, String?)>(
+          selector: (_, vm) =>
+              (vm.conversationId, vm.privatePartnerId, vm.conversationType),
+          builder: (context, data, _) {
+            final conversationId = data.$1;
+            final privatePartnerId = data.$2;
+            final conversationType = data.$3;
             return GestureDetector(
               onTap: () {
-                final chatViewModel = context.read<ChatViewModel>();
-                if (chatViewModel.conversationType ==
-                    ConversationType.private.name) {
+                if (conversationType == ConversationType.private.name) {
                   Navigator.of(context).pushNamed(
                     AppRoutes.userProfile,
-                    arguments: {
-                      'userId': context.read<ChatViewModel>().privatePartnerId,
-                    },
+                    arguments: {'userId': privatePartnerId},
                   );
                 }
-                if (chatViewModel.conversationType ==
-                    ConversationType.group.name) {
+                if (conversationType == ConversationType.group.name) {
                   Navigator.of(context).pushNamed(
                     AppRoutes.groupProfile,
                     arguments: {'conversationId': conversationId},

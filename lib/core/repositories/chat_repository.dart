@@ -75,6 +75,9 @@ class ChatRepository {
         'participantId': participantId,
       },
       parser: (response) {
+        developer.log(
+          'ChatRepository - getOrCreatePrivateConversationId - response: $response',
+        );
         return ApiResponse<ConversationModel>.fromJson(
           response,
           (data) => ConversationModel.fromJson(

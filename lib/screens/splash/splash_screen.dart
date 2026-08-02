@@ -102,7 +102,7 @@ class _SplashScreenState extends State<SplashScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset(
-              'assets/apps_logo/app-icon-ngobrolin-enhanced-transparent.png',
+              'assets/apps_logo/app-icon-ngobrolin-v2-1.1-transparent.png',
               width: 200,
               height: 200,
               errorBuilder: (_, __, ___) => const Icon(

@@ -106,7 +106,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           const SizedBox(height: 16),
           // Logo
           Image.asset(
-            'assets/apps_logo/app-icon-ngobrolin-enhanced-transparent.png',
+            'assets/apps_logo/app-icon-ngobrolin-v2-horizontal-2.1-transparent.png',
             width: 150,
             height: 150,
             errorBuilder: (context, error, stackTrace) {

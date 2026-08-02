@@ -336,7 +336,10 @@ class ChatViewModel extends BaseViewModel {
         _privatePartnerId,
       );
       final conversation = result.data;
-      setConversationId(conversation?.id);
+      if (conversation?.id != null) {
+        setConversationId(conversation?.id);
+        initChat(conversationId: conversation?.id);
+      }
     }
 
     return await runBusyFuture(

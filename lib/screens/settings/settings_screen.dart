@@ -268,7 +268,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         applicationName: dialogContext.tr('app_name'),
         applicationVersion: '1.0.0',
         applicationIcon: Image.asset(
-          'assets/apps_logo/app-icon-ngobrolin-enhanced-transparent.png',
+          'assets/apps_logo/app-icon-ngobrolin-v2-horizontal-2.1-transparent.png',
           width: 50,
           height: 50,
           errorBuilder: (_, __, ___) =>

@@ -106,14 +106,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 32),
 
                   // Logo
-                  Image.asset(
-                    'assets/apps_logo/app-icon-ngobrolin-enhanced-transparent.png',
-                    width: 200,
-                    height: 200,
-                    errorBuilder: (context, error, stackTrace) => const Icon(
-                      Icons.image_not_supported,
-                      size: 120,
-                      color: AppColors.grey,
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Image.asset(
+                      'assets/apps_logo/app-icon-ngobrolin-v2-horizontal-2.1-transparent.png',
+                      width: double.infinity,
+                      errorBuilder: (context, error, stackTrace) => const Icon(
+                        Icons.image_not_supported,
+                        size: 120,
+                        color: AppColors.grey,
+                      ),
                     ),
                   ),
 
