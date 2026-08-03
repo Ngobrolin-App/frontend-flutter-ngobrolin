@@ -205,6 +205,7 @@ const Map<String, String> idID = {
   'join_group_failed': 'Gagal bergabung ke grup',
   'no_groups_in_common': 'Tidak ada grup yang sama',
   'failed_to_update_profile': 'Gagal memperbarui profil',
+  'failed_to_download_or_open_file': 'Gagal mengunduh atau membuka file',
 
   // General Enums
   'view_profile_image': 'Lihat Foto Profil',

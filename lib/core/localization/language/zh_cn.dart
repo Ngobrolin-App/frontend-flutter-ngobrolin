@@ -193,6 +193,7 @@ const Map<String, String> zhCN = {
   'join_group_failed': '加入群组失败',
   'no_groups_in_common': '没有共同群组',
   'failed_to_update_profile': '更新个人资料失败',
+  'failed_to_download_or_open_file': '下载或打开文件失败',
 
   // General Enums
   'view_profile_image': '查看头像',

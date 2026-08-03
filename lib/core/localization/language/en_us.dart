@@ -204,6 +204,7 @@ const Map<String, String> enUS = {
   'join_group_failed': 'Failed to join the group',
   'no_groups_in_common': 'No groups in common',
   'failed_to_update_profile': 'Failed to update profile',
+  'failed_to_download_or_open_file': 'Failed to download or open the file',
 
   // General Enums
   'view_profile_image': 'View Profile Image',

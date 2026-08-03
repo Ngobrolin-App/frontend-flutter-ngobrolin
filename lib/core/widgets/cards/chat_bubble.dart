@@ -18,7 +18,7 @@ import '../../../theme/app_colors.dart';
 import '../../localization/app_localizations.dart';
 import '../../models/message_model.dart';
 
-class ChatBubble extends StatelessWidget {
+class ChatBubble extends StatefulWidget {
   final MessageModel message;
   final ConversationType? conversationType;
   final bool isLongPressOptionEnabled;
@@ -35,6 +35,35 @@ class ChatBubble extends StatelessWidget {
     this.onReplyTap,
     this.isLongPressOptionEnabled = true,
   });
+
+  @override
+  State<ChatBubble> createState() => _ChatBubbleState();
+}
+
+class _ChatBubbleState extends State<ChatBubble> {
+  bool _isDownloaded = false;
+  bool _isDownloading = false;
+  double _downloadProgress = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkDownloadStatus();
+  }
+
+  Future<void> _checkDownloadStatus() async {
+    if (widget.message.type == 'file') {
+      bool downloaded = await MediaUtils.isFileDownloaded(
+        widget.message.mediaUrl ?? '',
+        fileName: widget.message.mediaFileName,
+      );
+      if (mounted) {
+        setState(() {
+          _isDownloaded = downloaded;
+        });
+      }
+    }
+  }
 
   String _extractFileName(String? url, String fallback) {
     if (url == null || url.isEmpty) return fallback;
@@ -134,10 +163,10 @@ class ChatBubble extends StatelessWidget {
   void _handleMenuAction(String value, BuildContext context) {
     switch (value) {
       case 'reply':
-        context.read<ChatViewModel>().setReplyingTo(message);
+        context.read<ChatViewModel>().setReplyingTo(widget.message);
         break;
       case 'copy':
-        Clipboard.setData(ClipboardData(text: message.content ?? ''));
+        Clipboard.setData(ClipboardData(text: widget.message.content ?? ''));
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(context.tr('copied_to_clipboard')),
@@ -151,7 +180,11 @@ class ChatBubble extends StatelessWidget {
         );
         break;
       case 'download':
-        MediaUtils.downloadAndOpen(context, message.mediaUrl ?? '');
+        MediaUtils.downloadAndOpen(
+          context,
+          widget.message.mediaUrl ?? '',
+          fileName: widget.message.mediaFileName,
+        );
         break;
       case 'forward':
         break;
@@ -163,9 +196,9 @@ class ChatBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Align(
-      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+      alignment: widget.isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: GestureDetector(
-        onLongPressStart: isLongPressOptionEnabled
+        onLongPressStart: widget.isLongPressOptionEnabled
             ? (details) => _showContextMenu(
                 context: context,
                 position: details.globalPosition,
@@ -178,10 +211,12 @@ class ChatBubble extends StatelessWidget {
           margin: const EdgeInsets.symmetric(vertical: 4),
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
           decoration: BoxDecoration(
-            color: isMe ? AppColors.chatBubbleUser : AppColors.chatBubbleOther,
+            color: widget.isMe
+                ? AppColors.chatBubbleUser
+                : AppColors.chatBubbleOther,
             borderRadius: BorderRadius.circular(16).copyWith(
-              bottomRight: isMe ? const Radius.circular(4) : null,
-              bottomLeft: !isMe ? const Radius.circular(4) : null,
+              bottomRight: widget.isMe ? const Radius.circular(4) : null,
+              bottomLeft: !widget.isMe ? const Radius.circular(4) : null,
             ),
             boxShadow: [
               BoxShadow(
@@ -196,11 +231,11 @@ class ChatBubble extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (!isMe &&
-                    (conversationType == ConversationType.group) &&
-                    showSenderName)
+                if (!widget.isMe &&
+                    (widget.conversationType == ConversationType.group) &&
+                    widget.showSenderName)
                   Align(
-                    alignment: isMe
+                    alignment: widget.isMe
                         ? Alignment.centerRight
                         : Alignment.centerLeft,
                     child: Padding(
@@ -208,10 +243,10 @@ class ChatBubble extends StatelessWidget {
                         top: 8,
                         left: 8,
                         right: 8,
-                        bottom: (message.repliedMessage != null) ? 4 : 0,
+                        bottom: (widget.message.repliedMessage != null) ? 4 : 0,
                       ),
                       child: Text(
-                        message.sender?.name ?? '',
+                        widget.message.sender?.name ?? '',
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
                           color: AppColors.buttonText,
@@ -220,12 +255,12 @@ class ChatBubble extends StatelessWidget {
                     ),
                   ),
 
-                if (message.repliedMessage != null) ...[
+                if (widget.message.repliedMessage != null) ...[
                   const SizedBox(height: 4),
                   _buildRepliedMessage(context),
                   const SizedBox(height: 4),
                 ],
-                if (message.forwardedFromMessageId != null)
+                if (widget.message.forwardedFromMessageId != null)
                   _buildForwardedMark(context),
 
                 Padding(
@@ -249,13 +284,12 @@ class ChatBubble extends StatelessWidget {
   }
 
   // --- SUB-WIDGET BUILDERS ---
-
   Widget _buildRepliedMessage(BuildContext context) {
     return ReplyMessageWidget(
-      message: message.repliedMessage!,
+      message: widget.message.repliedMessage!,
       onTap: () {
-        if (message.repliedMessage!.id != null) {
-          onReplyTap?.call(message.repliedMessage!.id);
+        if (widget.message.repliedMessage!.id != null) {
+          widget.onReplyTap?.call(widget.message.repliedMessage!.id);
         }
       },
     );
@@ -278,7 +312,7 @@ class ChatBubble extends StatelessWidget {
   }
 
   Widget _buildMainContent(BuildContext context) {
-    switch (message.type) {
+    switch (widget.message.type) {
       case 'image':
         return _buildImageMessage(context);
       case 'file':
@@ -290,7 +324,7 @@ class ChatBubble extends StatelessWidget {
 
   Widget _buildTextMessage(BuildContext context) {
     return Text(
-      message.content ?? '',
+      widget.message.content ?? '',
       style: const TextStyle(fontSize: 16, color: AppColors.text),
     );
   }
@@ -310,7 +344,9 @@ class ChatBubble extends StatelessWidget {
                   builder: (_) => Dialog(
                     insetPadding: const EdgeInsets.all(16),
                     child: PhotoView(
-                      imageProvider: NetworkImage(message.mediaUrl ?? ''),
+                      imageProvider: NetworkImage(
+                        widget.message.mediaUrl ?? '',
+                      ),
                       initialScale: PhotoViewComputedScale.contained,
                       errorBuilder: (context, error, stackTrace) {
                         return Center(
@@ -327,7 +363,7 @@ class ChatBubble extends StatelessWidget {
                 );
               },
 
-              onLongPressStart: isLongPressOptionEnabled
+              onLongPressStart: widget.isLongPressOptionEnabled
                   ? (details) => _showContextMenu(
                       context: context,
                       position: details.globalPosition,
@@ -337,7 +373,7 @@ class ChatBubble extends StatelessWidget {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: CachedNetworkImage(
-                  imageUrl: message.mediaUrl ?? '',
+                  imageUrl: widget.message.mediaUrl ?? '',
                   width: MediaQuery.of(context).size.width * 0.6,
                   fit: BoxFit.cover,
                   progressIndicatorBuilder: (context, url, downloadProgress) =>
@@ -361,7 +397,7 @@ class ChatBubble extends StatelessWidget {
               ),
             ),
 
-            if (message.content?.isNotEmpty ?? false) ...[
+            if (widget.message.content?.isNotEmpty ?? false) ...[
               const SizedBox(height: 4),
               _buildTextMessage(context), // Display caption below the image
             ],
@@ -378,21 +414,55 @@ class ChatBubble extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           InkWell(
-            onTap: () =>
-                MediaUtils.downloadAndOpen(context, message.mediaUrl ?? ''),
+            onTap: () async {
+              if (_isDownloading) return;
+
+              if (_isDownloaded) {
+                await MediaUtils.openDownloadedFile(
+                  widget.message.mediaUrl ?? '',
+                  fileName: widget.message.mediaFileName,
+                );
+                return;
+              }
+
+              setState(() {
+                _isDownloading = true;
+                _downloadProgress = 0.0;
+              });
+
+              await MediaUtils.downloadAndOpen(
+                context,
+                widget.message.mediaUrl ?? '',
+                fileName: widget.message.mediaFileName,
+                onProgress: (progress) {
+                  if (mounted) {
+                    setState(() {
+                      _downloadProgress = progress;
+                    });
+                  }
+                },
+              );
+
+              if (mounted) {
+                setState(() {
+                  _isDownloading = false;
+                  _isDownloaded = true;
+                });
+              }
+            },
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Iconify(
                   Mdi.file_document,
-                  size: 24,
+                  size: 32,
                   color: AppColors.text,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     _extractFileName(
-                      message.mediaFileName ?? '',
+                      widget.message.mediaFileName ?? '',
                       context.tr('file'),
                     ),
                     style: const TextStyle(fontSize: 16, color: AppColors.text),
@@ -401,17 +471,37 @@ class ChatBubble extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Iconify(
-                  MaterialSymbols.open_in_new,
-                  size: 20,
-                  color: AppColors.accent,
-                ),
+                if (_isDownloading)
+                  SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      value: _downloadProgress == -1.0
+                          ? null
+                          : _downloadProgress,
+                      strokeWidth: 3.0,
+                      color: AppColors.accent,
+                      backgroundColor: AppColors.lightGrey,
+                    ),
+                  )
+                else if (_isDownloaded)
+                  const Iconify(
+                    MaterialSymbols.open_in_new,
+                    size: 20,
+                    color: AppColors.accent,
+                  )
+                else
+                  const Iconify(
+                    MaterialSymbols.download_rounded,
+                    size: 24,
+                    color: AppColors.accent,
+                  ),
               ],
             ),
           ),
-          if (message.content?.isNotEmpty ?? false) ...[
+          if (widget.message.content?.isNotEmpty ?? false) ...[
             const SizedBox(height: 4),
-            _buildTextMessage(context), // Display caption below the image
+            _buildTextMessage(context),
           ],
         ],
       ),
@@ -424,17 +514,19 @@ class ChatBubble extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          context.loc.formatTime(message.createdAt),
+          context.loc.formatTime(widget.message.createdAt),
           style: const TextStyle(fontSize: 12, color: AppColors.timestamp),
         ),
-        if (isMe) ...[
+        if (widget.isMe) ...[
           const SizedBox(width: 4),
           Iconify(
-            message.isRead
+            widget.message.isRead
                 ? MaterialSymbols.done_all_rounded
                 : MaterialSymbols.done_rounded,
             size: 14,
-            color: message.isRead ? AppColors.messageRead : AppColors.timestamp,
+            color: widget.message.isRead
+                ? AppColors.messageRead
+                : AppColors.timestamp,
           ),
         ],
       ],

@@ -197,6 +197,7 @@ const Map<String, String> jaJP = {
   'join_group_failed': 'グループへの参加に失敗しました',
   'no_groups_in_common': '共通のグループはありません',
   'failed_to_update_profile': 'プロフィールの更新に失敗しました',
+  'failed_to_download_or_open_file': 'ファイルのダウンロードまたは開くことに失敗しました',
 
   // General Enums
   'view_profile_image': 'プロフィール画像を見る',
