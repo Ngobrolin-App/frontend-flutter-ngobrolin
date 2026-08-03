@@ -8,8 +8,7 @@ import 'package:ngobrolin_app/core/viewmodels/profile/profile_view_model.dart';
 import 'package:ngobrolin_app/core/models/user_model.dart';
 import 'package:ngobrolin_app/core/widgets/cards/app_avatar.dart';
 import 'package:ngobrolin_app/core/widgets/modals/media_picker_modal.dart';
-import 'package:ngobrolin_app/core/widgets/states/image_error_placeholder.dart';
-import 'package:photo_view/photo_view.dart';
+import 'package:ngobrolin_app/routes/app_routes.dart';
 import 'package:provider/provider.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/widgets/buttons/primary_button.dart';
@@ -150,21 +149,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
 
     if (tappedOption == ProfileTapOption.viewProfileImage) {
-      showDialog(
-        context: context,
-        builder: (_) => Dialog(
-          insetPadding: const EdgeInsets.all(16),
-          child: PhotoView(
-            imageProvider: NetworkImage(widget.user.avatarUrl!),
-            initialScale: PhotoViewComputedScale.contained,
-            errorBuilder: (context, error, stackTrace) => ImageErrorPlaceholder(
-              width: double.infinity,
-              height: double.infinity,
-              iconSize: 48,
-              errorMessage: context.tr('failed_to_load_image'),
-            ),
-          ),
-        ),
+      if (!mounted) return;
+      Navigator.pushNamed(
+        context,
+        AppRoutes.fullscreenImage,
+        arguments: {
+          'imageUrl': widget.user.avatarUrl ?? '',
+          'showDownloadButton': false,
+        },
       );
     } else {
       _handleImageSelection();

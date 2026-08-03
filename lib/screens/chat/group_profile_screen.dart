@@ -232,21 +232,15 @@ class _GroupProfileScreenState extends State<GroupProfileScreen> {
     );
 
     if (tappedOption == ProfileTapOption.viewProfileImage) {
-      showDialog(
-        context: context,
-        builder: (_) => Dialog(
-          insetPadding: const EdgeInsets.all(16),
-          child: PhotoView(
-            imageProvider: NetworkImage(groupProfileImage!),
-            initialScale: PhotoViewComputedScale.contained,
-            errorBuilder: (context, error, stackTrace) => ImageErrorPlaceholder(
-              width: double.infinity,
-              height: double.infinity,
-              iconSize: 48,
-              errorMessage: context.tr('failed_to_load_image'),
-            ),
-          ),
-        ),
+      if (!mounted) return;
+
+      Navigator.pushNamed(
+        context,
+        AppRoutes.fullscreenImage,
+        arguments: {
+          'imageUrl': groupProfileImage ?? '',
+          'showDownloadButton': false,
+        },
       );
     } else {
       _handleImageSelection();

@@ -10,7 +10,7 @@ import 'package:ngobrolin_app/core/enums/general_enums.dart';
 import 'package:ngobrolin_app/core/utils/media_utils.dart';
 import 'package:ngobrolin_app/core/widgets/cards/reply_message.dart';
 import 'package:ngobrolin_app/core/widgets/states/image_error_placeholder.dart';
-import 'package:photo_view/photo_view.dart';
+import 'package:ngobrolin_app/routes/app_routes.dart';
 import 'package:provider/provider.dart';
 import 'package:iconify_flutter/icons/ion.dart';
 import 'package:ngobrolin_app/core/viewmodels/chat/chat_view_model.dart';
@@ -339,27 +339,14 @@ class _ChatBubbleState extends State<ChatBubble> {
           children: [
             GestureDetector(
               onTap: () {
-                showDialog(
-                  context: context,
-                  builder: (_) => Dialog(
-                    insetPadding: const EdgeInsets.all(16),
-                    child: PhotoView(
-                      imageProvider: NetworkImage(
-                        widget.message.mediaUrl ?? '',
-                      ),
-                      initialScale: PhotoViewComputedScale.contained,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Center(
-                          child: ImageErrorPlaceholder(
-                            width: double.infinity,
-                            height: double.infinity,
-                            iconSize: 48,
-                            errorMessage: context.tr('failed_to_load_image'),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
+                Navigator.pushNamed(
+                  context,
+                  AppRoutes.fullscreenImage,
+                  arguments: {
+                    'imageUrl': widget.message.mediaUrl ?? '',
+                    'caption': widget.message.content,
+                    'showDownloadButton': true,
+                  },
                 );
               },
 

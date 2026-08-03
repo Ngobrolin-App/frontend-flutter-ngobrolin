@@ -75,28 +75,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       GestureDetector(
                         onTap: user.avatarUrl != null
                             ? () {
-                                showDialog(
-                                  context: context,
-                                  builder: (_) => Dialog(
-                                    insetPadding: const EdgeInsets.all(16),
-                                    child: PhotoView(
-                                      imageProvider: NetworkImage(
-                                        user.avatarUrl!,
-                                      ),
-                                      initialScale:
-                                          PhotoViewComputedScale.contained,
-                                      errorBuilder:
-                                          (context, error, stackTrace) =>
-                                              ImageErrorPlaceholder(
-                                                width: double.infinity,
-                                                height: double.infinity,
-                                                iconSize: 48,
-                                                errorMessage: context.tr(
-                                                  'failed_to_load_image',
-                                                ),
-                                              ),
-                                    ),
-                                  ),
+                                Navigator.pushNamed(
+                                  context,
+                                  AppRoutes.fullscreenImage,
+                                  arguments: {
+                                    'imageUrl': user.avatarUrl ?? '',
+                                    'showDownloadButton': false,
+                                  },
                                 );
                               }
                             : null,

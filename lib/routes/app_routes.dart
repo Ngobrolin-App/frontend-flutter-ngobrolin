@@ -11,6 +11,7 @@ import 'package:ngobrolin_app/core/viewmodels/profile/profile_view_model.dart';
 import 'package:ngobrolin_app/core/viewmodels/profile/user_profile_view_model.dart';
 import 'package:ngobrolin_app/core/viewmodels/search/search_group_view_model.dart';
 import 'package:ngobrolin_app/core/viewmodels/search/search_user_view_model.dart';
+import 'package:ngobrolin_app/core/widgets/screens/fullscreen_image_viewer.dart';
 import 'package:ngobrolin_app/core/widgets/screens/text_editor_screen.dart';
 import 'package:ngobrolin_app/screens/chat/create_chat_group_screen.dart';
 import 'package:ngobrolin_app/screens/chat/group_profile_screen.dart';
@@ -32,7 +33,6 @@ import '../screens/chat/chat_screen.dart';
 import '../screens/chat/user_profile_screen.dart';
 import '../screens/settings/settings_screen.dart';
 import '../screens/settings/blocked_users_screen.dart';
-// import 'dart:developer' as developer;
 
 class AppRoutes {
   static const String splash = '/';
@@ -52,12 +52,9 @@ class AppRoutes {
   static const String textEditor = '/text-editor';
   static const String searchUser = '/search-user';
   static const String searchGroup = '/search-group';
+  static const String fullscreenImage = '/fullscreen-image'; // <-- Rute baru
 
   static Route<dynamic>? generateRoute(RouteSettings settings) {
-    // developer.log(
-    //   'AppRoutes: Navigating to: ${settings.name}',
-    //   name: 'AppRoutes',
-    // );
     switch (settings.name) {
       case splash:
         return MaterialPageRoute(builder: (_) => const SplashScreen());
@@ -164,6 +161,15 @@ class AppRoutes {
           builder: (_) => ChangeNotifierProvider(
             create: (_) => serviceLocator<SearchGroupViewModel>(),
             child: SearchGroupScreen(),
+          ),
+        );
+      case fullscreenImage:
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => FullscreenImageViewer(
+            imageUrl: args?['imageUrl'] as String? ?? '',
+            caption: args?['caption'] as String?,
+            showDownloadButton: args?['showDownloadButton'] as bool? ?? true,
           ),
         );
       default:
