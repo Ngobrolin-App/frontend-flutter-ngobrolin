@@ -33,3 +33,9 @@
 # ==========================================
 -keep class com.baseflow.permissionhandler.** { *; }
 -dontwarn com.baseflow.permissionhandler.**
+
+# ==========================================
+# 6. IGNORE MISSING PLAY CORE CLASSES
+# ==========================================
+-dontwarn com.google.android.play.core.**
+-dontwarn io.flutter.embedding.engine.deferredcomponents.**
