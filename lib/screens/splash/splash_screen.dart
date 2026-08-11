@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:ngobrolin_app/core/viewmodels/auth/auth_view_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import '../../core/providers/socket_provider.dart';
 import '../../routes/app_routes.dart';
@@ -38,6 +39,35 @@ class _SplashScreenState extends State<SplashScreen> {
     super.dispose();
   }
 
+  Future<bool> _isFirstTimeUser() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return !(prefs.getBool('onboarding_completed') ?? false);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> _handleUnauthenticatedRoute() async {
+    final isFirstTime = await _isFirstTimeUser();
+
+    if (!mounted) return;
+
+    if (isFirstTime) {
+      developer.log(
+        'SplashScreen - First time user. Redirecting to Onboarding.',
+      );
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(AppRoutes.onboarding, (route) => false);
+    } else {
+      developer.log('SplashScreen - Returning user. Redirecting to Login.');
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
+    }
+  }
+
   Future<void> _checkAuthAndNavigate() async {
     try {
       if (!mounted) return;
@@ -55,10 +85,8 @@ class _SplashScreenState extends State<SplashScreen> {
       if (!mounted) return;
 
       if (!isAuthValid) {
-        developer.log('SplashScreen - API Auth failed. Redirecting to Login.');
-        Navigator.of(
-          context,
-        ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
+        developer.log('SplashScreen - API Auth failed.');
+        await _handleUnauthenticatedRoute();
         return;
       }
 
@@ -75,22 +103,14 @@ class _SplashScreenState extends State<SplashScreen> {
 
       _socketAuthErrorHandler = (data) {
         developer.log('SplashScreen - Socket Auth Error: $data');
-        if (mounted) {
-          Navigator.of(
-            context,
-          ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
-        }
+        _handleUnauthenticatedRoute();
       };
 
       _socketProvider.on('authenticated', _socketAuthenticatedHandler);
       _socketProvider.on('auth_error', _socketAuthErrorHandler);
     } catch (e) {
       developer.log('SplashScreen - Fatal Error: $e');
-      if (mounted) {
-        Navigator.of(
-          context,
-        ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
-      }
+      _handleUnauthenticatedRoute();
     }
   }
 
