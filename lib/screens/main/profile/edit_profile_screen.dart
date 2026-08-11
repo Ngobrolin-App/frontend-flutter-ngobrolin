@@ -27,6 +27,7 @@ class EditProfileScreen extends StatefulWidget {
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _usernameController;
   late final TextEditingController _nameController;
   late final TextEditingController _emailController;
   late final TextEditingController _bioController;
@@ -41,6 +42,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   void initState() {
     super.initState();
+    _usernameController = TextEditingController(text: widget.user.username);
     _nameController = TextEditingController(text: widget.user.name);
     _emailController = TextEditingController(text: widget.user.email ?? '');
     _bioController = TextEditingController(text: widget.user.bio ?? '');
@@ -55,6 +57,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   void dispose() {
+    _usernameController.dispose();
     _nameController.dispose();
     _emailController.dispose();
     _bioController.dispose();
@@ -263,6 +266,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return context.tr('please_enter_name');
+                    }
+                    return null;
+                  },
+                ),
+
+                const SizedBox(height: 16),
+
+                CustomTextField(
+                  controller: _usernameController,
+                  labelText: context.tr('username'),
+                  enabled: false,
+                  maxLength: 100,
+                  showCounter: false,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return context.tr('please_enter_username');
                     }
                     return null;
                   },
