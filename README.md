@@ -158,10 +158,16 @@ Pada proyek ini saya bertanggung jawab untuk:
 
 ## 📄 DOKUMENTASI
 
-Dokumentasi tambahan mengenai desain antarmuka dapat dilihat pada tautan berikut:
+Dokumentasi lengkap mengenai demo aplikasi, desain antarmuka, struktur proyek, alur aplikasi, serta implementasi teknis dapat dilihat pada tautan berikut:
 
 ### Figma UI Design
 [Desain Figma Ngobrolin](https://www.figma.com/design/dslLxMk9eGFG3uv0J60n8R/Ngobrolin?node-id=0-1&t=8zEPpILNlElecNqd-1)
+
+### Demo Aplikasi
+[Demo Aplikasi Ngobrolin](https://drive.google.com/file/d/1Mg0xLDb_frEGyHolIxQWB2SrZfIQR2AI/view?usp=sharing)
+
+### Dokumentasi
+[Dokumentasi Ringkas](https://drive.google.com/file/d/1wAmNgipcmTCYoJI-ktQs0SY8Q9uOqCH7/view?usp=sharing)
 
 ---
 
