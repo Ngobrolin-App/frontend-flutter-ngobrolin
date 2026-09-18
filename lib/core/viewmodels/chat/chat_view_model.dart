@@ -338,7 +338,9 @@ class ChatViewModel extends BaseViewModel {
       final conversation = result.data;
       if (conversation?.id != null) {
         setConversationId(conversation?.id);
-        initChat(conversationId: conversation?.id);
+        // Hydrate room context WITHOUT wiping _messages (initChat would clear
+        // the optimistic insert and refetch)
+        _setupChatRoomContext();
       }
     }
 
@@ -396,7 +398,10 @@ class ChatViewModel extends BaseViewModel {
         _privatePartnerId,
       );
       final conversation = result.data;
-      setConversationId(conversation?.id);
+      if (conversation?.id != null) {
+        setConversationId(conversation?.id);
+        _setupChatRoomContext();
+      }
     }
 
     return await runBusyFuture(

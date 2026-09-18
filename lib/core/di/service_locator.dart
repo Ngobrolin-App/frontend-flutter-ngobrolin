@@ -9,6 +9,7 @@ import '../repositories/chat_repository.dart';
 import '../repositories/settings_repository.dart';
 import '../repositories/user_repository.dart';
 import '../services/api/api_service.dart';
+import '../providers/socket_provider.dart';
 import '../services/api/dio_client.dart';
 import '../viewmodels/auth/auth_view_model.dart';
 import '../viewmodels/chat/chat_list_view_model.dart';
@@ -28,6 +29,7 @@ void setupServiceLocator() {
   serviceLocator.registerLazySingleton(() => DioClient());
   serviceLocator.registerLazySingleton(() => ApiService());
   serviceLocator.registerLazySingleton(() => DeeplinkService());
+  serviceLocator.registerLazySingleton(() => SocketProvider());
 
   // Register repositories
   serviceLocator.registerLazySingleton(

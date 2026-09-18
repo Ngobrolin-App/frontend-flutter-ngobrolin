@@ -4,18 +4,20 @@ import 'dart:developer' as developer;
 class SocketService {
   IO.Socket? _socket;
 
+  // Registry of handlers so they are re-applied to any new socket instance
+  // (reconnect / re-init must not orphan screen-registered listeners).
+  final Map<String, List<void Function(dynamic)>> _handlers = {};
+
   bool get isConnected => _socket?.connected ?? false;
 
   void connect({required String url, String? token}) {
     developer.log('SocketService: connecting to $url', name: 'SocketService');
 
-    // Konfigurasi opsi socket
     final opts = IO.OptionBuilder()
         .setTransports(['websocket'])
         .setPath('/socket.io')
         .enableAutoConnect()
         .setTimeout(10000)
-        // Menggunakan setExtraHeaders sangat bagus untuk autentikasi awal (handshake)
         .setExtraHeaders(
           token != null ? {'Authorization': 'Bearer $token'} : {},
         )
@@ -49,9 +51,18 @@ class SocketService {
       (attempt) =>
           developer.log('Socket reconnect: $attempt', name: 'SocketService'),
     );
+
+    // Re-apply registered handlers on the new socket instance
+    _handlers.forEach((event, handlers) {
+      for (final handler in handlers) {
+        _socket?.on(event, handler);
+      }
+    });
   }
 
   void on(String event, void Function(dynamic data) handler) {
+    final list = _handlers.putIfAbsent(event, () => []);
+    if (!list.contains(handler)) list.add(handler);
     _socket?.on(event, handler);
   }
 
@@ -60,11 +71,17 @@ class SocketService {
   }
 
   void off(String event, [dynamic handler]) {
+    if (handler != null) {
+      _handlers[event]?.remove(handler);
+    } else {
+      _handlers.remove(event);
+    }
     _socket?.off(event, handler);
   }
 
-  // Bersihkan semua core event listener untuk mencegah duplikasi/kebocoran
+  // Remove ALL handlers (core + screen-registered). Use only on full re-init.
   void clearListeners() {
+    _handlers.clear();
     _socket?.clearListeners();
   }
 

@@ -160,7 +160,7 @@ Future<void> bootstrap() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => SocketProvider()),
+        ChangeNotifierProvider(create: (_) => serviceLocator<SocketProvider>()),
         ChangeNotifierProvider(create: (_) => serviceLocator<AuthViewModel>()),
         ChangeNotifierProvider(
           create: (_) => serviceLocator<SettingsViewModel>(),
@@ -216,7 +216,7 @@ class _MyAppState extends State<MyApp> {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      locale: context.watch<SettingsViewModel>().locale,
+      locale: context.select<SettingsViewModel, Locale>((vm) => vm.locale),
       theme: AppTheme.lightTheme,
       initialRoute: AppRoutes.splash,
       onGenerateRoute: AppRoutes.generateRoute,

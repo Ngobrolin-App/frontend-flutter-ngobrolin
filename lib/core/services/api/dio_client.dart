@@ -1,7 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ngobrolin_app/bootstrap.dart' show navigatorKey;
+import 'package:ngobrolin_app/routes/app_routes.dart' as routes;
+import 'package:flutter/material.dart';
+import '../token_storage.dart';
 
 /// A singleton class that provides a configured Dio instance for API requests.
 class DioClient {
@@ -54,8 +57,7 @@ class DioClient {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          final prefs = await SharedPreferences.getInstance();
-          final token = prefs.getString('auth_token');
+          final token = await TokenStorage().read();
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
           }
@@ -63,7 +65,16 @@ class DioClient {
         },
         onError: (DioException error, handler) {
           if (error.response?.statusCode == 401) {
-            // Optionally handle token refresh/logout
+            // Session is invalid — purge token and bounce to login (skip auth endpoints
+            // like failed login attempts which legitimately return 401)
+            final path = error.requestOptions.uri.path;
+            if (!path.contains('/auth/login') && !path.contains('/auth/register')) {
+              TokenStorage().delete();
+              navigatorKey.currentState?.pushNamedAndRemoveUntil(
+                routes.AppRoutes.login,
+                (_) => false,
+              );
+            }
           }
           return handler.next(error);
         },

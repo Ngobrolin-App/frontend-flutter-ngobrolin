@@ -3,6 +3,7 @@ import '../../repositories/auth_repository.dart';
 import '../base_view_model.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import '../../di/service_locator.dart';
+import '../../providers/socket_provider.dart';
 import '../../repositories/user_repository.dart';
 import 'dart:developer' as developer;
 
@@ -190,6 +191,9 @@ class AuthViewModel extends BaseViewModel {
             }
 
             await _authRepository.signOut();
+
+            // Tear down authenticated socket session immediately
+            serviceLocator<SocketProvider>().reset();
 
             _token = null;
             _authenticated = false;

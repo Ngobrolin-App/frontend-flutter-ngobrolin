@@ -111,8 +111,15 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   // OPTIMASI: Ekstraksi listener anonim menjadi method terstruktur untuk mencegah leak
+  // Prune GlobalKeys so the map doesn't grow without bound on long chats (M2)
+  void _pruneMessageKeys() {
+    final ids = _chatViewModel.messages.map((m) => m.id).toSet();
+    _messageKeys.removeWhere((key, _) => !ids.contains(key));
+  }
+
   void _onChatViewModelChanged() {
     if (!mounted) return;
+    _pruneMessageKeys();
 
     if (!_joinedRoom && _chatViewModel.conversationId != null) {
       _socketProvider.joinConversationSocket(_chatViewModel.conversationId!);
@@ -122,6 +129,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _checkBlockStatusAndInitChat() async {
     try {
+      _messageKeys.clear();
       _chatViewModel.initChat(
         conversationId: widget.chatId,
         userId: widget.userId,
@@ -535,8 +543,18 @@ class _ChatScreenState extends State<ChatScreen> {
                   child: Selector<ChatViewModel, bool>(
                     selector: (_, vm) => vm.isLoading,
                     builder: (context, isLoading, _) {
-                      return Consumer<ChatViewModel>(
-                        builder: (context, chatVM, _) {
+                      // S3: rebuild only when message count / pagination flag changes —
+                      // typing & status notifications no longer rebuild the whole list
+                      return Selector<ChatViewModel, (int, bool, int)>(
+                        selector: (context, vm) => (
+                          vm.messages.length,
+                          vm.isLoadingMore,
+                          // Signature of all message ids so edits/replaces (count
+                          // unchanged) still trigger a rebuild
+                          Object.hashAll(vm.messages.map((m) => m.id)),
+                        ),
+                        builder: (context, _, __) {
+                          final chatVM = _chatViewModel;
                           final messages = chatVM.messages;
                           final myId = _authViewModel.user?.id;
 
@@ -648,20 +666,21 @@ class _ChatScreenState extends State<ChatScreen> {
                                       showSenderName: showSenderName,
                                     );
 
-                              // Jika butuh header, bungkus dengan Column
-                              if (showDateHeader) {
-                                return Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    ChatDateBadge(date: message.createdAt),
-                                    SizedBox(height: 10),
-                                    bubbleWidget,
-                                  ],
-                                );
-                              }
-
-                              // Jika tidak, render bubble biasa
-                              return bubbleWidget;
+                              // Stable key per message so widget state survives reordering (M2)
+                              final itemWidget = !showDateHeader
+                                  ? bubbleWidget
+                                  : Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        ChatDateBadge(date: message.createdAt),
+                                        SizedBox(height: 10),
+                                        bubbleWidget,
+                                      ],
+                                    );
+                              return KeyedSubtree(
+                                key: ValueKey(message.id),
+                                child: itemWidget,
+                              );
                             },
                           );
                         },

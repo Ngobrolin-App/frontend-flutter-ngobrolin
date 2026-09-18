@@ -1,4 +1,5 @@
 import 'package:ngobrolin_app/core/models/api_response.dart';
+import 'package:ngobrolin_app/core/services/token_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../models/auth_response.dart';
@@ -88,6 +89,8 @@ class AuthRepository {
   /// Purges local stored session keys and invalidates structural persistence.
   Future<void> signOut() async {
     try {
+      final TokenStorage tokenStorage = TokenStorage();
+      await tokenStorage.delete();
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_tokenKey);
       await prefs.remove(_userKey);
@@ -104,11 +107,10 @@ class AuthRepository {
     }
   }
 
-  /// Reads the active authorization token sequence string from local disks.
+  /// Reads the active authorization token from secure storage.
   Future<String?> getToken() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      return prefs.getString(_tokenKey);
+      return await TokenStorage().read();
     } catch (e) {
       developer.log(
         'AuthRepository: Error reading token: $e',
@@ -137,14 +139,14 @@ class AuthRepository {
     }
   }
 
-  /// Internally writes token packets and mapped JSON parameters to hardware devices securely.
+  /// Stores the token in secure storage and user data in preferences.
   Future<void> _saveAuthData(AuthResponse authResponse) async {
     try {
+      await TokenStorage().write(authResponse.token);
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_tokenKey, authResponse.token);
       await prefs.setString(_userKey, jsonEncode(authResponse.user.toJson()));
       developer.log(
-        'AuthRepository: Token and user data encrypted & stored.',
+        'AuthRepository: Token stored securely & user data stored.',
         name: 'AuthRepository',
       );
     } catch (e) {

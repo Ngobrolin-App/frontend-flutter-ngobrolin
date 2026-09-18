@@ -200,8 +200,12 @@ class ChatListViewModel extends BaseViewModel {
         return;
       }
 
-      // If the chat block is non-existent in the current viewport
-      await fetchChatList();
+      // Chat not in loaded pages: only refetch when still on page 1.
+      // Deeper into pagination, refetching would wipe the list and reset scroll
+      // position — the new chat appears on next pull-to-refresh instead.
+      if (_page == 1) {
+        await fetchChatList();
+      }
     } catch (e, stackTrace) {
       developer.log(
         'updateWithNewMessage() error: $e',

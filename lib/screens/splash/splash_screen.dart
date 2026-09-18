@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../core/providers/socket_provider.dart';
 import '../../routes/app_routes.dart';
 import '../../theme/app_colors.dart';
+import 'dart:async';
 import 'dart:developer' as developer;
 
 class SplashScreen extends StatefulWidget {
@@ -19,6 +20,7 @@ class _SplashScreenState extends State<SplashScreen> {
   late SocketProvider _socketProvider;
   late Function(dynamic) _socketAuthenticatedHandler;
   late Function(dynamic) _socketAuthErrorHandler;
+  Timer? _authTimeout;
 
   @override
   void initState() {
@@ -26,10 +28,21 @@ class _SplashScreenState extends State<SplashScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkAuthAndNavigate();
     });
+
+    // Safety net: never hang forever if the socket 'authenticated' event is lost
+    _authTimeout = Timer(const Duration(seconds: 12), () {
+      if (!mounted) return;
+      developer.log(
+        'SplashScreen - socket auth timeout, falling back',
+        name: 'SplashScreen',
+      );
+      _handleUnauthenticatedRoute();
+    });
   }
 
   @override
   void dispose() {
+    _authTimeout?.cancel();
     try {
       _socketProvider.off('authenticated', _socketAuthenticatedHandler);
       _socketProvider.off('auth_error', _socketAuthErrorHandler);

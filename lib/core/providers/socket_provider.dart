@@ -1,11 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../services/socket_service.dart';
+import '../services/token_storage.dart';
 import 'dart:developer' as developer;
 
 class SocketProvider extends ChangeNotifier {
   final SocketService _socket = SocketService();
+
+  bool _disposed = false;
 
   bool _connected = false;
   bool get connected => _connected;
@@ -18,8 +20,7 @@ class SocketProvider extends ChangeNotifier {
 
     String? authToken = token;
     if (authToken == null || authToken.isEmpty) {
-      final prefs = await SharedPreferences.getInstance();
-      authToken = prefs.getString('auth_token');
+      authToken = await TokenStorage().read();
     }
 
     // SOLUSI: Bersihkan koneksi lama dan pendengar event lama secara menyeluruh
@@ -88,6 +89,19 @@ class SocketProvider extends ChangeNotifier {
     _authenticated = false;
   }
 
+  /// Disconnect without disposing the shared instance (used on sign-out).
+  /// Handlers stay registered and are re-applied on the next [init].
+  void reset() {
+    _resetState();
+    _socket.disconnect();
+    notifyListeners();
+  }
+
+  @override
+  void notifyListeners() {
+    if (!_disposed) super.notifyListeners();
+  }
+
   // Passthrough methods untuk UI / Screen Components
   void on(String event, void Function(dynamic data) handler) {
     _socket.on(event, handler);
@@ -127,6 +141,8 @@ class SocketProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
+    _socket.clearListeners();
     _socket.disconnect();
     super.dispose();
   }
